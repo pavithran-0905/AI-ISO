@@ -202,11 +202,29 @@ def scan_unsafe_instructions(body: str) -> list[Finding]:
     ]
 
 
+def _keyword_pattern(keyword: str) -> str:
+    """A case-folded, literal pattern for one restricted keyword.
+
+    Word boundaries are applied **only where the keyword's own edge is
+    a word character**. ``\\b`` sits between a word and a non-word
+    character, so an unconditional ``\\b{kw}\\b`` can never match a
+    keyword like ``c++`` or ``node.js`` -- the trailing ``\\b`` would
+    need a word character on both sides of a ``+``. An organization
+    configuring such a term would get silent non-matching rather than
+    protection or an error, which is the worst of the three outcomes.
+    """
+    escaped = re.escape(keyword)
+    prefix = r"\b" if keyword[0].isalnum() or keyword[0] == "_" else ""
+    suffix = r"\b" if keyword[-1].isalnum() or keyword[-1] == "_" else ""
+    return f"{prefix}{escaped}{suffix}"
+
+
 def scan_restricted_keywords(body: str, keywords: Sequence[str]) -> list[Finding]:
     """Organization-configured restricted terms.
 
-    Matched case-insensitively on word boundaries so a configured term
-    like ``ssn`` does not fire on ``assassin``.
+    Matched case-insensitively, on word boundaries where the keyword
+    allows one, so a configured term like ``ssn`` does not fire on
+    ``assassin`` while ``c++`` still matches at all.
     """
     lowered = body.lower()
     return [
@@ -216,7 +234,7 @@ def scan_restricted_keywords(body: str, keywords: Sequence[str]) -> list[Finding
             detail=f"Restricted keyword {keyword!r} appears in the prompt body.",
         )
         for keyword in keywords
-        if keyword and re.search(rf"\b{re.escape(keyword.lower())}\b", lowered)
+        if keyword.strip() and re.search(_keyword_pattern(keyword.strip().lower()), lowered)
     ]
 
 
