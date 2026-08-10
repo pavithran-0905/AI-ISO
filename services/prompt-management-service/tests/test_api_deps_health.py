@@ -17,6 +17,7 @@ down rather than 500-ing and telling the orchestrator nothing.
 
 from __future__ import annotations
 
+import ast
 import uuid
 from pathlib import Path
 from typing import Any
@@ -36,6 +37,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
+from app.api import prompts as prompts_router
 from app.config.keys import load_public_key
 from app.config.settings import (
     PromptManagementServiceSettings,
@@ -349,6 +351,76 @@ async def test_a_token_signed_by_the_wrong_key_is_rejected(
     )
 
     assert response.status_code == HTTP_UNAUTHORIZED
+
+
+def test_every_prompt_route_requires_authentication() -> None:
+    """A structural check, not a per-route one, because a route added
+    later would not fail any of the behavioural tests below.
+
+    The read routes are the ones that matter most here: this service
+    stores prompt bodies, and ``GET /prompts/{id}/versions`` returns them
+    in full. An unauthenticated read would let anyone who can reach the
+    port enumerate every organization's prompts by varying one query
+    parameter. ``secrets-management-service`` uses exactly this
+    ``_caller: CurrentUserId`` idiom on every one of its own read routes.
+    """
+    source = (Path(prompts_router.__file__ or "")).read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    unauthenticated: list[str] = []
+    routes = 0
+    for node in tree.body:
+        if not isinstance(node, ast.AsyncFunctionDef):
+            continue
+        if not any(
+            isinstance(d, ast.Call)
+            and getattr(d.func, "attr", "") in {"get", "post", "put", "delete"}
+            for d in node.decorator_list
+        ):
+            continue
+        routes += 1
+        annotations = [
+            ast.unparse(arg.annotation) for arg in node.args.args if arg.annotation is not None
+        ]
+        if "CurrentUserId" not in annotations:
+            unauthenticated.append(node.name)
+
+    assert routes == 30
+    assert unauthenticated == []
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/prompts",
+        "/prompts/test",
+        "/prompts/ab-test",
+        "/prompts/statistics",
+        "/prompts/reports",
+    ],
+)
+async def test_an_unauthenticated_read_is_refused(
+    client: AsyncClient, organization_id: uuid.UUID, path: str
+) -> None:
+    """The behavioural half of the structural check above, over real
+    HTTP with no ``Authorization`` header at all."""
+    response = await client.get(path, params={"organization_id": str(organization_id)})
+    assert response.status_code == HTTP_UNAUTHORIZED
+
+
+async def test_an_unauthenticated_read_of_a_prompts_bodies_is_refused(
+    client: AsyncClient, organization_id: uuid.UUID, make_prompt: MakePromptFn
+) -> None:
+    """The single worst thing an open read would expose: the full text of
+    every revision."""
+    prompt, _version = await make_prompt("private-wording")
+
+    response = await client.get(
+        f"/prompts/{prompt.id}/versions", params={"organization_id": str(organization_id)}
+    )
+
+    assert response.status_code == HTTP_UNAUTHORIZED
+    assert "private-wording" not in response.text
 
 
 async def test_the_caller_token_dependency_forwards_the_raw_bearer() -> None:

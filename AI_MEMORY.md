@@ -7167,3 +7167,116 @@ table they touched afterwards.
   files up in place, lint them, run them, and finish the remainder
   directly. Confirming what actually landed on disk beat trusting any
   completion report.
+
+---
+
+## Prompt 061 — Enterprise Prompt Management Service
+
+`services/prompt-management-service`, port **8032**, database
+**`aiios_prompt_management`**, Redis **db 34**. The centralized prompt
+registry every other AI-IOS service retrieves prompts through: semantic
+versioning with immutable revisions, a sandboxed Jinja2 templating
+engine with inheritance and composition, eight variable kinds with
+secret references, review/approval publication gating, security
+scanning, prompt testing with snapshot regression, nine evaluation
+metrics, A/B experiments with a real two-proportion z-test, token/cost
+optimization suggestions, analytics rollups, reporting, and an
+append-only audit trail. 26 enums, 17 tables, 17 repositories, 8 service
+classes, 30 REST routes, 4 leader-elected workers, 9 domain events.
+
+**1122 tests, 100.00% branch coverage** against real PostgreSQL, Redis,
+and RabbitMQ. Ruff clean, Black clean (93 files), MyPy clean in-container
+(*Success: no issues found in 67 source files*).
+
+### This service calls no model provider, deliberately
+
+It governs prompts; it does not execute them. There are no provider
+credentials anywhere in the codebase. That shapes what its own tests can
+honestly claim: a prompt test asserts on the **rendered prompt**, not on
+a model's reply, and a caller who already has a reply passes it in as
+`actual_output`. Every operation is therefore deterministic, and unlike
+`ai-assistant-service` or `ai-agent-platform-service` this suite carries
+no "the LLM may be unreachable" caveat at all.
+
+### Live verification
+
+Migrated a fresh database in the container, started the service on the
+real Docker network against real PostgreSQL/Redis/RabbitMQ with workers
+enabled, and drove all 21 checks of the full governance path over real
+HTTP with a real RS256-signed token: create → variables on an
+unpublished draft → gate refuses → scan → approval requested and granted
+→ gate opens → publish → render → execution recorded → second revision
+→ forced publish → rollback → reports → unauthenticated read refused.
+
+Then confirmed in the database directly what the API cannot show: the
+recorded `rendered_prompt` was stored as `api_key: [REDACTED]`, so the
+credential never reached the table. And **without ever calling a worker
+by hand**, the leader-elected approval-expiry sweep fired three times on
+its own timer with real audit rows behind it.
+
+### Six real defects found, each verified before and after the fix
+
+1. **A mandatory REJECTED review did not block publication at all.** The
+   filter was `decision IN (PENDING, CHANGES_REQUESTED)`, making an
+   outright no the one mandatory verdict the gate ignored — strictly
+   weaker than "please change this". Backwards.
+2. **A CHANGES_REQUESTED verdict blocked forever.** `ReviewService.request`
+   deliberately permits asking the same reviewer again once their first
+   review is no longer pending, but the gate counted every mandatory row,
+   so the superseded objection kept blocking and the second round could
+   never clear it. The revision was permanently unpublishable. Now
+   resolved per reviewer on their latest verdict, in both directions.
+3. **Every read route was unauthenticated — 0 of 10.** Found by the live
+   e2e, not by any unit test. `GET /prompts/{id}/versions` returns full
+   prompt bodies, so anyone who could reach the port could enumerate
+   every organization's prompts by varying one query parameter.
+   `secrets-management-service` uses `_caller: CurrentUserId` on every
+   one of its own read routes; this service used it on none. All 30
+   routes now require authentication, guarded structurally by an AST walk
+   so a route added later cannot quietly reopen the hole.
+4. **`PromptVersion.created_by` redefined `AuditMixin.created_by`** as a
+   `String(128)` where the base types it `UUID` — the only place in the
+   entire monorepo that did. Two writers on one column with different
+   value shapes. Renamed to `authored_by`.
+5. **`PromptRepository.search` overrode the base incompatibly**, so a
+   caller holding a `BaseRepository[Prompt]` would fail at runtime.
+   Renamed `search_in_org`.
+6. **`AgentStatisticRepository.list_since` had no ORDER BY** despite its
+   caller documenting "oldest first" (carried over from 060's pattern;
+   the equivalent here was caught by the repository tests).
+
+Only **MyPy inside the container** caught #4 and #5 — Ruff, Black, and
+1115 passing tests all missed them. Only the **live e2e** caught #3.
+
+### Worth remembering
+
+- **`get_settings` is `lru_cache(maxsize=1)`.** Any test that needs
+  different settings must `cache_clear()` before *and* after, or a later
+  `create_app()` inherits them — in this suite, that would have started a
+  real scheduler nobody asked for.
+- **`build_settings()` returns a shared `application` section.** Mutating
+  it in place to test the production CORS branch leaks a production
+  environment into every later test; construct a fresh `Settings` instead.
+- **`include_router` wraps children in `_IncludedRouter`**, which exposes
+  `original_router` and no `path`. A flat comprehension over
+  `application.routes` silently misses every included route.
+- **`preview` tolerates unresolved variables but not undeclared ones.** A
+  test case supplying no variables still runs — placeholders are
+  substituted for *declared* specs — so only an undeclared variable
+  errors. Two of my own tests assumed otherwise.
+- **The redaction patterns key off an assignment**, not a bare token
+  shape: `api_key: sk-...` matches, a lone `sk-...` does not. Consistent
+  across all three services that carry the pattern set, so left alone.
+- **Error responses carry a generic localized message plus a code**,
+  never the exception's own text. `GET /prompts/{id}/gate` is the
+  endpoint that reports blockers; the publish 409 does not.
+- **`ValidationError` maps to 400, not 422.** 422 means the body failed
+  the schema; 400 means it passed and then failed a domain rule.
+- **pytest tries to *collect* any imported class named `Test*`.** A
+  `StrEnum` or a frozen dataclass so named becomes a collection error
+  under `filterwarnings = error`; alias on import
+  (`TestKind as PromptTestKind`).
+- **All 15 parallel test-writing agents hit account-wide session limits**,
+  across four separate reset windows. Every one had written real work
+  before dying and none was lost: the recovery path was to pick their
+  files up off disk, lint them, run them, and finish the rest directly.

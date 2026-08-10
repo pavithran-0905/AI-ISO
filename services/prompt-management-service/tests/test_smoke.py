@@ -56,17 +56,19 @@ async def test_full_prompt_lifecycle_end_to_end(
     assert prompt["status"] == "draft"
     assert prompt["current_version_number"] is None
 
-    listed = await client.get("/prompts", params=params)
+    listed = await client.get("/prompts", params=params, headers=headers)
     assert listed.status_code == HTTP_OK
     assert any(row["id"] == prompt_id for row in listed.json()["data"])
 
-    variables = await client.get(f"/prompts/{prompt_id}/variables", params=params)
+    variables = await client.get(f"/prompts/{prompt_id}/variables", params=params, headers=headers)
     assert variables.status_code == HTTP_OK, variables.text
     assert {v["name"] for v in variables.json()["data"]} == {"topic", "count"}
 
     # The publication gate must refuse before anything has been done.
     gate = await client.get(
-        f"/prompts/{prompt_id}/gate", params={**params, "version_number": "1.0.0"}
+        f"/prompts/{prompt_id}/gate",
+        params={**params, "version_number": "1.0.0"},
+        headers=headers,
     )
     assert gate.status_code == HTTP_OK, gate.text
     assert gate.json()["data"]["allowed"] is False
@@ -141,13 +143,15 @@ async def _assert_second_revision_and_rollback(client, headers, params, prompt_i
     assert drafted.status_code == HTTP_CREATED, drafted.text
     assert drafted.json()["data"]["version_number"] == "1.1.0"
 
-    versions = await client.get(f"/prompts/{prompt_id}/versions", params=params)
+    versions = await client.get(f"/prompts/{prompt_id}/versions", params=params, headers=headers)
     assert versions.status_code == HTTP_OK
     assert len(versions.json()["data"]) == 2
 
     # 1.1.0 has no approval of its own, so the gate must still refuse it.
     gate2 = await client.get(
-        f"/prompts/{prompt_id}/gate", params={**params, "version_number": "1.1.0"}
+        f"/prompts/{prompt_id}/gate",
+        params={**params, "version_number": "1.1.0"},
+        headers=headers,
     )
     assert gate2.json()["data"]["allowed"] is False
 
@@ -173,7 +177,7 @@ async def _assert_second_revision_and_rollback(client, headers, params, prompt_i
 async def _assert_analytics_and_archive(client, headers, params, prompt_id) -> None:
     """Statistics, reporting, and archival -- split out of the lifecycle
     test purely to keep one function under the statement ceiling."""
-    statistics = await client.get("/prompts/statistics", params=params)
+    statistics = await client.get("/prompts/statistics", params=params, headers=headers)
     assert statistics.status_code == HTTP_OK
 
     report = await client.post(
@@ -188,14 +192,19 @@ async def _assert_analytics_and_archive(client, headers, params, prompt_id) -> N
 
 
 async def test_static_routes_are_not_hijacked_by_the_catch_all(
-    client: AsyncClient, organization_id: uuid.UUID
+    client: AsyncClient, organization_id: uuid.UUID, auth_headers: AuthHeadersFn
 ) -> None:
     """``/prompts/test`` must not resolve as ``prompt_id="test"``.
 
     The router-ordering bug class this platform has hit three times.
     A 422 here would mean the catch-all won and UUID parsing failed.
+
+    Sent authenticated, because every read route requires a token -- an
+    unauthenticated 401 would be indistinguishable from a shadowed route
+    for the purpose of this check.
     """
     params = {"organization_id": str(organization_id)}
+    headers = auth_headers(uuid.uuid4(), organization_id=organization_id)
     for path in ("/prompts/test", "/prompts/ab-test", "/prompts/statistics", "/prompts/reports"):
-        response = await client.get(path, params=params)
+        response = await client.get(path, params=params, headers=headers)
         assert response.status_code == HTTP_OK, f"{path} -> {response.status_code}"

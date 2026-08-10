@@ -194,6 +194,25 @@ suite carries no "the LLM may be unreachable" caveat — this service
 calls no model provider, so every operation is deterministic and every
 test asserts exact outcomes.
 
+**1122 tests, 100.00% branch coverage on `app`.** Ruff, Black, and MyPy
+all clean.
+
+Two things the suite deliberately checks structurally rather than
+behaviourally, because a route added later would not fail any
+behavioural test:
+
+- **Every one of the 30 routes requires authentication.** Asserted by
+  walking the router's own AST for a `CurrentUserId` annotation. The
+  read routes matter most: `GET /prompts/{id}/versions` returns full
+  prompt bodies, so an open read would let anyone who can reach the port
+  enumerate every organization's prompts by varying one query parameter.
+- **Every worker really registers *and* gets a `next_run`.** One test
+  enables workers for real and drives the actual lifespan against real
+  RabbitMQ and Redis. Without it `_build_workers` never executed in any
+  test, and a scheduler that silently failed to register would look
+  exactly like a healthy service until someone noticed approvals never
+  expiring.
+
 ### Tool shims are blocked on this machine
 
 Windows Application Control intermittently blocks `uv`'s generated
@@ -231,6 +250,23 @@ the container.
 - **`start_span` takes `**attributes`, not an `attributes=` keyword.**
   Passing one silently drops every attribute — a confirmed repo-wide
   defect in services built before Prompt 054.
+- **A mandatory review is resolved per reviewer, on their LATEST
+  verdict.** Only `APPROVED` resolves; `REJECTED` blocks like
+  `CHANGES_REQUESTED` does. `ReviewService.request` refuses only a second
+  *pending* request, so re-review after a changes-requested verdict is a
+  supported flow — and counting every mandatory row instead would leave
+  the superseded objection blocking forever, with the only escape being
+  a byte-identical revision cut purely to reset review state.
+- **`PromptVersion.authored_by`, not `created_by`.** `created_by` belongs
+  to `AuditMixin`, which docs/018 says no entity may redefine and which
+  types it as a `UUID`. Shadowing it with a `String` leaves two writers
+  on one column with different value shapes. An actor here is not always
+  a user — a revision can be authored by a sweep.
+- **`PromptRepository.search_in_org`, not `search`.** The base's own
+  `search` takes an explicit field list and no tenant, so overloading the
+  name both breaks substitutability and makes an unscoped platform-wide
+  search look identical to a tenant-scoped one at the call site — the
+  same reason `require_in_org` is named apart from `require_by_id`.
 
 ---
 

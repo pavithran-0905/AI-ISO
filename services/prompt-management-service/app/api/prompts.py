@@ -173,7 +173,7 @@ async def _store_variables(
     summary="Define a prompt test",
 )
 async def define_test(
-    body: TestCreateRequest, organization_id: UUID, tests: TestingSvc
+    body: TestCreateRequest, organization_id: UUID, tests: TestingSvc, _caller: CurrentUserId
 ) -> SuccessResponse[TestResponse]:
     """Register a reusable test case for one prompt."""
     test = await tests.define(
@@ -199,6 +199,7 @@ async def define_test(
 async def list_tests(
     organization_id: UUID,
     tests: TestsRepo,
+    _caller: CurrentUserId,
     limit: Annotated[int, Query(ge=1, le=1_000)] = 200,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> SuccessResponse[list[TestResponse]]:
@@ -248,6 +249,7 @@ async def evaluate(
     organization_id: UUID,
     versions: VersionsRepo,
     evaluations: EvaluationSvc,
+    _caller: CurrentUserId,
 ) -> SuccessResponse[EvaluationResponse]:
     """Score one output against the nine evaluation metrics."""
     version = await versions.require_in_org(organization_id, body.prompt_version_id)
@@ -284,6 +286,7 @@ async def optimize(
     organization_id: UUID,
     versions: VersionsRepo,
     optimizations: OptimizationSvc,
+    _caller: CurrentUserId,
 ) -> SuccessResponse[list[OptimizationResponse]]:
     """Suggest improvements. Nothing is applied -- accepting a
     suggestion creates a new draft through the normal review path."""
@@ -335,6 +338,7 @@ async def start_ab_test(
     prompts: PromptsRepo,
     versions: VersionsRepo,
     ab: AbSvc,
+    _caller: CurrentUserId,
 ) -> SuccessResponse[AbTestResponse]:
     """Split traffic between two revisions of one prompt.
 
@@ -373,6 +377,7 @@ async def start_ab_test(
 async def list_ab_tests(
     organization_id: UUID,
     ab_tests: AbTestsRepo,
+    _caller: CurrentUserId,
     limit: Annotated[int, Query(ge=1, le=1_000)] = 200,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> SuccessResponse[list[AbTestResponse]]:
@@ -446,7 +451,7 @@ async def record_execution(
     summary="Latest rolled-up prompt activity",
 )
 async def get_statistics(
-    organization_id: UUID, statistics: StatisticsSvc
+    organization_id: UUID, statistics: StatisticsSvc, _caller: CurrentUserId
 ) -> SuccessResponse[StatisticResponse | None]:
     """This organization's own most recently computed window."""
     windows = await statistics.trend(organization_id, since_days=3_650)
@@ -458,7 +463,10 @@ async def get_statistics(
     "/reports", response_model=SuccessResponse[list[ReportResponse]], summary="List reports"
 )
 async def list_reports(
-    organization_id: UUID, reports: ReportSvc, kind: ReportKind | None = None
+    organization_id: UUID,
+    reports: ReportSvc,
+    _caller: CurrentUserId,
+    kind: ReportKind | None = None,
 ) -> SuccessResponse[list[ReportResponse]]:
     """Generated reports, newest first."""
     rows = await reports.list_for_org(organization_id, kind=kind)
@@ -496,6 +504,7 @@ async def submit_review(
     body: ReviewSubmitRequest,
     reviews_repo: ReviewsRepo,
     reviews: ReviewSvc,
+    _caller: CurrentUserId,
 ) -> SuccessResponse[ReviewResponse]:
     """Record a reviewer's verdict on a revision."""
     review = await reviews_repo.require_in_org(organization_id, review_id)
@@ -540,6 +549,7 @@ async def decide_approval(
 async def list_prompts(
     organization_id: UUID,
     prompts: PromptsRepo,
+    _caller: CurrentUserId,
     prompt_type: PromptType | None = None,
     category: PromptCategory | None = None,
     status: PromptLifecycleStatus | None = None,
@@ -605,7 +615,7 @@ async def create_prompt(
     "/{prompt_id}", response_model=SuccessResponse[PromptResponse], summary="Get one prompt"
 )
 async def get_prompt(
-    prompt_id: UUID, organization_id: UUID, prompts: PromptsRepo
+    prompt_id: UUID, organization_id: UUID, prompts: PromptsRepo, _caller: CurrentUserId
 ) -> SuccessResponse[PromptResponse]:
     """One registered prompt."""
     prompt = await prompts.require_in_org(organization_id, prompt_id)
@@ -666,7 +676,11 @@ async def archive_prompt(
     summary="List a prompt's revisions",
 )
 async def list_versions(
-    prompt_id: UUID, organization_id: UUID, prompts: PromptsRepo, versions: VersionsRepo
+    prompt_id: UUID,
+    organization_id: UUID,
+    prompts: PromptsRepo,
+    versions: VersionsRepo,
+    _caller: CurrentUserId,
 ) -> SuccessResponse[list[VersionResponse]]:
     """Every revision of one prompt, newest first."""
     prompt = await prompts.require_in_org(organization_id, prompt_id)
@@ -722,6 +736,7 @@ async def list_variables(
     prompts: PromptsRepo,
     versions: VersionsRepo,
     variables: VariablesRepo,
+    _caller: CurrentUserId,
     version_number: str | None = None,
 ) -> SuccessResponse[list[VariableResponse]]:
     """Variables declared by the live revision, or a named one."""
@@ -805,6 +820,7 @@ async def check_gate(
     versions: VersionsRepo,
     gate: Gate,
     settings: ServiceSettings,
+    _caller: CurrentUserId,
 ) -> SuccessResponse[GateResponse]:
     """Report every blocker standing between a revision and publication."""
     prompt = await prompts.require_in_org(organization_id, prompt_id)
@@ -859,6 +875,7 @@ async def render_prompt(
     body: RenderRequest,
     prompts: PromptsRepo,
     rendering: RenderingSvc,
+    _caller: CurrentUserId,
 ) -> SuccessResponse[RenderResponse]:
     """Resolve and render one prompt for use against a model.
 
@@ -937,6 +954,7 @@ async def list_scans(
     prompts: PromptsRepo,
     versions: VersionsRepo,
     scans: ScansRepo,
+    _caller: CurrentUserId,
 ) -> SuccessResponse[list[SecurityScanResponse]]:
     """Every scan of one revision, newest first."""
     prompt = await prompts.require_in_org(organization_id, prompt_id)
@@ -964,6 +982,7 @@ async def request_review(
     prompts: PromptsRepo,
     versions: VersionsRepo,
     reviews: ReviewSvc,
+    _caller: CurrentUserId,
 ) -> SuccessResponse[ReviewResponse]:
     """Ask a named reviewer to review a revision."""
     prompt = await prompts.require_in_org(organization_id, prompt_id)
