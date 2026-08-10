@@ -213,12 +213,16 @@ async def test_search_covers_slug_name_and_description_but_not_other_tenants(
     )
     await seed_prompt(prompts_repo, other_org, "alpha-prompt", name="Zeta Wording")
 
-    assert [row.id for row in await prompts_repo.search(organization_id, "alpha")] == [by_slug.id]
-    assert [row.id for row in await prompts_repo.search(organization_id, "zeta")] == [by_name.id]
-    assert [row.id for row in await prompts_repo.search(organization_id, "needle")] == [
+    assert [row.id for row in await prompts_repo.search_in_org(organization_id, "alpha")] == [
+        by_slug.id
+    ]
+    assert [row.id for row in await prompts_repo.search_in_org(organization_id, "zeta")] == [
+        by_name.id
+    ]
+    assert [row.id for row in await prompts_repo.search_in_org(organization_id, "needle")] == [
         by_description.id
     ]
-    assert await prompts_repo.search(organization_id, "unmatchable-term") == []
+    assert await prompts_repo.search_in_org(organization_id, "unmatchable-term") == []
 
 
 async def test_search_escapes_like_wildcards_rather_than_expanding_them(
@@ -227,7 +231,9 @@ async def test_search_escapes_like_wildcards_rather_than_expanding_them(
     literal = await seed_prompt(prompts_repo, organization_id, "pct", name="100% Coverage")
     await seed_prompt(prompts_repo, organization_id, "no-pct", name="100X Coverage")
 
-    assert [row.id for row in await prompts_repo.search(organization_id, "100%")] == [literal.id]
+    assert [row.id for row in await prompts_repo.search_in_org(organization_id, "100%")] == [
+        literal.id
+    ]
 
 
 async def test_search_with_a_blank_query_filters_nothing_and_respects_limit(
@@ -238,11 +244,11 @@ async def test_search_with_a_blank_query_filters_nothing_and_respects_limit(
     second = await seed_prompt(prompts_repo, organization_id, "s-two")
     await seed_prompt(prompts_repo, other_org, "s-three")
 
-    assert {row.id for row in await prompts_repo.search(organization_id, "   ")} == {
+    assert {row.id for row in await prompts_repo.search_in_org(organization_id, "   ")} == {
         first.id,
         second.id,
     }
-    assert len(await prompts_repo.search(organization_id, "", limit=1)) == 1
+    assert len(await prompts_repo.search_in_org(organization_id, "", limit=1)) == 1
 
 
 # ---- PromptRepository.list_due_for_review -----------------------------------

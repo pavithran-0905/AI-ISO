@@ -130,7 +130,17 @@ class PromptVersion(BaseModel):
     is_current: Mapped[bool] = mapped_column(Boolean, default=False)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     published_by: Mapped[str | None] = mapped_column(String(128), default=None)
-    created_by: Mapped[str | None] = mapped_column(String(128), default=None)
+    authored_by: Mapped[str | None] = mapped_column(String(128), default=None)
+    """Who wrote this wording, as a free-form actor reference.
+
+    Deliberately **not** named ``created_by``: that name belongs to
+    :class:`~shared_core.base.AuditMixin`, which docs/018 states no
+    entity may redefine, and which types it as a ``UUID``. Shadowing it
+    with a ``String`` would leave two writers on one column -- this
+    service writing an actor reference, and ``BaseRepository``'s own
+    audit machinery writing a user id -- with different value shapes and
+    no way to tell them apart afterwards. An actor here is not always a
+    user: a revision can be authored by a sweep."""
     average_score: Mapped[float | None] = mapped_column(Float, default=None)
     """Rolled up from this revision's own evaluations, so comparing two
     versions does not require re-reading every evaluation row."""

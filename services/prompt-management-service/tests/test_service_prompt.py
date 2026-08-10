@@ -92,7 +92,7 @@ async def test_create_registers_the_prompt_and_its_own_first_draft_together(
     assert version.status == PromptVersionStatus.DRAFT
     assert version.is_current is False
     assert version.published_at is None
-    assert version.created_by == "author-1"
+    assert version.authored_by == "author-1"
     assert version.estimated_tokens == estimate_tokens("Hello {{ name }}")
 
     assert await versions_repo.get_current(prompt.id) is None
@@ -325,7 +325,7 @@ async def test_add_version_records_its_own_metadata_and_announces_the_draft(
     assert added.changelog == "Warmer wording."
     assert added.template_format == TemplateFormat.MARKDOWN
     assert added.model_hint == "claude-sonnet"
-    assert added.created_by == "author-2"
+    assert added.authored_by == "author-2"
     assert added.estimated_tokens == estimate_tokens("Hi {{ name }}, welcome.")
     assert added.is_current is False
 

@@ -86,8 +86,18 @@ class PromptRepository(BaseRepository[Prompt]):
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 
-    async def search(self, organization_id: UUID, query: str, *, limit: int = 50) -> list[Prompt]:
-        """Full-text-ish search over slug, name, and description."""
+    async def search_in_org(
+        self, organization_id: UUID, query: str, *, limit: int = 50
+    ) -> list[Prompt]:
+        """Full-text-ish search over slug, name, and description.
+
+        Named apart from ``BaseRepository.search`` for the same reason
+        ``require_in_org`` is named apart from ``require_by_id``: the
+        base's own ``search`` takes an explicit field list and no tenant,
+        so overloading the name would both break substitutability and
+        make an unscoped platform-wide search look identical to a
+        tenant-scoped one at the call site.
+        """
         base = self._base_select().where(Prompt.organization_id == organization_id)
         stmt = apply_search(base, Prompt, ["slug", "name", "description"], query).limit(limit)
         result = await self._session.execute(stmt)

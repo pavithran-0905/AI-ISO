@@ -120,7 +120,7 @@ class PromptService:
                 body=body,
                 template_format=template_format,
                 estimated_tokens=estimate_tokens(body),
-                created_by=created_by,
+                authored_by=created_by,
             )
         )
         await self._record(
@@ -237,7 +237,7 @@ class PromptService:
                 changelog=changelog,
                 model_hint=model_hint,
                 estimated_tokens=estimate_tokens(body),
-                created_by=created_by,
+                authored_by=created_by,
             )
         )
         if carry_variables and source is not None:

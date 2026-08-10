@@ -549,7 +549,7 @@ async def list_prompts(
 ) -> SuccessResponse[list[PromptResponse]]:
     """Prompts registered in this organization."""
     rows = (
-        await prompts.search(organization_id, query, limit=limit)
+        await prompts.search_in_org(organization_id, query, limit=limit)
         if query
         else await prompts.list_for_org(
             organization_id,
