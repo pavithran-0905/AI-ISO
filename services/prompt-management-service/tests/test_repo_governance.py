@@ -165,7 +165,9 @@ async def test_review_list_for_version_is_newest_first_and_scoped_to_one_revisio
     oldest = await seed_review(
         reviews_repo, organization_id, version.id, "alice", created_at=ago(300)
     )
-    middle = await seed_review(reviews_repo, organization_id, version.id, "bob", created_at=ago(200))
+    middle = await seed_review(
+        reviews_repo, organization_id, version.id, "bob", created_at=ago(200)
+    )
     newest = await seed_review(
         reviews_repo, organization_id, version.id, "carol", created_at=ago(100)
     )
@@ -253,15 +255,19 @@ async def test_has_unresolved_mandatory_ignores_advisory_reviews(
     assert await reviews_repo.has_unresolved_mandatory(version.id) is False
 
 
-async def test_has_unresolved_mandatory_treats_a_rejection_as_resolved(
+async def test_has_unresolved_mandatory_counts_a_rejection_as_unresolved(
     prompts_repo: PromptRepository,
     versions_repo: PromptVersionRepository,
     reviews_repo: PromptReviewRepository,
     organization_id: uuid.UUID,
 ) -> None:
-    """``REJECTED`` is a decision that was reached, so this specific
-    gate is satisfied -- the publish is still blocked, but by the
-    approval count rather than by an outstanding review."""
+    """Unresolved means "the reviewer has not said yes", not "the
+    reviewer has not answered".
+
+    Reading ``REJECTED`` as resolved-because-final would make an outright
+    no the one mandatory verdict this gate ignores -- strictly weaker than
+    ``CHANGES_REQUESTED``, which is backwards.
+    """
     prompt = await seed_prompt(prompts_repo, organization_id, "rejected")
     version = await seed_version(versions_repo, organization_id, prompt.id, "1.0.0")
     await seed_review(
@@ -271,6 +277,134 @@ async def test_has_unresolved_mandatory_treats_a_rejection_as_resolved(
         "alice",
         decision=ReviewDecision.REJECTED,
         is_mandatory=True,
+    )
+
+    assert await reviews_repo.has_unresolved_mandatory(version.id) is True
+
+
+async def test_has_unresolved_mandatory_uses_each_reviewers_latest_verdict(
+    prompts_repo: PromptRepository,
+    versions_repo: PromptVersionRepository,
+    reviews_repo: PromptReviewRepository,
+    organization_id: uuid.UUID,
+) -> None:
+    """A reviewer can be asked twice about the same revision, so a
+    superseded objection must not block forever.
+
+    Counting every mandatory row would make a re-review round -- which
+    ``ReviewService.request`` explicitly permits once the first is no
+    longer pending -- unable to ever clear the gate.
+    """
+    prompt = await seed_prompt(prompts_repo, organization_id, "second-round")
+    version = await seed_version(versions_repo, organization_id, prompt.id, "1.0.0")
+    await seed_review(
+        reviews_repo,
+        organization_id,
+        version.id,
+        "alice",
+        decision=ReviewDecision.CHANGES_REQUESTED,
+        is_mandatory=True,
+    )
+    assert await reviews_repo.has_unresolved_mandatory(version.id) is True
+
+    await seed_review(
+        reviews_repo,
+        organization_id,
+        version.id,
+        "alice",
+        decision=ReviewDecision.APPROVED,
+        is_mandatory=True,
+    )
+
+    assert await reviews_repo.has_unresolved_mandatory(version.id) is False
+
+
+async def test_has_unresolved_mandatory_lets_a_later_verdict_block_again(
+    prompts_repo: PromptRepository,
+    versions_repo: PromptVersionRepository,
+    reviews_repo: PromptReviewRepository,
+    organization_id: uuid.UUID,
+) -> None:
+    """ "Latest verdict wins" has to cut both ways, or it is just a way to
+    unblock."""
+    prompt = await seed_prompt(prompts_repo, organization_id, "revised")
+    version = await seed_version(versions_repo, organization_id, prompt.id, "1.0.0")
+    await seed_review(
+        reviews_repo,
+        organization_id,
+        version.id,
+        "alice",
+        decision=ReviewDecision.APPROVED,
+        is_mandatory=True,
+    )
+    assert await reviews_repo.has_unresolved_mandatory(version.id) is False
+
+    await seed_review(
+        reviews_repo,
+        organization_id,
+        version.id,
+        "alice",
+        decision=ReviewDecision.REJECTED,
+        is_mandatory=True,
+    )
+
+    assert await reviews_repo.has_unresolved_mandatory(version.id) is True
+
+
+async def test_has_unresolved_mandatory_resolves_reviewers_independently(
+    prompts_repo: PromptRepository,
+    versions_repo: PromptVersionRepository,
+    reviews_repo: PromptReviewRepository,
+    organization_id: uuid.UUID,
+) -> None:
+    """One reviewer's approval never answers for another's."""
+    prompt = await seed_prompt(prompts_repo, organization_id, "two-reviewers")
+    version = await seed_version(versions_repo, organization_id, prompt.id, "1.0.0")
+    await seed_review(
+        reviews_repo,
+        organization_id,
+        version.id,
+        "alice",
+        decision=ReviewDecision.APPROVED,
+        is_mandatory=True,
+    )
+    await seed_review(
+        reviews_repo,
+        organization_id,
+        version.id,
+        "bob",
+        decision=ReviewDecision.PENDING,
+        is_mandatory=True,
+    )
+
+    assert await reviews_repo.has_unresolved_mandatory(version.id) is True
+
+
+async def test_has_unresolved_mandatory_ignores_an_advisory_second_round(
+    prompts_repo: PromptRepository,
+    versions_repo: PromptVersionRepository,
+    reviews_repo: PromptReviewRepository,
+    organization_id: uuid.UUID,
+) -> None:
+    """Only mandatory rows participate, so an advisory rejection cannot
+    undo a mandatory approval from the same person."""
+    prompt = await seed_prompt(prompts_repo, organization_id, "mixed-mandate")
+    version = await seed_version(versions_repo, organization_id, prompt.id, "1.0.0")
+    await seed_review(
+        reviews_repo,
+        organization_id,
+        version.id,
+        "alice",
+        decision=ReviewDecision.APPROVED,
+        is_mandatory=True,
+    )
+    await seed_review(
+        reviews_repo,
+        organization_id,
+        version.id,
+        "alice",
+        decision=ReviewDecision.REJECTED,
+        is_mandatory=False,
     )
 
     assert await reviews_repo.has_unresolved_mandatory(version.id) is False
@@ -371,9 +505,7 @@ async def test_approval_list_for_version_is_oldest_request_first(
     version = await seed_version(versions_repo, organization_id, prompt.id, "1.0.0")
     sibling = await seed_version(versions_repo, organization_id, prompt.id, "1.1.0")
 
-    second = await seed_approval(
-        approvals_repo, organization_id, version.id, requested_at=ago(200)
-    )
+    second = await seed_approval(approvals_repo, organization_id, version.id, requested_at=ago(200))
     first = await seed_approval(approvals_repo, organization_id, version.id, requested_at=ago(300))
     third = await seed_approval(approvals_repo, organization_id, version.id, requested_at=ago(100))
     other = await seed_approval(approvals_repo, organization_id, sibling.id, requested_at=ago(250))
@@ -598,9 +730,9 @@ async def test_list_pending_for_org_is_oldest_first_and_tenant_scoped(
     assert [row.id for row in rows] == [first.id, second.id]
     assert {decided.id, theirs.id}.isdisjoint({row.id for row in rows})
 
-    assert [row.id for row in await approvals_repo.list_pending_for_org(organization_id, limit=1)] == [
-        first.id
-    ]
+    assert [
+        row.id for row in await approvals_repo.list_pending_for_org(organization_id, limit=1)
+    ] == [first.id]
     assert await approvals_repo.list_pending_for_org(uuid.uuid4()) == []
 
 
@@ -742,16 +874,16 @@ async def test_count_findings_in_window_sums_only_in_window_rows(
     await seed_scan(scans_repo, organization_id, version.id, scanned_at=since, finding_count=2)
     await seed_scan(scans_repo, organization_id, version.id, scanned_at=ago(2_400), finding_count=3)
     await seed_scan(scans_repo, organization_id, version.id, scanned_at=until, finding_count=100)
-    await seed_scan(scans_repo, organization_id, version.id, scanned_at=ago(7_200), finding_count=50)
-    await seed_scan(scans_repo, other_org, theirs_version.id, scanned_at=ago(2_400), finding_count=9)
-
-    assert (
-        await scans_repo.count_findings_in_window(organization_id, since=since, until=until) == 5
+    await seed_scan(
+        scans_repo, organization_id, version.id, scanned_at=ago(7_200), finding_count=50
     )
+    await seed_scan(
+        scans_repo, other_org, theirs_version.id, scanned_at=ago(2_400), finding_count=9
+    )
+
+    assert await scans_repo.count_findings_in_window(organization_id, since=since, until=until) == 5
     assert (
-        await scans_repo.count_findings_in_window(
-            organization_id, since=ago(600), until=utcnow()
-        )
+        await scans_repo.count_findings_in_window(organization_id, since=ago(600), until=utcnow())
         == 0
     )
     assert await scans_repo.count_findings_in_window(uuid.uuid4(), since=since, until=until) == 0

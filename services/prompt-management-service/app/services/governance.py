@@ -360,7 +360,10 @@ class PublicationGate:
         blockers: list[str] = []
 
         if await self._reviews.has_unresolved_mandatory(version.id):
-            blockers.append("A mandatory review is still outstanding.")
+            # Not "still outstanding": a mandatory reviewer who rejected
+            # or asked for changes has answered, and saying so blocks a
+            # publish just as an unanswered request does.
+            blockers.append("A mandatory reviewer has not approved this revision.")
 
         approved = await self._approvals.count_approved(version.id)
         if approved < required_approvals:

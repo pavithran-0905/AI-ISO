@@ -355,9 +355,7 @@ async def test_accepted_savings_in_window_counts_accepted_only(
         == 0
     )
     assert (
-        await optimizations_repo.accepted_savings_in_window(
-            uuid.uuid4(), since=since, until=until
-        )
+        await optimizations_repo.accepted_savings_in_window(uuid.uuid4(), since=since, until=until)
         == 0
     )
 
@@ -548,9 +546,7 @@ async def test_count_by_action_groups_by_action_from_the_cutoff_inclusive(
     other_org = uuid.uuid4()
     since = ago(3_600)
 
-    await seed_audit(
-        audit_repo, organization_id, action=AuditAction.PUBLISHED, occurred_at=since
-    )
+    await seed_audit(audit_repo, organization_id, action=AuditAction.PUBLISHED, occurred_at=since)
     await seed_audit(
         audit_repo, organization_id, action=AuditAction.PUBLISHED, occurred_at=ago(1_800)
     )

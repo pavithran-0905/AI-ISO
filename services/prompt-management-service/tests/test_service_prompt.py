@@ -269,7 +269,9 @@ async def test_add_version_bumps_from_the_highest_version_not_the_live_pointer(
     time and collide with a version that already exists.
     """
     prompt, first = await make_published("greeting")
-    second = await prompt_service.add_version(prompt, body="Hi {{ name }}", component=VersionBump.MINOR)
+    second = await prompt_service.add_version(
+        prompt, body="Hi {{ name }}", component=VersionBump.MINOR
+    )
     prompt = await prompt_service.publish(prompt, second)
     prompt = await prompt_service.rollback(prompt, to_version_number=first.version_number)
 
@@ -423,9 +425,7 @@ async def test_carry_variables_false_starts_the_new_revision_with_none_declared(
     prompt, first = await make_prompt("greeting")
     await declare(variables_repo, first, "name")
 
-    second = await prompt_service.add_version(
-        prompt, body="Hi {{ name }}", carry_variables=False
-    )
+    second = await prompt_service.add_version(prompt, body="Hi {{ name }}", carry_variables=False)
 
     assert await variables_repo.list_for_version(second.id) == []
     assert len(await variables_repo.list_for_version(first.id)) == 1
@@ -469,9 +469,7 @@ async def test_a_service_without_a_variable_repository_simply_carries_nothing(
         body="Hello {{ name }}",
     )
     await variables_repo.create(
-        PromptVariable(
-            organization_id=organization_id, prompt_version_id=first.id, name="name"
-        )
+        PromptVariable(organization_id=organization_id, prompt_version_id=first.id, name="name")
     )
 
     second = await service.add_version(prompt, body="Hi {{ name }}")
@@ -674,7 +672,7 @@ async def test_rollback_refuses_a_version_that_does_not_exist(
 ) -> None:
     prompt, _first = await make_published("greeting")
 
-    with pytest.raises(ConflictError, match="has no version 9.9.9"):
+    with pytest.raises(ConflictError, match=r"has no version 9\.9\.9"):
         await prompt_service.rollback(prompt, to_version_number="9.9.9")
 
 

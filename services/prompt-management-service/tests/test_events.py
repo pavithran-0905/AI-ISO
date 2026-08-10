@@ -25,6 +25,7 @@ from pydantic import ValidationError
 from shared_core.events import default_registry
 from shared_core.events.base import BaseEvent, DomainEvent, EventType
 
+from app.events import prompt_events
 from app.events.prompt_events import (
     PromptApprovalRequestedEvent,
     PromptCreatedEvent,
@@ -86,8 +87,8 @@ def test_all_nine_events_are_distinct_classes_under_distinct_names() -> None:
 
 
 def test_the_module_exports_exactly_the_nine_registered_events() -> None:
-    from app.events import prompt_events
-
+    """``__all__`` drifting from the module's real contents is how an
+    event ends up published but unimportable by its consumers."""
     assert set(prompt_events.__all__) == {cls.__name__ for cls, _name in EVENT_CLASSES}
 
 
@@ -119,9 +120,7 @@ def test_constructing_requires_only_source_service(
 
 
 @pytest.mark.parametrize(("event_cls", "_expected_name"), EVENT_CLASSES)
-def test_source_service_is_mandatory(
-    event_cls: type[DomainEvent], _expected_name: str
-) -> None:
+def test_source_service_is_mandatory(event_cls: type[DomainEvent], _expected_name: str) -> None:
     with pytest.raises(ValidationError):
         event_cls()
 

@@ -53,18 +53,44 @@ class PromptReviewRepository(BaseRepository[PromptReview]):
     async def has_unresolved_mandatory(self, prompt_version_id: UUID) -> bool:
         """Whether a mandatory review is still outstanding.
 
-        ``CHANGES_REQUESTED`` counts as unresolved alongside
-        ``PENDING``: a reviewer who asked for changes has not approved,
-        and treating that as resolved would let a version publish over
-        an open objection.
+        Decided **per reviewer, on that reviewer's latest mandatory
+        verdict**, because a reviewer can be asked more than once about
+        the same revision: :meth:`~app.services.governance.ReviewService.request`
+        refuses only a second *pending* request, so re-review after
+        ``CHANGES_REQUESTED`` is a supported flow. Counting every row
+        instead would leave the superseded objection blocking forever,
+        making the revision permanently unpublishable and the second
+        round pointless -- the only escape being to cut a byte-identical
+        revision purely to reset review state.
+
+        Unresolved means the reviewer has not said yes:
+
+        - ``PENDING`` -- they were asked and have not answered.
+        - ``CHANGES_REQUESTED`` -- they asked for changes; publishing
+          over that is publishing over an open objection.
+        - ``REJECTED`` -- the strongest objection there is. It blocks for
+          the same reason ``CHANGES_REQUESTED`` does, and more so:
+          treating a rejection as "resolved because it is final" would
+          let a mandatory reviewer's outright no be the one verdict the
+          gate ignores.
+
+        Only ``APPROVED`` resolves a reviewer.
         """
-        stmt = self._base_select().where(
-            PromptReview.prompt_version_id == prompt_version_id,
-            PromptReview.is_mandatory.is_(True),
-            PromptReview.decision.in_((ReviewDecision.PENDING, ReviewDecision.CHANGES_REQUESTED)),
+        stmt = (
+            self._base_select()
+            .where(
+                PromptReview.prompt_version_id == prompt_version_id,
+                PromptReview.is_mandatory.is_(True),
+            )
+            .order_by(PromptReview.created_at.desc(), PromptReview.id.desc())
         )
         result = await self._session.execute(stmt)
-        return result.scalars().first() is not None
+
+        latest_by_reviewer: dict[str, PromptReview] = {}
+        for row in result.scalars().all():
+            # Newest first, so the first row seen per reviewer is theirs.
+            latest_by_reviewer.setdefault(row.reviewer_id, row)
+        return any(row.decision != ReviewDecision.APPROVED for row in latest_by_reviewer.values())
 
     async def count_by_decision(self, prompt_version_id: UUID) -> dict[str, int]:
         """How many reviews of each decision one revision has."""

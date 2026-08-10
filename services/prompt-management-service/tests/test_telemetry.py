@@ -216,9 +216,11 @@ def test_nested_helpers_are_parent_and_child(recorder: Recorder) -> None:
 def test_an_exception_inside_a_span_still_closes_it(recorder: Recorder) -> None:
     """The span must be exported even when the traced work fails --
     otherwise failures are exactly the traces that go missing."""
-    with pytest.raises(RuntimeError, match="boom"):
-        with trace_rendering(recorder.tracer, slug="s", version_number="1.0.0", depth=1):
-            raise RuntimeError("boom")
+    with (
+        pytest.raises(RuntimeError, match="boom"),
+        trace_rendering(recorder.tracer, slug="s", version_number="1.0.0", depth=1),
+    ):
+        raise RuntimeError("boom")
 
     span = recorder.only
     assert span.name == "prompt.render"

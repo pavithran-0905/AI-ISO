@@ -17,6 +17,7 @@ import uuid
 from typing import Any
 
 import pytest
+import pytest_asyncio
 from shared_core.exceptions.conflict import ConflictError
 
 from app.models.enums import (
@@ -564,19 +565,18 @@ async def test_an_untouched_revision_is_blocked_by_every_gate_at_once(
     )
 
 
-async def test_a_mandatory_review_asking_for_changes_still_blocks(
-    publication_gate: PublicationGate,
-    review_service: ReviewService,
+@pytest_asyncio.fixture
+async def gated_version(
     approval_service: ApprovalService,
     approvals_repo: PromptApprovalRepository,
     security_service: SecurityService,
     variables_repo: PromptVariableRepository,
     make_prompt: MakePromptFn,
-) -> None:
-    """A reviewer who asked for changes has not approved.
+) -> PromptVersion:
+    """A revision whose approval and scan gates are already satisfied.
 
-    Treating ``CHANGES_REQUESTED`` as resolved would let a revision
-    publish straight over an open objection.
+    Leaves the *review* gate as the only variable, so a blocked result
+    can only be about reviews.
     """
     _prompt, version = await make_prompt("greeting")
     await variables_repo.create(
@@ -586,19 +586,132 @@ async def test_a_mandatory_review_asking_for_changes_still_blocks(
     )
     await security_service.scan_version(version)
     await approve_by(approval_service, approvals_repo, version, "alice")
+    return version
 
-    review = await review_service.request(version, reviewer_id="reviewer-1", is_mandatory=True)
+
+async def test_a_mandatory_review_asking_for_changes_blocks(
+    publication_gate: PublicationGate,
+    review_service: ReviewService,
+    gated_version: PromptVersion,
+) -> None:
+    """A reviewer who asked for changes has not approved.
+
+    Treating ``CHANGES_REQUESTED`` as resolved would let a revision
+    publish straight over an open objection.
+    """
+    review = await review_service.request(
+        gated_version, reviewer_id="reviewer-1", is_mandatory=True
+    )
     await review_service.submit(review, decision=ReviewDecision.CHANGES_REQUESTED)
 
-    blocked = await publication_gate.evaluate(version)
+    blocked = await publication_gate.evaluate(gated_version)
     assert blocked.allowed is False
-    assert blocked.blockers == ("A mandatory review is still outstanding.",)
+    assert blocked.blockers == ("A mandatory reviewer has not approved this revision.",)
 
-    second = await review_service.request(version, reviewer_id="reviewer-1", is_mandatory=True)
+
+async def test_a_mandatory_rejection_blocks(
+    publication_gate: PublicationGate,
+    review_service: ReviewService,
+    gated_version: PromptVersion,
+) -> None:
+    """Rejection is the strongest objection there is.
+
+    Reading it as "resolved because it is final" would make an outright
+    no the one mandatory verdict the gate ignores -- strictly weaker than
+    ``CHANGES_REQUESTED``, which is backwards.
+    """
+    review = await review_service.request(
+        gated_version, reviewer_id="reviewer-1", is_mandatory=True
+    )
+    await review_service.submit(review, decision=ReviewDecision.REJECTED)
+
+    blocked = await publication_gate.evaluate(gated_version)
+    assert blocked.allowed is False
+    assert blocked.blockers == ("A mandatory reviewer has not approved this revision.",)
+
+
+async def test_a_second_review_round_can_clear_a_changes_requested_verdict(
+    publication_gate: PublicationGate,
+    review_service: ReviewService,
+    gated_version: PromptVersion,
+) -> None:
+    """``ReviewService.request`` refuses only a second *pending* request,
+    so re-review after ``CHANGES_REQUESTED`` is a supported flow -- and
+    it has to be able to actually clear the gate.
+
+    Counting every mandatory row instead of each reviewer's latest would
+    leave the superseded objection blocking forever, making the revision
+    permanently unpublishable and the second round pointless. A verdict
+    is never rewritten: both rows survive for the audit trail.
+    """
+    first = await review_service.request(gated_version, reviewer_id="reviewer-1", is_mandatory=True)
+    await review_service.submit(first, decision=ReviewDecision.CHANGES_REQUESTED)
+    assert (await publication_gate.evaluate(gated_version)).allowed is False
+
+    second = await review_service.request(
+        gated_version, reviewer_id="reviewer-1", is_mandatory=True
+    )
     await review_service.submit(second, decision=ReviewDecision.APPROVED)
-    assert (await publication_gate.evaluate(version)).allowed is False
 
-    await review_service.submit(review, decision=ReviewDecision.APPROVED)
+    assert (await publication_gate.evaluate(gated_version)).allowed is True
+    assert first.decision == ReviewDecision.CHANGES_REQUESTED
+
+
+async def test_a_later_round_rejecting_reopens_the_gate_it_had_cleared(
+    publication_gate: PublicationGate,
+    review_service: ReviewService,
+    gated_version: PromptVersion,
+) -> None:
+    """The latest verdict wins in both directions. A reviewer who
+    approved and then, asked again, rejects must block -- otherwise
+    "latest verdict" would only ever be a way to unblock."""
+    first = await review_service.request(gated_version, reviewer_id="reviewer-1", is_mandatory=True)
+    await review_service.submit(first, decision=ReviewDecision.APPROVED)
+    assert (await publication_gate.evaluate(gated_version)).allowed is True
+
+    second = await review_service.request(
+        gated_version, reviewer_id="reviewer-1", is_mandatory=True
+    )
+    await review_service.submit(second, decision=ReviewDecision.REJECTED)
+
+    assert (await publication_gate.evaluate(gated_version)).allowed is False
+
+
+async def test_one_reviewer_approving_does_not_answer_for_another(
+    publication_gate: PublicationGate,
+    review_service: ReviewService,
+    gated_version: PromptVersion,
+) -> None:
+    """Resolution is per reviewer, so a second mandatory reviewer who has
+    not answered still blocks."""
+    approved = await review_service.request(gated_version, reviewer_id="alice", is_mandatory=True)
+    await review_service.submit(approved, decision=ReviewDecision.APPROVED)
+    await review_service.request(gated_version, reviewer_id="bob", is_mandatory=True)
+
+    assert (await publication_gate.evaluate(gated_version)).allowed is False
+
+
+async def test_an_advisory_rejection_never_blocks(
+    publication_gate: PublicationGate,
+    review_service: ReviewService,
+    gated_version: PromptVersion,
+) -> None:
+    """``is_mandatory`` is the whole distinction: an advisory review is
+    an opinion, and one that could block would not be advisory."""
+    review = await review_service.request(gated_version, reviewer_id="reviewer-1")
+    await review_service.submit(review, decision=ReviewDecision.REJECTED)
+
+    assert (await publication_gate.evaluate(gated_version)).allowed is True
+
+
+async def test_a_revision_nobody_was_asked_to_review_is_not_blocked_on_reviews(
+    publication_gate: PublicationGate,
+    gated_version: PromptVersion,
+) -> None:
+    """Mandatory reviews are opt-in; the approval gate is the always-on
+    one. Blocking here would mean no prompt could ever publish without
+    someone first requesting a review of it."""
+    assert (await publication_gate.evaluate(gated_version)).allowed is True
 
 
 async def test_a_fully_satisfied_gate_opens_and_says_so(

@@ -178,9 +178,7 @@ async def test_test_list_for_prompt_is_alphabetical_and_can_exclude_disabled(
 
     zulu = await seed_test(tests_repo, organization_id, prompt.id, "Zulu case", enabled=True)
     alpha = await seed_test(tests_repo, organization_id, prompt.id, "Alpha case", enabled=True)
-    disabled = await seed_test(
-        tests_repo, organization_id, prompt.id, "Mike case", enabled=False
-    )
+    disabled = await seed_test(tests_repo, organization_id, prompt.id, "Mike case", enabled=False)
     other = await seed_test(tests_repo, organization_id, sibling.id, "Alpha case")
 
     everything = await tests_repo.list_for_prompt(prompt.id)
@@ -203,18 +201,10 @@ async def test_test_list_for_org_is_newest_first_and_honours_limit_and_offset(
     prompt = await seed_prompt(prompts_repo, organization_id, "org-tests")
     theirs_prompt = await seed_prompt(prompts_repo, other_org, "their-tests")
 
-    oldest = await seed_test(
-        tests_repo, organization_id, prompt.id, "Oldest", created_at=ago(300)
-    )
-    middle = await seed_test(
-        tests_repo, organization_id, prompt.id, "Middle", created_at=ago(200)
-    )
-    newest = await seed_test(
-        tests_repo, organization_id, prompt.id, "Newest", created_at=ago(100)
-    )
-    theirs = await seed_test(
-        tests_repo, other_org, theirs_prompt.id, "Theirs", created_at=ago(150)
-    )
+    oldest = await seed_test(tests_repo, organization_id, prompt.id, "Oldest", created_at=ago(300))
+    middle = await seed_test(tests_repo, organization_id, prompt.id, "Middle", created_at=ago(200))
+    newest = await seed_test(tests_repo, organization_id, prompt.id, "Newest", created_at=ago(100))
+    theirs = await seed_test(tests_repo, other_org, theirs_prompt.id, "Theirs", created_at=ago(150))
 
     listed = await tests_repo.list_for_org(organization_id)
     assert [row.id for row in listed] == [newest.id, middle.id, oldest.id]
@@ -316,7 +306,11 @@ async def test_count_failed_for_version_counts_errored_alongside_failed(
 
     for status in (PromptTestRunStatus.FAILED, PromptTestRunStatus.ERRORED):
         await seed_result(test_results_repo, organization_id, case.id, version.id, status=status)
-    for status in (PromptTestRunStatus.PASSED, PromptTestRunStatus.PENDING, PromptTestRunStatus.RUNNING):
+    for status in (
+        PromptTestRunStatus.PASSED,
+        PromptTestRunStatus.PENDING,
+        PromptTestRunStatus.RUNNING,
+    ):
         await seed_result(test_results_repo, organization_id, case.id, version.id, status=status)
     await seed_result(
         test_results_repo,
