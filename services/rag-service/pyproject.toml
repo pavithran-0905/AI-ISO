@@ -1,0 +1,81 @@
+[project]
+name = "rag-service"
+version = "0.1.0"
+description = "AI-IOS Enterprise RAG Service — document ingestion, multi-format parsing, chunking, embedding generation, pluggable vector storage, hybrid retrieval, GraphRAG, reranking, context assembly, citations, indexing, evaluation, and audit"
+requires-python = ">=3.13"
+dependencies = [
+  "fastapi>=0.115.0",
+  "uvicorn[standard]>=0.32.0",
+  "pydantic[email]>=2.9.0",
+  "pydantic-settings>=2.6.0",
+  "prometheus-fastapi-instrumentator>=7.0.0",
+  "sqlalchemy[asyncio]>=2.0.36",
+  "asyncpg>=0.30.0",
+  "alembic>=1.13.0",
+  "psycopg[binary]>=3.2.0",
+  "httpx>=0.27.0",
+  # PostgreSQL is this service's default vector store. The compose stack
+  # already runs pgvector/pgvector:pg17, so this is the one provider that
+  # needs no infrastructure nobody is running -- see
+  # app/vector_store/README-worthy reasoning in app/vector_store/base.py.
+  "pgvector>=0.3.0",
+  # Document parsing. Each of these covers one format the spec names and
+  # nothing more; OCR is deliberately an injected hook rather than a
+  # dependency, because it needs a Tesseract binary this image does not
+  # ship -- see app/parsers/ocr.py.
+  "pypdf>=5.1.0",
+  "python-docx>=1.1.2",
+  "beautifulsoup4>=4.12.0",
+  "lxml>=5.3.0",
+  "pyyaml>=6.0.2",
+  # Neo4j for GraphRAG. Every other consumer in this monorepo depends on
+  # the async driver directly -- shared_core carries only Neo4jSettings,
+  # no client.
+  "neo4j>=5.26.0",
+  "shared-core",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3.0",
+  "pytest-asyncio>=0.24.0",
+  "pytest-cov>=6.0.0",
+  "pytest-httpx>=0.35.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+shared-core = { workspace = true }
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+addopts = "-ra --strict-markers --strict-config"
+testpaths = ["tests"]
+filterwarnings = [
+  "error",
+  # The same confirmed environment artefact every prior AI-IOS service's
+  # own conftest documents: on Windows' ProactorEventLoop an asyncpg
+  # connection properly disposed at one test's teardown is sometimes only
+  # garbage-collected during a later, unrelated test whose event loop is
+  # already closed, so asyncpg's __del__ raises an unraisable
+  # ResourceWarning pytest attributes to that later test. Not a
+  # connection leak in this service's own code.
+  "ignore::pytest.PytestUnraisableExceptionWarning",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["app"]
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+fail_under = 95
+show_missing = true
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
+  "def __repr__",
+]
