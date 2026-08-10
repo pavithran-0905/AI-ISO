@@ -149,17 +149,27 @@ def declared_variables(body: str) -> tuple[str, ...]:
     rather than a regex, so ``{% for row in rows %}{{ row.x }}{% endfor %}``
     correctly reports ``rows`` and not ``row``.
 
+    **Both calls are guarded, not just the parse.**
+    ``find_undeclared_variables`` runs Jinja2's code generator, which
+    raises :class:`~jinja2.TemplateAssertionError` for problems the
+    parser accepts but compilation rejects -- an unknown filter is the
+    common one. Guarding only ``parse()`` lets that escape as a raw
+    Jinja2 exception, which then surfaces to an API caller instead of
+    this module's own error type.
+
     Raises:
         TemplateRenderError: If *body* is not valid Jinja2.
     """
     environment = SandboxedEnvironment(undefined=StrictUndefined)
     try:
         parsed = environment.parse(body)
+        return tuple(sorted(meta.find_undeclared_variables(parsed)))
     except TemplateSyntaxError as exc:
+        # TemplateAssertionError subclasses TemplateSyntaxError, so this
+        # covers both the parse and the compile failure modes.
         raise TemplateRenderError(
             f"Template syntax error on line {exc.lineno}: {exc.message}"
         ) from exc
-    return tuple(sorted(meta.find_undeclared_variables(parsed)))
 
 
 def validate_syntax(body: str) -> str | None:
