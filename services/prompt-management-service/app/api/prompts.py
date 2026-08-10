@@ -58,6 +58,7 @@ from app.models.enums import (
     PromptType,
     ReportKind,
 )
+from app.models.prompt import PromptVersion
 from app.models.template import PromptVariable
 from app.schemas.governance import (
     AbTestCreateRequest,
@@ -104,6 +105,36 @@ router = APIRouter(prefix="/prompts", tags=["Prompts"])
 
 def _meta() -> ResponseMeta:
     return ResponseMeta(request_id=get_log_context().request_id or "unknown")
+
+
+async def _resolve_version(
+    versions: VersionsRepo, prompt_id: UUID, version_number: str | None
+) -> PromptVersion:
+    """The revision an authoring request means.
+
+    Named version, else the live one, else the newest draft. That last
+    fallback matters: a prompt that has never been published has no
+    live revision at all, so without it an author could not inspect or
+    test the draft they just created -- which is exactly when they need
+    to.
+
+    Raises:
+        NotFoundError: If the prompt has no such revision, or none at all.
+    """
+    if version_number is not None:
+        version = await versions.get_by_number(prompt_id, version_number)
+        if version is None:
+            raise NotFoundError(f"This prompt has no version {version_number}.")
+        return version
+
+    current = await versions.get_current(prompt_id)
+    if current is not None:
+        return current
+
+    revisions = await versions.list_for_prompt(prompt_id)
+    if not revisions:
+        raise NotFoundError("This prompt has no revisions.")
+    return revisions[0]
 
 
 async def _store_variables(
@@ -199,13 +230,7 @@ async def run_test(
         NotFoundError: If the test or the target revision is absent.
     """
     test = await tests_repo.require_in_org(organization_id, test_id)
-    version = (
-        await versions.get_by_number(test.prompt_id, body.version_number)
-        if body.version_number
-        else await versions.get_current(test.prompt_id)
-    )
-    if version is None:
-        raise NotFoundError("No such revision to run this test against.")
+    version = await _resolve_version(versions, test.prompt_id, body.version_number)
     result = await tests.run(test, version, actual_output=body.actual_output, run_by=str(caller))
     return SuccessResponse(
         message="Test run.", data=TestResultResponse.model_validate(result), meta=_meta()
@@ -701,13 +726,7 @@ async def list_variables(
 ) -> SuccessResponse[list[VariableResponse]]:
     """Variables declared by the live revision, or a named one."""
     prompt = await prompts.require_in_org(organization_id, prompt_id)
-    version = (
-        await versions.get_by_number(prompt.id, version_number)
-        if version_number
-        else await versions.get_current(prompt.id)
-    )
-    if version is None:
-        raise NotFoundError("No such revision.")
+    version = await _resolve_version(versions, prompt.id, version_number)
     rows = await variables.list_for_version(version.id)
     return SuccessResponse(
         message="Variables listed.",
