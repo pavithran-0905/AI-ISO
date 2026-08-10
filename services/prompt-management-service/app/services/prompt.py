@@ -37,9 +37,11 @@ from app.models.enums import (
     VersionBump,
 )
 from app.models.prompt import Prompt, PromptVersion
+from app.models.template import PromptVariable
 from app.optimization.tokens import estimate_tokens
 from app.repositories.analytics import PromptAuditRepository
 from app.repositories.prompt import PromptRepository, PromptVersionRepository
+from app.repositories.template import PromptVariableRepository
 from app.templating.renderer import validate_syntax
 from app.types import EventPublisher
 from app.versioning import semver
@@ -57,11 +59,13 @@ class PromptService:
         audit: PromptAuditRepository,
         *,
         publish_event: EventPublisher,
+        variables: PromptVariableRepository | None = None,
     ) -> None:
         self._prompts = prompts
         self._versions = versions
         self._audit = audit
         self._publish_event = publish_event
+        self._variables = variables
 
     async def create(
         self,
@@ -191,12 +195,21 @@ class PromptService:
         template_format: TemplateFormat = TemplateFormat.PLAIN_TEXT,
         model_hint: str | None = None,
         created_by: str | None = None,
+        carry_variables: bool = True,
     ) -> PromptVersion:
         """Add a new draft revision, bumping from the highest existing one.
 
         Bumps from the **highest** version, not the currently-published
         one: after a rollback those differ, and bumping from the live
         pointer would generate a number that already exists.
+
+        Variable declarations are **copied forward** from the revision
+        being bumped from, unless *carry_variables* is false. Variables
+        are stored per revision so that approving one version is not
+        retroactively changed by a later version adding a variable --
+        but that would otherwise mean every new revision starts with
+        none declared, and a one-word wording tweak would fail to
+        render until the author re-declared everything by hand.
 
         Raises:
             ConflictError: If *prompt* is archived.
@@ -212,6 +225,7 @@ class PromptService:
         highest = (
             semver.sort_versions([row.version_number for row in existing])[-1] if existing else None
         )
+        source = next((row for row in existing if row.version_number == highest), None)
         version = await self._versions.create(
             PromptVersion(
                 organization_id=prompt.organization_id,
@@ -226,6 +240,9 @@ class PromptService:
                 created_by=created_by,
             )
         )
+        if carry_variables and source is not None:
+            await self._copy_variables(source.id, version)
+
         await self._record(
             prompt,
             action=AuditAction.VERSION_CREATED,
@@ -470,6 +487,34 @@ class PromptService:
         """Stamp *prompt* as reviewed now ("GOVERNANCE": Review Cycle)."""
         prompt.last_reviewed_at = datetime.now(UTC)
         return await self._prompts.update(prompt)
+
+    async def _copy_variables(self, from_version_id: UUID, to_version: PromptVersion) -> None:
+        """Copy one revision's variable declarations onto a new one.
+
+        Copies rather than shares rows, so editing the new revision's
+        declarations can never reach back and alter what an already-
+        approved revision requires -- which is the entire reason
+        variables are per-revision in the first place.
+        """
+        if self._variables is None:
+            return
+        for row in await self._variables.list_for_version(from_version_id):
+            await self._variables.create(
+                PromptVariable(
+                    organization_id=to_version.organization_id,
+                    prompt_version_id=to_version.id,
+                    name=row.name,
+                    description=row.description,
+                    kind=row.kind,
+                    value_type=row.value_type,
+                    default_value=row.default_value,
+                    required=row.required,
+                    secret_reference=row.secret_reference,
+                    computed_expression=row.computed_expression,
+                    validation_rules=dict(row.validation_rules or {}),
+                    is_masked=row.is_masked,
+                )
+            )
 
     @staticmethod
     def _require_valid_template(body: str) -> None:
