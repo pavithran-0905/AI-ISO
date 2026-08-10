@@ -233,6 +233,32 @@ def score_cost(cost_usd: float, *, budget_usd: float = 0.05) -> MetricScore:
     )
 
 
+_NUMBER = re.compile(r"\b\d[\d,.]*\b")
+_CAPITALISED = re.compile(r"\b[A-Z][a-z]{2,}\b")
+_SENTENCE_BOUNDARY = re.compile(r"(?:[.!?]\s+|\n\s*)$")
+
+
+def _specific_claims(text: str) -> set[str]:
+    """Figures and proper nouns a grounding set could support.
+
+    **A capitalised word counts only if it appears at least once away
+    from a sentence boundary.** English capitalises the first word of
+    every sentence, so counting those as proper nouns would make "The"
+    a factual claim in almost every output -- systematically marking
+    well-grounded text as hallucinated.
+
+    The check is per *occurrence*, not per word: "The Paris office.
+    Paris grew." must still yield ``Paris``, because one of its two
+    occurrences sits mid-sentence. Excluding by word would lose it.
+    """
+    claims = set(_NUMBER.findall(text))
+    for match in _CAPITALISED.finditer(text):
+        preceding = text[: match.start()]
+        if preceding and not _SENTENCE_BOUNDARY.search(preceding):
+            claims.add(match.group())
+    return claims
+
+
 def score_hallucination_risk(actual: str, grounding: Sequence[str] = ()) -> MetricScore:
     """Risk that the output asserts things its grounding does not support.
 
@@ -256,7 +282,7 @@ def score_hallucination_risk(actual: str, grounding: Sequence[str] = ()) -> Metr
         )
 
     grounding_text = " ".join(grounding).lower()
-    claims = set(re.findall(r"\b\d[\d,.]*\b|\b[A-Z][a-z]{2,}\b", actual))
+    claims = _specific_claims(actual)
     if not claims:
         return MetricScore(
             metric=EvaluationMetric.HALLUCINATION,
