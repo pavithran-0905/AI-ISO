@@ -40,7 +40,42 @@ always English function words and would link to nothing useful -- but
 they are still kept inside phrases, which is why the tokenizer above does
 not filter them out."""
 
-_STOPWORDS = frozenset(["the", "and", "for", "with", "from", "that", "this", "what", "why", "how", "when", "where", "which", "who", "does", "are", "was", "were", "will", "would", "should", "could", "have", "has", "had", "been", "being", "not", "but"])
+_STOPWORDS = frozenset(
+    [
+        "the",
+        "and",
+        "for",
+        "with",
+        "from",
+        "that",
+        "this",
+        "what",
+        "why",
+        "how",
+        "when",
+        "where",
+        "which",
+        "who",
+        "does",
+        "are",
+        "was",
+        "were",
+        "will",
+        "would",
+        "should",
+        "could",
+        "have",
+        "has",
+        "had",
+        "been",
+        "being",
+        "not",
+        "but",
+    ]
+)
+"""Dropped from standalone candidates only. A query is mostly function
+words, and linking on them would seed a traversal from whatever node
+happens to be called "How"."""
 
 MAX_SEED_ENTITIES = 8
 """How many linked entities seed a traversal. Beyond a handful the
@@ -227,13 +262,14 @@ class GraphRetriever:
         expanded = await self.expand(
             seeds, organization_id, depth=depth, relationship_types=relationship_types
         )
-        # The seeds themselves belong in the result: the node the query
-        # named is usually the most relevant one, and an expansion that
-        # returned only its neighbours would omit it.
-        known = {node.key for node in expanded.nodes}
+        # The seeds themselves belong in the result, first: the node the
+        # query named is usually the most relevant one, and an expansion
+        # that returned only its neighbours would omit it. Deduplicated
+        # because a seed is reachable from another seed.
+        seed_keys = {node.key for node in seeds}
         expanded.nodes = [
             *seeds,
-            *(n for n in expanded.nodes if n.key not in {s.key for s in seeds}),
+            *(node for node in expanded.nodes if node.key not in seed_keys),
         ]
         return expanded
 
