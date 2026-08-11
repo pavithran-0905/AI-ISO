@@ -20,6 +20,7 @@ metadata joins are new here.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import UTC, datetime
 from uuid import UUID
 
 from shared_core.logging.logger import get_logger
@@ -44,6 +45,11 @@ from app.vector_store.base import (
 logger = get_logger("app.vector_store.pgvector")
 
 _CLASSIFICATIONS_BY_RANK = ("public", "internal", "confidential", "restricted", "secret")
+
+_MAX_NAMED_IN_ERROR = 5
+"""How many chunk ids to name before eliding. Enough to start debugging
+with, few enough that a ten-thousand-chunk mismatch does not produce an
+error message no log viewer will render."""
 
 
 class PgVectorStore:
@@ -71,6 +77,15 @@ class PgVectorStore:
         the natural key is ``(chunk, provider, model)``, and a chunk
         re-embedded under a *different* model must keep both vectors,
         which an upsert keyed on the chunk alone would destroy.
+
+        Both statements run inside the caller's transaction, so a failure
+        anywhere in the batch leaves neither the deletions nor the
+        insertions -- the retry then sees exactly the state the first
+        attempt started from.
+
+        Raises:
+            VectorStoreError: If a record's vector is the wrong width for
+                this store, or the write fails.
         """
         if not records:
             return 0
@@ -82,6 +97,7 @@ class PgVectorStore:
                 )
 
         chunk_ids = [record.chunk_id for record in records]
+        embedded_at = datetime.now(UTC)
         try:
             await self._session.execute(
                 delete(EmbeddingVector).where(
@@ -90,9 +106,50 @@ class PgVectorStore:
                 )
             )
             await self._session.flush()
+            self._session.add_all(
+                [
+                    EmbeddingVector(
+                        organization_id=record.organization_id,
+                        document_id=record.document_id,
+                        document_chunk_id=record.chunk_id,
+                        provider=self._embedding_provider,
+                        model_name=self._model,
+                        dimensions=self._dimensions,
+                        vector=list(record.vector),
+                        token_count=record.token_count,
+                        cost_usd=record.cost_usd,
+                        content_hash=record.content_hash,
+                        embedded_at=embedded_at,
+                    )
+                    for record in records
+                ]
+            )
+            await self._session.flush()
         except SQLAlchemyError as exc:
-            raise VectorStoreError(f"Could not replace existing vectors: {exc}") from exc
+            raise VectorStoreError(f"Could not store vectors: {exc}") from exc
         return len(records)
+
+    async def delete_chunks(self, chunk_ids: Sequence[UUID]) -> int:
+        """Remove specific chunks' vectors under this model.
+
+        A **hard** delete keyed on ``(chunk, model)`` rather than on the
+        chunk alone: a chunk re-embedded under a second model must keep
+        both vectors, and a delete keyed on the chunk would destroy the
+        one nobody asked about.
+        """
+        if not chunk_ids:
+            return 0
+        try:
+            result = await self._session.execute(
+                delete(EmbeddingVector).where(
+                    EmbeddingVector.document_chunk_id.in_(list(chunk_ids)),
+                    EmbeddingVector.model_name == self._model,
+                )
+            )
+            await self._session.flush()
+        except SQLAlchemyError as exc:
+            raise VectorStoreError(f"Could not delete vectors: {exc}") from exc
+        return int(result.rowcount or 0)
 
     async def search(self, query: VectorQuery) -> list[VectorMatch]:
         """Nearest neighbours, access-filtered inside the query itself."""

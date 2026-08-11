@@ -52,6 +52,16 @@ class VectorRecord:
     classification: str = "internal"
     allowed_roles: tuple[str, ...] = ()
     metadata: dict[str, str] = field(default_factory=dict)
+    content_hash: str = ""
+    """Hash of the exact text this vector was produced from. Carried on
+    the record because the store is what writes it down, and it is the
+    only way a later run can tell "already embedded" from "looks
+    similar"."""
+    token_count: int = 0
+    cost_usd: float = 0.0
+    """This record's share of what its batch cost. Per-record rather than
+    per-batch so spend stays attributable to a document after the batch
+    that produced it is long gone."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,7 +128,25 @@ class VectorStore(Protocol):
     provider: VectorStoreProvider
 
     async def upsert(self, records: Sequence[VectorRecord]) -> int:
-        """Insert or replace vectors, returning how many were written."""
+        """Store *records*, replacing any this store already held.
+
+        **The store is the only writer of vectors, deliberately.** An
+        earlier arrangement had the indexing service write the accounting
+        rows and the store write the searchable copy, and it had a hole
+        exactly the size of a failed store call: the rows landed, the
+        store call failed, the document was marked failed -- and the next
+        run saw the rows, skipped everything, and marked the document
+        indexed while the store still held nothing. One writer means a
+        failure leaves nothing behind and the retry does the whole job.
+
+        That is why :class:`VectorRecord` carries ``content_hash``,
+        ``token_count``, and ``cost_usd``: whoever writes the vector has
+        to be able to write the record of it too.
+
+        Raises:
+            VectorStoreError: If the records cannot be stored, or a
+                record's vector is the wrong width for this store.
+        """
         ...
 
     async def search(self, query: VectorQuery) -> list[VectorMatch]:

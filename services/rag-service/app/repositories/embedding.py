@@ -117,6 +117,27 @@ class EmbeddingVectorRepository(BaseRepository[EmbeddingVector]):
         )
         return (await self._session.execute(stmt)).scalars().first()
 
+    async def find_by_content_hash(
+        self, organization_id: UUID, content_hash: str, *, model_name: str
+    ) -> EmbeddingVector | None:
+        """Any vector already produced for this exact text under this model.
+
+        An embedding is a pure function of ``(text, model)``, so a vector
+        found here is *the* vector for that text -- copying it is not an
+        approximation, it is the same answer for no money. This is what
+        makes re-ingesting a document cheap: re-parsing produces a new
+        version with new chunk rows, so a lookup keyed on the chunk id
+        finds nothing and every unchanged paragraph gets paid for again.
+        Scoped to the organization because that is the boundary derived
+        data is kept inside, not because the maths would differ across it.
+        """
+        stmt = self._base_select().where(
+            EmbeddingVector.organization_id == organization_id,
+            EmbeddingVector.content_hash == content_hash,
+            EmbeddingVector.model_name == model_name,
+        )
+        return (await self._session.execute(stmt)).scalars().first()
+
     async def list_for_document(self, document_id: UUID) -> list[EmbeddingVector]:
         """Every vector belonging to one document."""
         stmt = self._base_select().where(EmbeddingVector.document_id == document_id)

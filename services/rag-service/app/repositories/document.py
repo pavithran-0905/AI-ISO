@@ -117,11 +117,18 @@ class DocumentRepository(BaseRepository[Document]):
         a ``NULL`` indexed checksum means it was never indexed at all.
         Comparing content instead would mean re-reading every document on
         every sweep.
+
+        **``FAILED`` documents are included, deliberately.** Most indexing
+        failures are transient -- the embedding provider was rate-limited,
+        the vector store was briefly unreachable -- and excluding them
+        means an outage permanently strands every document it touched,
+        with no path back except somebody noticing and re-queueing by
+        hand. A genuinely poisonous document does then fail on every
+        sweep, which is noisy; it is also visible, and visible-and-noisy
+        beats silently-never-retried.
         """
         stmt = self._base_select().where(
-            Document.status.notin_(
-                [DocumentStatus.ARCHIVED, DocumentStatus.DELETED, DocumentStatus.FAILED]
-            ),
+            Document.status.notin_([DocumentStatus.ARCHIVED, DocumentStatus.DELETED]),
             (Document.indexed_checksum.is_(None))
             | (Document.indexed_checksum != Document.checksum),
         )
