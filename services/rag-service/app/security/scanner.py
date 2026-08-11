@@ -136,7 +136,14 @@ _UNSAFE_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ),
 )
 
-_ZERO_WIDTH = re.compile(r"[​-‏‪-‮⁠-⁤﻿]")
+_ZERO_WIDTH = re.compile(
+    "["
+    "\u200b-\u200f"  # zero-width space and joiners, LTR/RTL marks
+    "\u202a-\u202e"  # bidirectional embedding and override
+    "\u2060-\u2064"  # word joiner, invisible operators
+    "\ufeff"  # zero-width no-break space (BOM)
+    "]"
+)
 """Zero-width and bidirectional-override characters. In an ingested
 document these are an injection technique in their own right: text that
 is invisible to a human reviewing the source still reaches the model,
