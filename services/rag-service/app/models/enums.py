@@ -319,6 +319,13 @@ class SyncStatus(StrEnum):
     NEVER_SYNCED = "never_synced"
     SYNCING = "syncing"
     SUCCEEDED = "succeeded"
+    PARTIAL = "partial"
+    """The source was reached and some of its documents imported. Its own
+    status, not a flavour of ``SUCCEEDED``, for the same reason
+    :attr:`IndexStatus.PARTIAL` is: a sync where eight of ten documents
+    landed reads as done if it is recorded as success, and the two that
+    did not land are then invisible until somebody goes looking for a
+    document that was never imported."""
     FAILED = "failed"
     UNREACHABLE = "unreachable"
     """The source itself could not be contacted, as distinct from a sync
