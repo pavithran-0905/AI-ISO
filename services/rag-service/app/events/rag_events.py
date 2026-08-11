@@ -11,6 +11,14 @@ view drifts permanently out of date.
 to change it later without breaking them is to publish a ``v2`` alongside
 -- which requires the version to have been there from the beginning.
 
+**Every event is registered with the shared registry at import time.**
+``EventManager.publish`` validates against
+:data:`shared_core.events.registry.default_registry` and refuses anything
+unregistered, so an unregistered event is not a warning -- it is an
+``AIIOS-EVENT-0002`` on the request that triggered it. A test double for
+the publisher will never surface that, which is exactly why the decorator
+is here rather than assumed.
+
 **Payloads carry identifiers, never content.** A ``DocumentIndexed``
 event carrying the document's text would put that text on the message
 bus, in every queue that subscribes, and in any dead-letter store it
@@ -23,9 +31,11 @@ from __future__ import annotations
 
 from typing import ClassVar
 
+from shared_core.events import default_registry
 from shared_core.events.base import DomainEvent
 
 
+@default_registry.register
 class DocumentImportedEvent(DomainEvent):
     """A document was ingested from a source or uploaded."""
 
@@ -33,6 +43,7 @@ class DocumentImportedEvent(DomainEvent):
     event_version: ClassVar[str] = "v1"
 
 
+@default_registry.register
 class DocumentIndexedEvent(DomainEvent):
     """A document's chunks were embedded and are now retrievable."""
 
@@ -40,6 +51,7 @@ class DocumentIndexedEvent(DomainEvent):
     event_version: ClassVar[str] = "v1"
 
 
+@default_registry.register
 class DocumentDeletedEvent(DomainEvent):
     """A document was archived or deleted and is no longer retrievable.
 
@@ -53,6 +65,7 @@ class DocumentDeletedEvent(DomainEvent):
     event_version: ClassVar[str] = "v1"
 
 
+@default_registry.register
 class EmbeddingGeneratedEvent(DomainEvent):
     """A batch of embeddings was produced.
 
@@ -64,6 +77,7 @@ class EmbeddingGeneratedEvent(DomainEvent):
     event_version: ClassVar[str] = "v1"
 
 
+@default_registry.register
 class RetrievalExecutedEvent(DomainEvent):
     """A retrieval ran.
 
@@ -76,6 +90,7 @@ class RetrievalExecutedEvent(DomainEvent):
     event_version: ClassVar[str] = "v1"
 
 
+@default_registry.register
 class ContextGeneratedEvent(DomainEvent):
     """A context block was assembled for a caller."""
 
@@ -83,6 +98,7 @@ class ContextGeneratedEvent(DomainEvent):
     event_version: ClassVar[str] = "v1"
 
 
+@default_registry.register
 class ReindexCompletedEvent(DomainEvent):
     """An indexing job finished.
 
@@ -95,6 +111,7 @@ class ReindexCompletedEvent(DomainEvent):
     event_version: ClassVar[str] = "v1"
 
 
+@default_registry.register
 class KnowledgeSourceUpdatedEvent(DomainEvent):
     """A knowledge source was created, reconfigured, or synced."""
 
@@ -102,6 +119,7 @@ class KnowledgeSourceUpdatedEvent(DomainEvent):
     event_version: ClassVar[str] = "v1"
 
 
+@default_registry.register
 class EvaluationCompletedEvent(DomainEvent):
     """A retrieval evaluation run finished, with its metric scores."""
 

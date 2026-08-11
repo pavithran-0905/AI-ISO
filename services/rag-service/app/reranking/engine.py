@@ -274,7 +274,19 @@ def rerank(
 
     if chosen is RerankMethod.DIVERSITY:
         picked = diversify(ordered, limit=cut, lambda_=lambda_)
-        return _finalise(picked, ordered, chosen, {c.key: {"diversity": 1.0} for c in picked})
+        # Diversification selects rather than scores, so the position it
+        # chose *is* the score: descending, distinct, and monotonic with
+        # the rank, which is what a caller comparing two results needs.
+        chosen_scores = {
+            c.key: 1.0 - (index / max(1, len(picked))) for index, c in enumerate(picked)
+        }
+        return _finalise(
+            picked,
+            ordered,
+            chosen,
+            {c.key: {"diversity": chosen_scores[c.key]} for c in picked},
+            chosen_scores,
+        )
 
     if chosen is RerankMethod.LLM:
         if llm_scorer is None:
@@ -288,7 +300,7 @@ def rerank(
             for candidate in ordered
         }
         signals = {key: {"llm": value} for key, value in scored.items()}
-        return _finalise(_by_score(ordered, scored, cut), ordered, chosen, signals)
+        return _finalise(_by_score(ordered, scored, cut), ordered, chosen, signals, scored)
 
     if chosen is RerankMethod.HYBRID:
         signals: dict[str, dict[str, float]] = {}
@@ -299,12 +311,12 @@ def rerank(
             scored[candidate.key] = sum(
                 HYBRID_WEIGHTS[name] * parts[str(name)] for name in HYBRID_WEIGHTS
             )
-        return _finalise(_by_score(ordered, scored, cut), ordered, chosen, signals)
+        return _finalise(_by_score(ordered, scored, cut), ordered, chosen, signals, scored)
 
     signal = _SIGNALS[chosen]
     scored = {candidate.key: signal(candidate, active) for candidate in ordered}
     signals = {key: {str(chosen): value} for key, value in scored.items()}
-    return _finalise(_by_score(ordered, scored, cut), ordered, chosen, signals)
+    return _finalise(_by_score(ordered, scored, cut), ordered, chosen, signals, scored)
 
 
 def _by_score(
@@ -325,13 +337,25 @@ def _finalise(
     original: Sequence[Candidate],
     method: RerankMethod,
     signals: Mapping[str, Mapping[str, float]],
+    scores: Mapping[str, float],
 ) -> list[RerankedCandidate]:
-    """Attach final ranks and record where each candidate came from."""
+    """Attach final ranks and record where each candidate came from.
+
+    *scores* is the mapping the ordering was actually computed from, and
+    it is reported verbatim. Reporting a sum of the raw signals instead --
+    which is what this did originally -- publishes a number that did not
+    drive the decision: the hybrid method weights its signals, so the
+    unweighted sum is not monotonic with the rank beside it. Observed
+    live, rank 1 came back scored 3.0 and rank 2 scored 3.55, so any
+    client sorting or thresholding on ``score`` would have undone the
+    reranking it had just paid for, and the ``score_after`` persisted into
+    ``reranking_results`` recorded a figure nothing had used.
+    """
     before = {candidate.key: candidate for candidate in original}
     return [
         RerankedCandidate(
             key=candidate.key,
-            score=sum(signals.get(candidate.key, {}).values()),
+            score=scores.get(candidate.key, 0.0),
             rank=index + 1,
             rank_before=before[candidate.key].rank,
             score_before=before[candidate.key].score,

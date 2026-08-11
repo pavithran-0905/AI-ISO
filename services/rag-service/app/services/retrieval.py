@@ -476,7 +476,12 @@ class RetrievalService:
         started = time.perf_counter()
         by_key = {item.key: item for item in candidates}
         ordered = rerank(
-            [self._to_candidate(item) for item in candidates], method=method, limit=top_k
+            [
+                self._to_candidate(item, _fusion_confidence(position, len(candidates)))
+                for position, item in enumerate(candidates)
+            ],
+            method=method,
+            limit=top_k,
         )
         elapsed = (time.perf_counter() - started) * 1_000.0
 
@@ -489,11 +494,29 @@ class RetrievalService:
         return final, elapsed
 
     @staticmethod
-    def _to_candidate(item: RetrievedChunk) -> Candidate:
-        """Bridge a retrieved chunk into the pure reranking engine."""
+    def _to_candidate(item: RetrievedChunk, confidence: float) -> Candidate:
+        """Bridge a retrieved chunk into the pure reranking engine.
+
+        *confidence* is supplied explicitly rather than left to the
+        reranker's fallback, and that is load-bearing. The fallback clamps
+        the first-stage score into ``[0, 1]``, and a Reciprocal Rank Fusion
+        score is about ``1/(60 + rank)`` -- roughly 0.016 for every
+        candidate. Clamped, those are indistinguishable, so the relevance
+        signal that carries 55% of the hybrid reranker's weight becomes a
+        constant and the final order is decided entirely by freshness,
+        metadata, and classification. Observed live: the only chunk that
+        actually matched a query, found by both arms at the top of each,
+        ranked sixth because it was classified ``secret``.
+
+        It also makes the reranker behave the same under every fusion
+        method. Weighted-score fusion produces values near 1.0 and RRF
+        near 0.016; feeding the raw score through would make the same
+        reranker aggressive under one and inert under the other.
+        """
         return Candidate(
             key=item.key,
             score=item.score,
+            confidence=confidence,
             rank=item.rank_before_rerank,
             content=item.chunk.content,
             document_id=str(item.document.id),
@@ -740,6 +763,20 @@ class RetrievalService:
                     score_after=item.score,
                 )
             )
+
+
+def _fusion_confidence(position: int, total: int) -> float:
+    """Fusion rank as a scale-free relevance signal in ``[0, 1]``.
+
+    Linear over the candidate list -- best gets 1.0, worst gets 0.0 --
+    rather than a reciprocal decay, which would flatten everything below
+    the top few into a tie and hand those positions back to the tiebreak
+    signals this exists to outweigh. A single candidate gets 1.0: it is
+    the best thing found, and dividing by zero to say so is not required.
+    """
+    if total <= 1:
+        return 1.0
+    return 1.0 - (position / (total - 1))
 
 
 def _string_metadata(chunk: DocumentChunk) -> dict[str, str]:

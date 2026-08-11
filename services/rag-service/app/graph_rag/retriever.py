@@ -140,6 +140,16 @@ class GraphRetriever:
     def enabled(self) -> bool:
         return self._client.enabled
 
+    async def close(self) -> None:
+        """Release the underlying Neo4j driver.
+
+        Exposed here because the retriever is what the application holds;
+        making callers reach through to the client to shut it down would
+        mean the app knowing about a dependency the retriever exists to
+        encapsulate.
+        """
+        await self._client.close()
+
     async def link_entities(
         self, query: str, organization_id: UUID, *, limit: int = MAX_SEED_ENTITIES
     ) -> list[GraphNode]:
