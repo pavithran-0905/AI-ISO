@@ -9,6 +9,8 @@ the call site.
 
 from __future__ import annotations
 
+import re
+from collections.abc import Sequence
 from datetime import datetime
 from uuid import UUID
 
@@ -21,6 +23,33 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.document import Document, DocumentChunk, DocumentMetadata, DocumentVersion
 from app.models.enums import ClassificationLevel, DocumentStatus, SourceKind
+
+_SEARCH_LANGUAGE = "english"
+"""The text-search configuration. Fixed rather than per-document: a
+``tsvector`` built under one configuration and queried under another
+matches almost nothing, silently, and the corpus this service indexes is
+technical English."""
+
+_MAX_SEARCH_TERMS = 32
+"""Terms past this are dropped. A pasted stack trace as a "query" would
+otherwise build a tsquery with hundreds of OR branches, which PostgreSQL
+will plan as a sequential scan over the whole table."""
+
+
+def _search_terms(query: str) -> list[str]:
+    """The distinct words a lexical search should gather on.
+
+    Deduplicated and length-capped, and stripped of anything that is not
+    alphanumeric so the result can be interpolated into a ``tsquery``
+    without needing to be escaped -- ``websearch_to_tsquery`` treats
+    quotes and dashes as operators, and a query containing them would
+    otherwise mean something other than what the caller typed.
+    """
+    seen: dict[str, None] = {}
+    for raw in re.split(r"[^A-Za-z0-9]+", query.lower()):
+        if raw and len(seen) < _MAX_SEARCH_TERMS:
+            seen.setdefault(raw, None)
+    return list(seen)
 
 
 class DocumentRepository(BaseRepository[Document]):
@@ -105,6 +134,24 @@ class DocumentRepository(BaseRepository[Document]):
         """
         base = self._base_select().where(Document.organization_id == organization_id)
         stmt = apply_search(base, Document, ["title", "description"], query).limit(limit)
+        return list((await self._session.execute(stmt)).scalars().all())
+
+    async def list_by_ids(
+        self, organization_id: UUID, document_ids: Sequence[UUID]
+    ) -> list[Document]:
+        """Documents by id, scoped to one organization.
+
+        Retrieval resolves a page of results with one query rather than
+        one per hit: a top-50 search would otherwise issue fifty
+        round-trips to decide what the caller may see, and the access
+        check is on the hot path of every single search.
+        """
+        if not document_ids:
+            return []
+        stmt = self._base_select().where(
+            Document.organization_id == organization_id,
+            Document.id.in_(list(document_ids)),
+        )
         return list((await self._session.execute(stmt)).scalars().all())
 
     async def list_needing_index(
@@ -321,13 +368,33 @@ class DocumentChunkRepository(BaseRepository[DocumentChunk]):
     ) -> list[DocumentChunk]:
         """Candidate chunks for the lexical arm of hybrid search.
 
-        Selects candidates with PostgreSQL's own index; the *ranking*
-        then happens in :mod:`app.hybrid_search.bm25`. Doing both here
-        would mean either ranking without term statistics or loading the
-        corpus into Python.
+        Selects candidates with PostgreSQL's own full-text index; the
+        *ranking* then happens in :mod:`app.hybrid_search.bm25`. Doing
+        both here would mean either ranking without term statistics or
+        loading the corpus into Python.
+
+        **The terms are OR-ed, and that is the whole difference between a
+        working lexical arm and a decorative one.** A substring match on
+        the whole query finds a chunk only if it contains the question
+        verbatim, and ``websearch_to_tsquery``'s default AND finds one
+        only if every word appears -- so "escalation engineering manager"
+        returns nothing against a document that says exactly that in
+        three separate sentences. Gathering on ANY term and letting BM25
+        rank is the arm's entire job: recall here, precision there.
         """
-        base = self._base_select().where(DocumentChunk.organization_id == organization_id)
-        stmt = apply_search(base, DocumentChunk, ["content"], query).limit(limit)
+        terms = _search_terms(query)
+        if not terms:
+            return []
+        document = func.to_tsvector(_SEARCH_LANGUAGE, DocumentChunk.content)
+        tsquery = func.websearch_to_tsquery(_SEARCH_LANGUAGE, " or ".join(terms))
+        stmt = (
+            self._base_select()
+            .where(
+                DocumentChunk.organization_id == organization_id,
+                document.op("@@")(tsquery),
+            )
+            .limit(limit)
+        )
         return list((await self._session.execute(stmt)).scalars().all())
 
     async def delete_for_version(self, document_version_id: UUID) -> int:
