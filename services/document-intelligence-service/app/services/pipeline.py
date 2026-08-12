@@ -26,6 +26,7 @@ import time
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from typing import Any
 
 from shared_core.logging.logger import get_logger
 
@@ -158,7 +159,7 @@ class PipelineService:
         repositories: Repositories,
         publish: EventPublisher,
         config: PipelineConfig | None = None,
-        ocr_engine: object | None = None,
+        ocr_engine: Any | None = None,
     ) -> None:
         self._repos: Repositories = repositories
         self._publish = publish
@@ -280,6 +281,8 @@ class PipelineService:
             DocumentParseError: When nothing could be read at all.
         """
         repos = self._repos
+        if job.document_id is None:
+            raise ValueError(f"Job {job.id!s} names no document, so there is nothing to parse.")
         document = await repos.documents.require_by_id(job.document_id)
         await repos.documents.mark_status(document.id, DocumentStatus.PARSING)
 
@@ -360,6 +363,8 @@ class PipelineService:
                 "needs_ocr": True,
             }
 
+        if job.document_id is None:  # pragma: no cover -- parsing already checked
+            raise ValueError(f"Job {job.id!s} names no document.")
         result = self._ocr.read(parsed)
         document = await self._repos.documents.require_by_id(job.document_id)
         document.ocr_completed = True

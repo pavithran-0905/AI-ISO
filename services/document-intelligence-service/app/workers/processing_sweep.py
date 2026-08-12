@@ -17,6 +17,7 @@ of its session, which is why the session wraps exactly one job.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from uuid import UUID
 
 from shared_core.logging.logger import get_logger
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -71,7 +72,7 @@ class ProcessingSweepWorker:
         )
         return processed
 
-    async def _claim(self) -> list[object]:
+    async def _claim(self) -> list[UUID]:
         """Claim due jobs and mark them RUNNING, returning their ids.
 
         Claimed and released in one short transaction, then each job is
@@ -90,7 +91,7 @@ class ProcessingSweepWorker:
             await session.commit()
             return ids
 
-    async def _run_one(self, job_id: object) -> bool:
+    async def _run_one(self, job_id: UUID) -> bool:
         """Run one job in its own session, returning whether it ran.
 
         A failure is recorded on the job and swallowed here: raising would
@@ -99,7 +100,7 @@ class ProcessingSweepWorker:
         """
         async with self._session_factory() as session:
             repos = build_repositories(session)
-            job = await repos.jobs.get_by_id(job_id)  # type: ignore[arg-type]
+            job = await repos.jobs.get_by_id(job_id)
             if job is None:  # pragma: no cover -- claimed a moment ago
                 return False
             try:
@@ -143,7 +144,7 @@ class ProcessingSweepWorker:
         document = await repos.documents.require_by_id(job.document_id)  # type: ignore[attr-defined]
         return await self._storage.get(bucket=document.storage_bucket, key=document.storage_key)
 
-    async def _record_failure(self, job_id: object, error: str) -> None:
+    async def _record_failure(self, job_id: UUID, error: str) -> None:
         """Mark a job failed in a fresh session.
 
         A fresh one because the session that raised has been rolled back,
@@ -152,7 +153,7 @@ class ProcessingSweepWorker:
         """
         async with self._session_factory() as session:
             repos = build_repositories(session)
-            job = await repos.jobs.get_by_id(job_id)  # type: ignore[arg-type]
+            job = await repos.jobs.get_by_id(job_id)
             if job is None:  # pragma: no cover
                 return
             job.status = JobStatus.FAILED

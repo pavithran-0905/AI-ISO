@@ -168,6 +168,8 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "ruff" },
+    { name = "types-openpyxl" },
+    { name = "types-pyyaml" },
 ]
 
 [package.metadata]
@@ -183,6 +185,8 @@ dev = [
     { name = "pytest-asyncio", specifier = ">=0.24.0" },
     { name = "pytest-cov", specifier = ">=6.0.0" },
     { name = "ruff", specifier = ">=0.8.0" },
+    { name = "types-openpyxl", specifier = ">=3.1.5" },
+    { name = "types-pyyaml", specifier = ">=6.0.12" },
 ]
 
 [[package]]
@@ -1707,6 +1711,7 @@ dependencies = [
     { name = "pypdf" },
     { name = "pytesseract" },
     { name = "python-docx" },
+    { name = "python-multipart" },
     { name = "pyyaml" },
     { name = "shared-core" },
     { name = "sqlalchemy", extra = ["asyncio"] },
@@ -1738,6 +1743,7 @@ requires-dist = [
     { name = "pypdf", specifier = ">=5.1.0" },
     { name = "pytesseract", specifier = ">=0.3.13" },
     { name = "python-docx", specifier = ">=1.1.2" },
+    { name = "python-multipart", specifier = ">=0.0.18" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "shared-core", editable = "packages/shared-core" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.36" },

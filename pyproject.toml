@@ -23,6 +23,13 @@ dev = [
   "pytest>=8.3.0",
   "pytest-asyncio>=0.24.0",
   "pytest-cov>=6.0.0",
+  # Stub packages, so the type checker sees real signatures for these
+  # rather than being told to ignore them. Preferred over an
+  # ignore_missing_imports override wherever a stub package actually
+  # exists: an override silences every mistake in how the library is
+  # called, which is most of what a checker is for.
+  "types-openpyxl>=3.1.5",
+  "types-PyYAML>=6.0.12",
 ]
 
 # ---------------------------------------------------------------------------
@@ -84,6 +91,14 @@ exclude = ["migrations/versions"]
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+# pytesseract ships no py.typed marker and no stub package exists on
+# PyPI. Used by services/document-intelligence-service's own
+# ocr/engine.py, which imports it lazily so the module stays importable
+# on a machine with no OCR at all.
+module = "pytesseract.*"
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 # msgpack ships no py.typed marker and no stub package exists on PyPI.

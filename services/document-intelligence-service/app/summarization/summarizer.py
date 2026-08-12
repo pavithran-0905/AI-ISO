@@ -157,7 +157,7 @@ def summarize(
         return summary
 
     weights = _term_weights(sentences)
-    summary.keywords = [term for term, _ in weights.most_common(settings.keyword_count)]
+    summary.keywords = top_terms(weights, settings.keyword_count)
     ranked = _rank(sentences, weights, chosen)
     picked = ranked[: settings.sentence_count]
     if settings.preserve_order:
@@ -283,7 +283,7 @@ def _tokens(sentence: str) -> list[str]:
     return [word for word in _WORD.findall(plain) if word not in STOPWORDS]
 
 
-def _term_weights(sentences: Sequence[SummarySentence]) -> Counter[str]:
+def _term_weights(sentences: Sequence[SummarySentence]) -> dict[str, float]:
     """How much each term contributes, by frequency across sentences.
 
     A term in every sentence carries no information about which sentence
@@ -298,11 +298,25 @@ def _term_weights(sentences: Sequence[SummarySentence]) -> Counter[str]:
         spread.update(set(tokens))
 
     total = len(sentences)
-    weighted: Counter[str] = Counter()
+    # A plain dict of floats, not a Counter: a Counter's values are ints by
+    # definition, so the damped weight would be silently truncated -- and
+    # every term appearing once in a long document would damp to zero.
+    weighted: dict[str, float] = {}
     for term, count in frequency.items():
         damping = math.log(1 + total / spread[term])
         weighted[term] = round(count * damping, 6)
     return weighted
+
+
+def top_terms(weights: Mapping[str, float], count: int) -> list[str]:
+    """The *count* highest-weighted terms, ties broken alphabetically.
+
+    Alphabetically rather than by insertion order, so two runs over the
+    same document produce the same keyword list -- a summary whose
+    keywords reshuffle between runs looks unstable to anyone diffing it.
+    """
+    ranked = sorted(weights.items(), key=lambda item: (-item[1], item[0]))
+    return [term for term, _ in ranked[:count]]
 
 
 def _rank(
@@ -454,10 +468,7 @@ def _section_summary(text: str, config: SummaryConfig, summary: Summary) -> Summ
         parts.append(f"{title}: {inner.text}")
 
     summary.text = _truncate_words("\n".join(parts), config.max_words)
-    summary.keywords = [
-        term
-        for term, _ in _term_weights(_sentences(text, config)).most_common(config.keyword_count)
-    ]
+    summary.keywords = top_terms(_term_weights(_sentences(text, config)), config.keyword_count)
     summary.confidence = round(_SECTION_CONFIDENCE if summary.sections else 0.0, 4)
     return summary
 
@@ -557,4 +568,5 @@ __all__ = [
     "split_sections",
     "summarize",
     "summarize_many",
+    "top_terms",
 ]

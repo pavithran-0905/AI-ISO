@@ -358,18 +358,6 @@ _BLOCK_SHAPE_RULES: tuple[tuple[re.Pattern[str], str, LayoutRegionKind, float], 
 """Shape rules tried in order, before any positional guess.
 
 Ordered rather than branched so the precedence is visible: a page number
-is a page number even in the first block, and a caption is a caption
-even in the last."""
-
-
-_BLOCK_SHAPE_RULES: tuple[tuple[re.Pattern[str], str, LayoutRegionKind, float], ...] = (
-    (_PAGE_NUMBER, "block", LayoutRegionKind.PAGE_NUMBER, 0.9),
-    (_CAPTION, "first_line", LayoutRegionKind.CAPTION, 0.85),
-    (_SIGNATURE, "first_line", LayoutRegionKind.SIGNATURE, 0.8),
-)
-"""Shape rules tried in order, before any positional guess.
-
-Ordered rather than branched so the precedence is visible: a page number
 is a page number even in the first block, and a caption is a caption even
 in the last."""
 

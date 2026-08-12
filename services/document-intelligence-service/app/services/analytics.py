@@ -20,7 +20,7 @@ from __future__ import annotations
 import csv
 import io
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
@@ -484,10 +484,10 @@ def _mean(values: Sequence[float]) -> float | None:
     return round(sum(values) / len(values), 4)
 
 
-def _merge_counts(mappings: object) -> dict[str, int]:
+def _merge_counts(mappings: Iterable[Mapping[str, int] | None]) -> dict[str, int]:
     """Sum a series of count dictionaries."""
     total: dict[str, int] = {}
-    for mapping in mappings:  # type: ignore[union-attr]
+    for mapping in mappings:
         for key, count in (mapping or {}).items():
             total[key] = total.get(key, 0) + int(count)
     return dict(sorted(total.items(), key=lambda item: -item[1]))

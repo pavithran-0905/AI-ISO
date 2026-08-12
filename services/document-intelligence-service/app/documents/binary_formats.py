@@ -17,6 +17,7 @@ from __future__ import annotations
 import io
 import zipfile
 from collections.abc import Iterator
+from typing import TYPE_CHECKING, Any
 
 from app.documents.parser import (
     DocumentParseError,
@@ -26,6 +27,9 @@ from app.documents.parser import (
     register,
 )
 from app.models.enums import DocumentFormat
+
+if TYPE_CHECKING:  # pragma: no cover -- import-time only for the checker
+    from docx.document import Document as DocxDocument
 
 MIN_TEXT_CHARACTERS_PER_PAGE = 16
 """Below this a PDF page's text layer is a page number and a header, not
@@ -93,7 +97,7 @@ def parse_pdf(data: bytes) -> ParsedDocument:
     return document
 
 
-def _pdf_page(number: int, page: object, document: ParsedDocument) -> ParsedPage:
+def _pdf_page(number: int, page: Any, document: ParsedDocument) -> ParsedPage:
     """One PDF page, with a failed extraction recorded rather than raised.
 
     One unreadable page must not lose the other two hundred, so a failure
@@ -102,7 +106,7 @@ def _pdf_page(number: int, page: object, document: ParsedDocument) -> ParsedPage
     from pypdf.errors import PyPdfError  # noqa: PLC0415
 
     try:
-        text = page.extract_text() or ""  # type: ignore[attr-defined]
+        text = page.extract_text() or ""
     except (PyPdfError, KeyError, TypeError, ValueError, UnicodeDecodeError) as error:
         document.add_warning(f"Page {number} could not be read ({error}); it needs OCR.")
         text = ""
@@ -156,7 +160,7 @@ def parse_docx(data: bytes) -> ParsedDocument:
     return document
 
 
-def _docx_blocks(source: object) -> Iterator[str]:
+def _docx_blocks(source: DocxDocument) -> Iterator[str]:
     """Paragraphs and tables in the order the document lays them out.
 
     python-docx exposes paragraphs and tables as separate collections, so
@@ -166,7 +170,7 @@ def _docx_blocks(source: object) -> Iterator[str]:
     from docx.table import Table  # noqa: PLC0415
     from docx.text.paragraph import Paragraph  # noqa: PLC0415
 
-    body = source.element.body  # type: ignore[attr-defined]
+    body = source.element.body
     for child in body.iterchildren():
         if child.tag.endswith("}p"):
             yield Paragraph(child, source).text
@@ -325,11 +329,11 @@ def _parse_member(
     name: str,
     depth: int,
     document: ParsedDocument,
-    detect_format: object,
-    parser_for: object,
+    detect_format: Any,
+    parser_for: Any,
 ) -> ParsedDocument | None:
     """One archive member, or ``None`` if it could not be parsed."""
-    guess = detect_format(payload, filename=name)  # type: ignore[operator]
+    guess = detect_format(payload, filename=name)
     if not guess.is_known:
         document.add_warning(f"{name!r} is of an unrecognised format and was skipped.")
         return None
@@ -342,7 +346,8 @@ def _parse_member(
             return None
         return parse_zip(payload, depth + 1)
     try:
-        return parser_for(guess.format)(payload)  # type: ignore[operator]
+        parsed: ParsedDocument = parser_for(guess.format)(payload)
+        return parsed
     except DocumentParseError as error:
         document.add_warning(f"{name!r} could not be parsed: {error}")
         return None

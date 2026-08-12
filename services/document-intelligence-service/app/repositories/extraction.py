@@ -95,7 +95,14 @@ class DocumentEntityRepository(BaseRepository[DocumentEntity]):
         """Mark entities of *kinds* redacted, returning how many."""
         if not kinds:
             return 0
-        result = await self._session.execute(
+        # Counted by selecting first rather than reading ``rowcount``:
+        # ``Result`` does not expose it (only ``CursorResult`` does), and a
+        # cast to reach it would be asserting something about the driver
+        # this repository has no business knowing.
+        targets = await self.list_for_version(version_id, kinds=kinds)
+        if not targets:
+            return 0
+        await self._session.execute(
             update(DocumentEntity)
             .where(
                 DocumentEntity.document_version_id == version_id,
@@ -103,7 +110,7 @@ class DocumentEntityRepository(BaseRepository[DocumentEntity]):
             )
             .values(is_redacted=True)
         )
-        return int(result.rowcount or 0)
+        return len(targets)
 
 
 class DocumentTableRepository(BaseRepository[DocumentTable]):
