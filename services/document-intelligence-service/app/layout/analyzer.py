@@ -43,6 +43,9 @@ MAX_BAND = 0.5
 than the content it frames, which is not a page layout."""
 
 MAX_TITLE_BLOCK_LENGTH = 120
+
+MAX_TITLE_LINE_LENGTH = 80
+"""A first line longer than this is an opening sentence, not a title."""
 """A first block longer than this is an opening paragraph, not a title."""
 
 MAX_FOOTER_BLOCK_LENGTH = 100
@@ -405,8 +408,16 @@ def _classify_by_position(
     Both at low confidence, because a one-line opening sentence looks
     identical to a title and only the writer knows which it was.
     """
-    if index == 0 and len(stripped) < MAX_TITLE_BLOCK_LENGTH and _ALL_CAPS_TITLE.match(first_line):
-        return LayoutRegionKind.TITLE, 1, 0.7
+    if index == 0 and len(stripped) < MAX_TITLE_BLOCK_LENGTH:
+        # An ALL-CAPS first line is unambiguous; a *single short line* at
+        # the very start is a title too. Requiring capitals meant the TITLE
+        # region essentially never fired, because real documents are titled
+        # in title case -- and a document with no title region cannot be
+        # laid out or cited by section.
+        if _ALL_CAPS_TITLE.match(first_line):
+            return LayoutRegionKind.TITLE, 1, 0.7
+        if "\n" not in stripped and len(first_line) <= MAX_TITLE_LINE_LENGTH:
+            return LayoutRegionKind.TITLE, 1, 0.6
     if (
         index == total - 1
         and total >= MIN_BLOCKS_FOR_FOOTER

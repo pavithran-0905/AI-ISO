@@ -208,7 +208,8 @@ only running it over a real multi-line document showed that."""
 _TITLED_PERSON = re.compile(rf"\b(Mr|Mrs|Ms|Miss|Dr|Prof|Sir|Dame)\.?[ \t]+({_NAME})\b")
 
 _LABELLED_PERSON = re.compile(
-    r"\b(?:reviewed|approved|prepared|authored|signed|submitted|requested)[ \t]+by"
+    r"\b(?:reviewed|approved|prepared|authored|signed|submitted|requested"
+    r"|raised|reported|opened|created|assigned|escalated|owned)[ \t]+by"
     rf"[ \t]*[:\-]?[ \t]*({_NAME})\b",
     re.IGNORECASE,
 )
@@ -577,12 +578,26 @@ def _score(kind: EntityKind, value: str) -> float:
 def _resolve_overlaps(entities: Sequence[ExtractedEntity]) -> list[ExtractedEntity]:
     """Keep one entity per span, preferring the longer, surer reading.
 
-    Sorted by start, then by descending length, then by descending
-    confidence, so the first match at any position is the one to keep and
-    everything it covers is dropped.
+    Sorted by start, then by whether the reading was configured, then by
+    descending length, then by descending confidence -- so the first match
+    at any position is the one to keep and everything it covers is dropped.
+
+    **A configured custom pattern outranks a built-in one.** An
+    organization that registers a pattern for its own asset tags did so
+    precisely to have those codes typed as its own kind, and the generic
+    identifier pattern matches the same span with a higher built-in
+    confidence. Ranking on confidence alone therefore discarded the
+    tenant's configuration in favour of a guess -- the same principle that
+    makes a classification rule outrank keyword evidence.
     """
     ordered = sorted(
-        entities, key=lambda item: (item.start, -(item.end - item.start), -item.confidence)
+        entities,
+        key=lambda item: (
+            item.start,
+            0 if item.custom_kind else 1,
+            -(item.end - item.start),
+            -item.confidence,
+        ),
     )
     kept: list[ExtractedEntity] = []
     covered_to = -1
