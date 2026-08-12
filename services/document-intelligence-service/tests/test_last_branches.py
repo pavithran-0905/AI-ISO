@@ -165,3 +165,56 @@ async def test_deleting_from_a_bucket_that_does_not_exist_reports_failure(
     with a deleted document, not an exception about the object store."""
     broken = DocumentStorage(storage._wrapper, bucket="a-bucket-that-does-not-exist")
     assert await broken.delete(bucket=broken.bucket, key="nothing/here") in {True, False}
+
+
+@pytest.mark.asyncio
+async def test_a_job_whose_document_was_deleted_is_cancelled_not_failed(
+    db_session_factory: object,
+    storage: DocumentStorage,
+    publisher: object,
+    organization_id: uuid.UUID,
+) -> None:
+    """Nothing went wrong with the document -- somebody deliberately removed
+    it, and counting that as a failure makes the failure count useless for
+    spotting the jobs that broke on their own."""
+    from app.models.enums import JobStatus
+    from app.services.bundle import build_repositories
+    from app.services.ingestion import IngestionService
+    from app.workers.processing_sweep import ProcessingSweepWorker
+    from tests.conftest import CHANGE_REQUEST
+
+    async with db_session_factory() as session:  # type: ignore[operator]
+        repos = build_repositories(session)
+        ingestion = IngestionService(
+            documents=repos.documents,
+            jobs=repos.jobs,
+            audits=repos.audits,
+            publish=publisher,  # type: ignore[arg-type]
+            max_bytes=1024 * 1024,
+            storage=storage,
+        )
+        result = await ingestion.ingest(
+            organization_id=organization_id,
+            data=CHANGE_REQUEST,
+            title="Doomed",
+            filename="cr.txt",
+        )
+        assert result.job is not None
+        job_id = result.job.id
+        await repos.documents.delete(result.document.id)
+        await session.commit()
+
+    worker = ProcessingSweepWorker(
+        db_session_factory,  # type: ignore[arg-type]
+        publish_event=publisher,  # type: ignore[arg-type]
+        storage=storage,
+        batch_size=50,
+    )
+    await worker.tick()
+
+    async with db_session_factory() as session:  # type: ignore[operator]
+        repos = build_repositories(session)
+        closed = await repos.jobs.get_by_id(job_id)
+        assert closed is not None
+        assert closed.status == JobStatus.CANCELLED
+        assert closed.error

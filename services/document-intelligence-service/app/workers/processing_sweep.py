@@ -19,6 +19,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from uuid import UUID
 
+from shared_core.exceptions.not_found import NotFoundError
 from shared_core.logging.logger import get_logger
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -114,9 +115,22 @@ class ProcessingSweepWorker:
                 await pipeline.run(job, data)
                 await session.commit()
                 return True
+            except NotFoundError as error:
+                # The document was deleted between queueing and claiming.
+                # Cancelled, not failed: nothing went wrong with the document,
+                # somebody deliberately removed it, and counting that as a
+                # failure makes the failure count useless for spotting the
+                # jobs that broke on their own.
+                await session.rollback()
+                await self._close_job(job_id, JobStatus.CANCELLED, str(error))
+                logger.info(
+                    "processing job cancelled; its document no longer exists",
+                    extra={"extra_fields": {"job_id": str(job_id)}},
+                )
+                return False
             except Exception as error:
                 await session.rollback()
-                await self._record_failure(job_id, str(error))
+                await self._close_job(job_id, JobStatus.FAILED, str(error))
                 logger.warning(
                     "processing job failed",
                     extra={"extra_fields": {"job_id": str(job_id), "error": str(error)}},
@@ -144,19 +158,20 @@ class ProcessingSweepWorker:
         document = await repos.documents.require_by_id(job.document_id)  # type: ignore[attr-defined]
         return await self._storage.get(bucket=document.storage_bucket, key=document.storage_key)
 
-    async def _record_failure(self, job_id: UUID, error: str) -> None:
-        """Mark a job failed in a fresh session.
+    async def _close_job(self, job_id: UUID, status: JobStatus, error: str) -> None:
+        """Close a job in a fresh session, with the reason it stopped.
 
-        A fresh one because the session that raised has been rolled back,
-        and writing the failure through it would be lost with everything
-        else in that transaction -- leaving the job RUNNING forever.
+        A fresh session because the one that raised has been rolled back,
+        and writing the outcome through it would be lost with everything
+        else in that transaction -- leaving the job RUNNING forever, which
+        is the one state nothing will ever move it out of.
         """
         async with self._session_factory() as session:
             repos = build_repositories(session)
             job = await repos.jobs.get_by_id(job_id)
             if job is None:  # pragma: no cover
                 return
-            job.status = JobStatus.FAILED
+            job.status = status
             job.error = error[:2_000]
             job.completed_at = datetime.now(UTC)
             job.attempts = max(job.attempts, 1)

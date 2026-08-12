@@ -7384,3 +7384,157 @@ HTTP run caught the second; the ASGI test client caught the third.
   its id, and requires `vectors=` and `moment=`.
 - **The DOCX parser puts a heading in `section_path`, not in the text** —
   the same convention as the markdown parser.
+
+---
+
+## Prompt 063 — Enterprise Document Intelligence Service
+
+`services/document-intelligence-service`, port 8034, Redis db 36,
+PostgreSQL `aiios_document_intelligence`, MinIO bucket `aiios-documents`.
+17 tables, 15 spec endpoints (28 routes in total), 9 domain events, 8 pure
+analysis engines, 14 format parsers, 6 business services, 4 leader-elected
+workers, 445 tests at 95.28% coverage against real PostgreSQL, Redis,
+RabbitMQ and MinIO. Ruff, Black and MyPy-in-container all clean.
+
+### Real defects this build found
+
+The method — hand-verify every engine against a **real document** before
+writing a single test, then run the service live over HTTP before trusting
+the test suite — found 28 defects. Ordered by how badly each would have hurt
+in production:
+
+- **The service stored no original bytes.** The pipeline reconstructed them
+  from a version's *extracted text*, which only exists after a successful
+  parse — so a document's very *first* processing run had nothing to read
+  and every processing endpoint returned 400. Not a degraded mode: a service
+  that could never process anything. Found by the live HTTP run and
+  invisible to every unit test, because the tests all created their versions
+  directly. Original bytes now go to MinIO before the job is queued.
+- **The pipeline's OCR stage called `.read()` on an engine that only had
+  `read_image`.** The stage could not work at all, and had never been
+  reached: every earlier test either skipped OCR (the document had text) or
+  had no engine configured. A test suite can be green over a stage that is
+  structurally incapable of running.
+- **`python-multipart` was undeclared**, so FastAPI refused to build the
+  upload route and the whole application failed to start.
+- **`decode()` tried UTF-16 before cp1252.** UTF-16 decodes almost any
+  even-length byte string without raising, so an ordinary Western European
+  document became plausible-looking CJK mojibake — silently, with no error
+  anywhere. UTF-16 now requires a byte-order mark.
+- **Keyword classification scored on relative standing alone**, so the
+  leading category reached the 0.88 ceiling however thin its case. A change
+  request containing the phrase "Risk level" matched the single log term
+  "level", led because nothing else scored, and was classified as a **log**
+  at 0.85 — outranking the correct structural reading as a form. Confidence
+  now scales with distinct term count.
+- **Template matching could never fire in the pipeline**: classification ran
+  before form extraction and so never received the field labels template
+  matching needs. The dependency runs the other way round, which reads
+  backwards until you look at what each stage produces.
+- **Five-word shingles cap near-duplicate similarity at 0.68** after a
+  single OCR error, so a re-scan of the same page scored below the 0.85
+  threshold and was never flagged — the one case the detector exists for.
+  Three-word shingles at 0.75 catch it at 0.81 while two different forms
+  sharing a template score 0.12. The threshold and the shingle size have to
+  be chosen together: for *S* shingles the ceiling after one edit is
+  `(S - k) / (S + k)`.
+- **A corrupt DOCX raised `zipfile.BadZipFile`, which is not an `OSError`**
+  and so escaped the handler entirely, crashing the worker instead of
+  recording a parse failure on the document.
+- **Eight repository methods filtered on `Document.is_deleted`**, which does
+  not exist — shared-core's soft-delete column is `deleted_at`. Every one
+  raised `AttributeError` on first call.
+- **Hard-wrapped lines cut every summary sentence in half.** Documents from a
+  PDF text layer break mid-sentence at whatever column they were typeset to,
+  and splitting on newlines produced summaries of fragments.
+- **Unnormalised salience drowned the audience bonus**, so an executive
+  summary and a technical one came out byte-identical. Raw term weights ran
+  to 3–4 while the bonuses were 0.12–0.35.
+- **pypdf's base exception is `PyPdfError`, not `PdfError`** — every PDF
+  parse raised `ImportError` before touching a document.
+- **Prose containing one stray double space read as a table.** Counting
+  fields per line passes it; requiring columns to actually *line up* across
+  rows is what separates a table from a sentence.
+- **A merged cell spanning to the end of a row was missed** — the commonest
+  merge there is — because the detector stopped at the last populated cell.
+- **`Change ID: CHG-004821` was typed as a NUMBER** because the label says
+  "ID". Label hints about a value's *type* must only run when the field is
+  blank; a present value contradicts them.
+- **A clock reading became a form field**: "began at 09:14" split at that
+  colon. A label may not end in a digit.
+- **The RTF group-stripping pattern counted the keyword's backslash twice**,
+  matching neither the plain `fonttbl` form nor the starred `generator` one,
+  so the font table survived into the document as "Arial;".
+- **A configured custom entity pattern lost to the generic built-in
+  identifier pattern** on the same span, because overlaps ranked on
+  confidence alone — discarding a tenant's own configuration in favour of a
+  guess. Configured readings now win, on the same principle that makes a
+  classification rule outrank keyword evidence.
+- **Title detection required an ALL-CAPS first line**, so the TITLE region
+  essentially never fired: real documents are titled in title case.
+- **A bulleted form field could never match**, because the anchor rejected
+  the leading bullet that `_clean_label` was written to strip — making that
+  stripping unreachable code.
+- **The summarizer selected markdown table rows and divider rows as
+  sentences**, putting a table divider into an executive summary.
+- **The validation response could not distinguish "every rule passed" from
+  "no rules ran"**, so a deployment with no rules configured reported every
+  document as valid. It now reports `rules_evaluated`.
+- **`DocumentLayoutRepository.list_for_version` filtered on two columns the
+  model does not have** — a layout region hangs off its *page*.
+- **A frozen dataclass holding a mapping is not hashable**, so a
+  `GlossaryEntry` used as a dict key raised `TypeError` at runtime.
+- **The hostname pattern outranked the path pattern**, splitting
+  `/etc/payments/pool.yaml` into a loose directory and a "hostname" called
+  `pool.yaml`; and the path pattern then swallowed the sentence's own full
+  stop.
+- **`preserved_terms` reported opaque placeholder tokens instead of the
+  terms** a reviewer needs to read.
+- **The summarizer accumulated damped term weights into a `Counter`**, whose
+  values are ints by definition — every term appearing once in a long
+  document damped to zero. Caught by MyPy, not by any test.
+- **`app/layout/analyzer.py` defined `_BLOCK_SHAPE_RULES` twice**, so the
+  first copy was dead. Also MyPy.
+- **Tag cleaning lived only in the request schema**, so the upload route's
+  comma-split form field reached the database with blanks and duplicates.
+
+### Things worth remembering
+
+- **A green test suite proves nothing about a stage that cannot run.** Two of
+  the worst defects here (no original bytes, `.read()` missing) were
+  invisible to unit tests because the tests constructed the state the stage
+  was supposed to produce. Running the real service over real HTTP is a
+  different *kind* of evidence, not a slower version of the same kind.
+- **Committed rows from manual scratch runs poison a shared dev database.**
+  Three test failures traced to 677 rows my own live experiments had
+  committed into `aiios_document_intelligence`. Truncate between phases, and
+  scope any assertion on a deliberately-global query (`claim_due`,
+  `list_expired`, `list_overdue`) to the test's own rows.
+- **`JobStatus.PARTIAL` and `SyncStatus.PARTIAL` exist for the same reason.**
+  A run where six of eight stages succeeded is neither a success nor a
+  failure, and a re-run decision needs the difference.
+- **`SpanType` has no `WORKFLOW` member.** The nearest honest choices are
+  `BACKGROUND_JOB` for a parent span and `WORKFLOW_STEP` for its children;
+  `FILE_UPLOAD` and `VALIDATION_STEP` are more accurate than either where
+  they fit.
+- **`shutil.which` is part of the OCR probe**, so faking the `pytesseract`
+  module alone leaves the engine correctly reporting itself unavailable. The
+  probe checks the wrapper and the binary separately on purpose — the wheel
+  being installed while the binary is absent is the commonest deployment
+  mistake and needs its own message.
+- **Ruff's `PLC0415`** (import not at top level) fires on the local imports
+  that are idiomatic in tests. Added to the `tests/*` per-file ignore with
+  the reasoning recorded: the rule protects production code from hidden
+  dependencies and hot-path import cost, and neither applies in a test.
+- **`pytestmark = pytest.mark.asyncio` breaks every sync test in the
+  module.** Either make them all async or mark the async ones individually.
+- **Writing regex-bearing code through a bash heredoc mangles it.** An
+  escaped newline became a literal newline inside a string literal and
+  produced a syntax error; a digit-class escape warns. Use the Write/Edit
+  tools, or a Python patch script written with Write and then executed.
+- **A method inserted at the wrong indentation lands inside the preceding
+  function** rather than the class, and neither Black nor Ruff complains —
+  the only symptom is an `AttributeError` at call time.
+- **A loaded row's enum column is a plain `str` at runtime.** `row.category
+  is DocumentCategory.FORM` is always False. Compare with `==`. (Recorded
+  before; cost time again.)
