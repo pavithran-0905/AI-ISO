@@ -7280,3 +7280,107 @@ Only **MyPy inside the container** caught #4 and #5 — Ruff, Black, and
   across four separate reset windows. Every one had written real work
   before dying and none was lost: the recovery path was to pick their
   files up off disk, lint them, run them, and finish the rest directly.
+
+## Prompt 062 — Enterprise RAG Service
+
+`services/rag-service`, port 8033, Redis db 35, PostgreSQL `aiios_rag`.
+16 tables, 13 spec endpoints (36 routes in total), 6 business services, 4
+leader-elected workers, 577 tests at 92% coverage against real
+PostgreSQL + pgvector, Redis, and RabbitMQ.
+
+### Real defects this build found
+
+Every one was found by running the thing, not by reading it. The
+verification-script-before-pytest method caught the first group; the live
+HTTP run caught the second; the ASGI test client caught the third.
+
+- **`app/parsers/__init__.py` was empty**, so nothing imported the modules
+  whose import-time `register()` calls populate the parser registry. Nine
+  working parsers, and every ingest would have failed with "no parser
+  exists for txt". Registration is now a property of importing the
+  package.
+- **Ingestion chunked the flattened parse text**, discarding the
+  provenance every parser puts on its blocks. Because the markdown parser
+  strips `##` markers, a HEADING-strategy run silently degraded to
+  fixed-size windows and produced chunks with no section path; PDF page
+  numbers would have been permanently unrecoverable.
+- **Redaction was applied to the joined text while the blocks kept their
+  originals** — and the blocks are what gets chunked and embedded, so the
+  secret was removed from the copy nobody queries.
+- **`PgVectorStore.upsert` deleted each chunk's existing rows and never
+  inserted anything**, returning `len(records)` as if it had. Any caller
+  using the store as documented destroyed its own vectors and was told the
+  write succeeded. Surfaced the moment a service actually called it.
+- **Vectors were keyed on chunk id alone**, so re-ingesting a document —
+  new version, new chunk rows, byte-identical text — paid to re-embed
+  every unchanged paragraph. Now looked up by content hash within the
+  tenant and copied.
+- **`list_needing_index` excluded FAILED documents**, so a transient
+  embedding or store outage stranded every document it touched
+  permanently.
+- **The lexical arm was dead.** `search_keyword` matched the query as one
+  ILIKE substring, so it found a chunk only if the chunk contained the
+  whole question verbatim. It now gathers on ANY term via full-text search
+  and lets BM25 rank.
+- **Score-based fusion raised rather than ran.** WEIGHTED_SCORE requires
+  weights and the service passed none.
+- **Every evaluation metric silently reported 0.0.** The metric functions
+  compare retrieved keys against relevant keys by set membership, and the
+  repositories return `UUID` while a retrieved key is its string form —
+  which never raises, just produces an empty intersection. A working
+  retriever would have looked comprehensively broken.
+- **No domain event was registered with the shared registry**, so
+  `EventManager.publish` refused every one with `AIIOS-EVENT-0002` and the
+  very first ingest request failed. Invisible to all five verification
+  suites because they pass a test double for the publisher.
+- **`organization_id` was a request parameter** (the pattern earlier
+  AI-IOS services use). Here that is a cross-tenant read. It now comes
+  from the token.
+- **The reranker's relevance signal was inert.** It falls back to the
+  first-stage score clamped to [0,1], and an RRF score is ~1/(60+rank) —
+  about 0.016 for everything. The signal carrying 55% of the hybrid weight
+  was a constant, and the order was decided by freshness and
+  classification instead: the only chunk that actually matched a query,
+  found by both arms at the top of each, ranked sixth because it was
+  classified `secret`.
+- **The reranker reported the unweighted sum of its signals while ordering
+  by the weighted sum**, so rank 1 came back scored 3.0 beside rank 2 at
+  3.55.
+- **`AccessDeniedError` extended `PermissionError`**, which has no
+  registered handler — every access refusal would have returned a 500
+  saying "internal error" about a decision the service made deliberately.
+
+### Things worth remembering
+
+- **A test double for the event publisher hides event-registry failures
+  entirely.** Five verification suites and 400 tests passed before the
+  first real HTTP request revealed that no event could be published.
+- **`pkill -f "uvicorn main:app"` does not kill it on Windows.** The stale
+  process keeps the port, the new one exits with "only one usage of each
+  socket", and you spend twenty minutes debugging code that is already
+  fixed. Use `netstat -ano | grep :PORT` then `taskkill //F //PID`.
+- **Docker Desktop lives at
+  `$LOCALAPPDATA\Programs\DockerDesktop\Docker Desktop.exe`** on this
+  machine, not under `Program Files`. It stopped mid-session and every
+  test skipped with `WinError 1225`.
+- **Redis needs `AIIOS_REDIS_PASSWORD=change-me`** and is published on
+  6379, not 6380.
+- **`list_due` and `list_organization_ids` are deliberately global** — a
+  worker polls across tenants — so any test asserting order or membership
+  must scope to its own organization first. Committed rows from earlier
+  scratch runs break the naive version.
+- **`_IncludedRouter` again**: walking `app.routes` naively finds four
+  FastAPI built-ins and reports a fully wired service as empty.
+- **Schema violations surface as 400 here, not FastAPI's 422**, through
+  the platform's own validation middleware.
+- **`embedding_vectors.document_chunk_id` is NOT NULL**, and
+  `indexing_jobs.document_id` has a foreign key — the database refuses a
+  job naming a document that never existed, earlier than the service
+  would.
+- **`SyncStatus` gained `PARTIAL`.** A sync where eight of ten documents
+  imported was recorded as SUCCEEDED, making the two that did not land
+  invisible.
+- **`EmbeddingModelRepository.record_usage` takes the model object**, not
+  its id, and requires `vectors=` and `moment=`.
+- **The DOCX parser puts a heading in `section_path`, not in the text** —
+  the same convention as the markdown parser.
