@@ -10,6 +10,7 @@ the call site.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import datetime
 from uuid import UUID
 
 from shared_core.database.repository import BaseRepository
@@ -113,7 +114,7 @@ class DocumentRepository(BaseRepository[Document]):
         return (await self._session.execute(stmt)).scalars().all()
 
     async def list_stalled(
-        self, *, statuses: Sequence[DocumentStatus], older_than: object, limit: int = 100
+        self, *, statuses: Sequence[DocumentStatus], older_than: datetime, limit: int = 100
     ) -> Sequence[Document]:
         """Documents stuck mid-pipeline since before *older_than*.
 
@@ -129,6 +130,30 @@ class DocumentRepository(BaseRepository[Document]):
                 Document.deleted_at.is_(None),
             )
             .order_by(Document.updated_at)
+            .limit(min(limit, MAX_PAGE_SIZE))
+        )
+        return (await self._session.execute(stmt)).scalars().all()
+
+    async def list_expired(self, now: datetime, *, limit: int = 100) -> Sequence[Document]:
+        """Documents whose retention period has passed.
+
+        Already-archived documents are excluded, so the retention sweep is
+        idempotent: without that, every tick would re-archive the same
+        documents and write a fresh audit row for each, and the trail would
+        fill with events that never happened.
+
+        Global rather than per-organization, because the sweep runs for
+        every tenant and has no organization of its own to scope to.
+        """
+        stmt = (
+            select(Document)
+            .where(
+                Document.expires_at.is_not(None),
+                Document.expires_at < now,
+                Document.status != DocumentStatus.ARCHIVED,
+                Document.deleted_at.is_(None),
+            )
+            .order_by(Document.expires_at)
             .limit(min(limit, MAX_PAGE_SIZE))
         )
         return (await self._session.execute(stmt)).scalars().all()

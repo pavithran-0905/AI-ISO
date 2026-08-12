@@ -60,6 +60,13 @@ class DocumentIntelligenceServiceSettings(BaseSettings):
     # ---- ingestion ---------------------------------------------------------
 
     max_document_bytes: int = Field(default=52_428_800, ge=1)
+    storage_bucket: str = Field(default="aiios-documents")
+    """The MinIO bucket original document bytes are written to.
+
+    Original bytes, not extracted text: text is what parsing produced, so
+    a service that kept only text could never run a document's first
+    parse -- and every later run would be a re-parse of a previous parse
+    rather than of the document."""
     """50 MiB. Parsing and OCR both run in memory, so this is the real
     bound on what one upload can cost the process."""
     max_pages_per_document: int = Field(default=2_000, ge=1)
@@ -121,7 +128,15 @@ class DocumentIntelligenceServiceSettings(BaseSettings):
     # ---- validation and review -------------------------------------------------------
 
     validation_minimum_completeness: float = Field(default=0.8, ge=0.0, le=1.0)
-    duplicate_similarity_threshold: float = Field(default=0.92, ge=0.0, le=1.0)
+    duplicate_similarity_threshold: float = Field(default=0.75, ge=0.0, le=1.0)
+    """Jaccard similarity at which two documents are near-duplicates.
+
+    Chosen against the three-word shingle size the validation engine uses,
+    not picked for looking strict: one changed word invalidates *k*
+    shingles on each side, so a re-scan of the same page differing by a
+    single OCR error tops out around 0.81. A 0.92 threshold would never
+    fire on the one case near-duplicate detection exists for, while two
+    different forms sharing a template score about 0.12."""
     review_required_below_confidence: float = Field(default=0.7, ge=0.0, le=1.0)
     """Below this, a human reviews it. The whole point of a confidence
     score is that something acts on it; a service that computes one and

@@ -42,6 +42,7 @@ from app.repositories.operations import (
     DocumentAuditRepository,
     DocumentProcessingJobRepository,
 )
+from app.services.storage import DocumentStorage
 from app.types import EventPublisher
 
 _LOGGER = get_logger(__name__)
@@ -87,12 +88,14 @@ class IngestionService:
         audits: DocumentAuditRepository,
         publish: EventPublisher,
         max_bytes: int,
+        storage: DocumentStorage | None = None,
     ) -> None:
         self._documents = documents
         self._jobs = jobs
         self._audits = audits
         self._publish = publish
         self._max_bytes = max_bytes
+        self._storage = storage
 
     async def ingest(
         self,
@@ -147,6 +150,19 @@ class IngestionService:
                 },
             )
         )
+
+        # Stored before the job is queued, so no worker can ever claim a
+        # job whose bytes are not yet readable -- the sweep runs every
+        # thirty seconds and would otherwise race the upload.
+        if self._storage is not None:
+            stored = await self._storage.put(
+                organization_id=organization_id,
+                document_id=document.id,
+                data=data,
+                content_type=content_type,
+            )
+            document.storage_bucket = stored.bucket
+            document.storage_key = stored.key
 
         job = None
         if existing is None:

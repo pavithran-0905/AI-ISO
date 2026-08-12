@@ -40,6 +40,11 @@ _SENTENCE_SPLIT = re.compile(r"(?<=[.!?])[ \t]+(?=[\"'(\[]?[A-Z0-9])|\n{2,}")
 _WORD = re.compile(r"[A-Za-z][A-Za-z'-]+")
 _HEADING = re.compile(r"^\s*(?:#{1,6}\s+|\d+(?:\.\d+)*[.)]?\s+)?(?P<title>[^\n]{3,80})\s*$")
 _BULLET_PREFIX = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s+")
+_TABLE_ROW = re.compile(r"^\s*\|.*\|\s*$")
+"""A markdown table row. Not a sentence: a summary that selects one reads
+as ``| payments-api | high | R. Mehta |``, and a divider row reads as
+``| --- | --- |``. The live end-to-end run put exactly that into an
+executive summary."""
 
 STOPWORDS = vocabulary(
     """a an and are as at be been but by for from had has have he her his i if in into is it
@@ -251,6 +256,12 @@ def _units(text: str) -> list[tuple[str, bool]]:
     for line in text.splitlines():
         stripped = line.strip()
         if not stripped:
+            flush()
+            continue
+        if _TABLE_ROW.match(stripped):
+            # A table is structure, not prose. Its rows belong to the
+            # table extractor, and a sentence ranker fed them will pick
+            # one whenever the document is mostly table.
             flush()
             continue
         if _BULLET_PREFIX.match(stripped):
