@@ -177,15 +177,19 @@ workspace path dependency.
 uv run python -m pytest tests/ --cov=app
 ```
 
-577 tests against **real** PostgreSQL with pgvector, Redis, and RabbitMQ.
+641 tests against **real** PostgreSQL with pgvector, Redis, and RabbitMQ.
 Nothing is mocked: the vectors are real vectors in a real `vector(1536)`
 column and the searches are real pgvector searches. The suite needs no
 model-provider credential, because the builtin encoder needs none — a RAG
 service whose tests only run when somebody has an OpenAI key is a RAG
 service whose tests do not run.
 
-Coverage is **92%** against a 95% target. What remains uncovered is
-concentrated in defensive branches: the worker-registration path in
-`app/core/factory.py` (reachable only with `workers_enabled=true` and a
-live scheduler), the Neo4j-backed halves of `app/graph_rag/`, and
-error paths in the format parsers.
+Coverage is **95%**, the figure docs/062 asks for. What remains uncovered
+is the worker-registration path in `app/core/factory.py`, reachable only
+with `workers_enabled=true` and a live scheduler holding a leader lock.
+
+Two test doubles exist in the whole suite and both are transports rather
+than logic: a fake Neo4j driver, because no environment this runs in holds
+RAG nodes to query, and `httpx.MockTransport` for the embedding provider,
+because the real request is still built and the real response still
+parsed. Everything else runs against the containers.
