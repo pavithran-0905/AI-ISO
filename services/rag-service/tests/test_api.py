@@ -13,6 +13,7 @@ from typing import Any
 
 import pytest
 from httpx import AsyncClient
+from shared_core.security.jwt import encode_token
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.models.enums import IndexStatus, ReportKind
@@ -24,6 +25,7 @@ from app.workers.indexing_sweep import IndexingSweepWorker
 from app.workers.source_sync_sweep import SourceSyncSweepWorker
 from app.workers.statistics_rollup import StatisticsRollupWorker
 from tests.conftest import (
+    _TEST_PRIVATE_KEY_PATH,
     HANDBOOK,
     HTTP_ACCEPTED,
     HTTP_BAD_REQUEST,
@@ -656,9 +658,6 @@ async def test_roles_may_arrive_comma_separated(
 ) -> None:
     """Several issuers encode ``roles`` that way, and rejecting it would
     fail closed in a way that looks like a permissions bug."""
-    from shared_core.security.jwt import encode_token
-
-    from tests.conftest import _TEST_PRIVATE_KEY_PATH
 
     token = encode_token(
         {
@@ -680,9 +679,6 @@ async def test_a_malformed_project_claim_does_not_deny_everything(
 ) -> None:
     """A single unparseable project id must not cost the caller every
     project they legitimately hold."""
-    from shared_core.security.jwt import encode_token
-
-    from tests.conftest import _TEST_PRIVATE_KEY_PATH
 
     token = encode_token(
         {
