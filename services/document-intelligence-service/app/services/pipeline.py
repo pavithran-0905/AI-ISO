@@ -68,17 +68,24 @@ STAGE_ORDER: tuple[ProcessingStage, ...] = (
     ProcessingStage.PARSING,
     ProcessingStage.OCR,
     ProcessingStage.LAYOUT,
-    ProcessingStage.CLASSIFICATION,
     ProcessingStage.ENTITY_EXTRACTION,
     ProcessingStage.TABLE_EXTRACTION,
     ProcessingStage.FORM_EXTRACTION,
+    ProcessingStage.CLASSIFICATION,
     ProcessingStage.VALIDATION_RULES,
     ProcessingStage.SUMMARIZATION,
     ProcessingStage.TRANSLATION,
     ProcessingStage.INDEXING,
 )
 """Every stage in dependency order. A job's own stage list is sorted into
-this order before it runs."""
+this order before it runs.
+
+Classification runs *after* form extraction, which reads backwards until
+you look at what template matching needs: the form's field labels. Form
+extraction finds those without knowing the document's category, and
+classification cannot match a template without them -- so with
+classification first, template matching silently never fires and every
+form is classified by keyword and structure alone."""
 
 _ESSENTIAL = frozenset({ProcessingStage.PARSING})
 """Stages whose failure ends the run. Only parsing: everything else reads
@@ -410,8 +417,19 @@ class PipelineService:
     async def _classify_stage(
         self, job: DocumentProcessingJob, parsed: ParsedDocument, version: DocumentVersion
     ) -> dict[str, object]:
-        """Assign categories to the document."""
-        outcome = classify(version.content, config=self._config.classifier)
+        """Assign categories to the document.
+
+        The field labels come from what form extraction already stored,
+        rather than being re-derived here: doing that work twice risks the
+        two disagreeing about what the form's labels are, and template
+        matching would then match against labels no stored field has.
+        """
+        fields = await self._repos.key_values.list_for_version(version.id)
+        outcome = classify(
+            version.content,
+            config=self._config.classifier,
+            field_labels=[item.normalized_key for item in fields],
+        )
         stored = []
         for index, label in enumerate(outcome.classifications):
             row = await self._repos.classifications.create(

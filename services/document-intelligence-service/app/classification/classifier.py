@@ -33,6 +33,14 @@ from dataclasses import dataclass, field
 
 from app.models.enums import ClassificationMethod, DocumentCategory
 
+MIN_CONFIDENT_TERMS = 3
+"""Distinct matched terms a category needs before keyword evidence counts
+as strong.
+
+One shared word is a coincidence -- almost every document contains
+*some* word from *some* category vocabulary. Three distinct terms is a
+document that keeps talking about the same subject."""
+
 DEFAULT_MINIMUM_CONFIDENCE = 0.35
 """Below this, a label is noise. Every document contains the word
 "report" somewhere."""
@@ -516,15 +524,30 @@ def _by_keywords(text: str) -> list[Classification]:
     found: list[Classification] = []
     for category, (score, hits) in scored.items():
         relative = score / best if best else 0.0
+        # Scaled by how much evidence there actually is, not only by how
+        # far ahead of the others it is. Relative standing alone gives the
+        # leading category 1.0 however thin its case: a change request
+        # containing the phrase "Risk level" matched the single log term
+        # "level", led on relative score because nothing else scored, and
+        # was reported as a log at the keyword ceiling -- outranking the
+        # correct structural reading of it as a form.
+        evidence = min(len(hits) / MIN_CONFIDENT_TERMS, 1.0)
         # Capped below a rule's confidence: keyword evidence is real and
         # is never as good as somebody having written the rule down.
-        confidence = min(0.30 + 0.55 * relative, 0.88)
+        confidence = min(0.30 + 0.55 * relative * evidence, 0.88)
         found.append(
             Classification(
                 category=category,
                 confidence=round(confidence, 4),
                 method=ClassificationMethod.KEYWORD,
-                rationale=f"Matched {len(hits)} distinctive term(s).",
+                rationale=(
+                    f"Matched {len(hits)} distinctive term(s)"
+                    + (
+                        f"; {MIN_CONFIDENT_TERMS} are needed for full keyword " "confidence."
+                        if len(hits) < MIN_CONFIDENT_TERMS
+                        else "."
+                    )
+                ),
                 matched_terms=tuple(sorted(hits)),
             )
         )

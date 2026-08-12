@@ -51,10 +51,10 @@ DEFAULT_STAGES: tuple[ProcessingStage, ...] = (
     ProcessingStage.PARSING,
     ProcessingStage.OCR,
     ProcessingStage.LAYOUT,
-    ProcessingStage.CLASSIFICATION,
     ProcessingStage.ENTITY_EXTRACTION,
     ProcessingStage.TABLE_EXTRACTION,
     ProcessingStage.FORM_EXTRACTION,
+    ProcessingStage.CLASSIFICATION,
     ProcessingStage.VALIDATION_RULES,
 )
 """The stages a newly uploaded document runs, in order. Summarization and
