@@ -26,6 +26,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from uuid import UUID
 
+from shared_core.exceptions.authorization import AuthorizationError
+
 from app.models.document import Document
 from app.models.enums import ClassificationLevel, classification_rank
 
@@ -77,13 +79,20 @@ class AccessContext:
         )
 
 
-class AccessDeniedError(PermissionError):
+class AccessDeniedError(AuthorizationError):
     """Raised when a caller may not see a document.
 
-    A distinct type so the API layer can map it to 403 and the audit trail
-    can record a *denial* rather than a miss -- "this was refused" and
-    "this does not exist" are different facts, and only one of them is
-    worth investigating.
+    A distinct type so the audit trail can record a *denial* rather than a
+    miss -- "this was refused" and "this does not exist" are different
+    facts, and only one of them is worth investigating.
+
+    **It extends the platform's own ``AuthorizationError``, not
+    ``PermissionError``.** ``register_exception_handlers`` maps the AI-IOS
+    hierarchy; a bare builtin has no handler, so every refusal would leave
+    the API as an unhandled exception -- a 500 that says "internal error"
+    about a decision the service made deliberately and correctly. Found by
+    the API tests, which see the exception itself rather than whatever a
+    catch-all turned it into.
     """
 
 
