@@ -231,6 +231,13 @@ def assemble(
     separator_cost = estimate_tokens(separator)
 
     for chunk in candidates:
+        if not chunk.content.strip():
+            # A blank chunk would still be labelled and cited, producing a
+            # citation that points at nothing -- the "gesture at evidence"
+            # this module exists to avoid. The chunker never emits one, so
+            # this only catches a caller assembling something else.
+            excluded.append(chunk.key)
+            continue
         # Both the separator and the citation label are real text in the
         # emitted body, so both are charged against the budget. Omitting
         # the label cost overruns by ~3 tokens per chunk -- invisible
