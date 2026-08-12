@@ -44,9 +44,16 @@ _BOX_GLYPH = re.compile(r"(?P<mark>[☐☑☒✅✓✔■□○●])")
 _BLANK_RUN = re.compile(r"(?:_{3,}|\.{3,}|…+|-{5,})")
 
 _LABEL = rf"[A-Za-z][A-Za-z0-9 \t/()&'#-]{{0,{MAX_LABEL_LENGTH - 1}}}"
+_LEADING_MARKER = r"(?:[-*•]|\d{1,2}[.)])[ \t]+"
+"""An optional bullet or list number before the label.
+
+Real forms are frequently written as markdown checklists, and without
+this the anchor could never reach the label at all -- which made
+:func:`_clean_label`'s own bullet-stripping unreachable code."""
+
 _KEY_VALUE = re.compile(
-    rf"^[ \t]*(?![0-9]{{2,}})(?P<label>{_LABEL}?)(?<![0-9])[ \t]*[:=][ \t]*"
-    rf"(?P<value>.*?)[ \t]*$"
+    rf"^[ \t]*(?:{_LEADING_MARKER})?(?![0-9]{{2,}})(?P<label>{_LABEL}?)(?<![0-9])"
+    rf"[ \t]*[:=][ \t]*(?P<value>.*?)[ \t]*$"
 )
 """``label: value``, with a label that does not end in a digit.
 

@@ -257,7 +257,6 @@ class PipelineService:
                 f"{stage!s} ran with no parsed version; the stage ordering is wrong."
             )
         handlers = {
-            ProcessingStage.OCR: self._ocr_stage,
             ProcessingStage.LAYOUT: self._layout_stage,
             ProcessingStage.CLASSIFICATION: self._classify_stage,
             ProcessingStage.ENTITY_EXTRACTION: self._entities_stage,
@@ -265,6 +264,8 @@ class PipelineService:
             ProcessingStage.FORM_EXTRACTION: self._forms_stage,
             ProcessingStage.VALIDATION_RULES: self._validate_stage,
         }
+        if stage is ProcessingStage.OCR:
+            return await self._ocr_stage(job, parsed, version, data)
         handler = handlers.get(stage)
         if handler is None:
             # Summarization, translation and indexing are requested
@@ -346,7 +347,11 @@ class PipelineService:
         }
 
     async def _ocr_stage(
-        self, job: DocumentProcessingJob, parsed: ParsedDocument, version: DocumentVersion
+        self,
+        job: DocumentProcessingJob,
+        parsed: ParsedDocument,
+        version: DocumentVersion,
+        data: bytes = b"",
     ) -> dict[str, object]:
         """Read pages that carry no text layer.
 
@@ -365,7 +370,10 @@ class PipelineService:
 
         if job.document_id is None:  # pragma: no cover -- parsing already checked
             raise ValueError(f"Job {job.id!s} names no document.")
-        result = self._ocr.read(parsed)
+        # The original bytes, not the parsed document alone: OCR needs page
+        # images, and a ParsedDocument records a scanned page's geometry
+        # without its pixels.
+        result = self._ocr.read(parsed, data)
         document = await self._repos.documents.require_by_id(job.document_id)
         document.ocr_completed = True
         document.mean_ocr_confidence = result.confidence

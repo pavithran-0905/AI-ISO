@@ -7,9 +7,9 @@ catch-all, a dependency that cannot be constructed.
 
 from __future__ import annotations
 
+import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
-import pytest
 
 from app.documents.parser import supported_formats
 from app.models.enums import DocumentFormat

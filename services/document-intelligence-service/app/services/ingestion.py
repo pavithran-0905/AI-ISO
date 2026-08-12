@@ -19,6 +19,7 @@ re-processing -- the results are already there.
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import UUID
@@ -141,7 +142,7 @@ class IngestionService:
                 byte_size=len(data),
                 checksum=checksum,
                 requires_ocr=needs_ocr(guess.format),
-                tags=list(tags or []),
+                tags=clean_tags(tags),
                 uploaded_by=uploaded_by,
                 duplicate_of_id=existing.id if existing is not None else None,
                 document_metadata={
@@ -277,6 +278,23 @@ class IngestionService:
         return job
 
 
+def clean_tags(tags: Sequence[str] | None) -> list[str]:
+    """Tags with blanks and duplicates removed, order preserved.
+
+    Cleaned here rather than only in the request schema, because the
+    schema is one of several callers: the upload route splits a
+    comma-separated form field, and a worker or an internal caller passes a
+    list directly. A blank tag reaching the column is a tag nothing can
+    match and a duplicate double-counts in every by-tag report.
+    """
+    seen: dict[str, None] = {}
+    for tag in tags or ():
+        cleaned = tag.strip()
+        if cleaned:
+            seen.setdefault(cleaned, None)
+    return list(seen)
+
+
 def checksum_of(data: bytes) -> str:
     """The checksum this service identifies a document by."""
     return f"sha256:{hashlib.sha256(data).hexdigest()}"
@@ -294,5 +312,6 @@ __all__ = [
     "IngestionResult",
     "IngestionService",
     "checksum_of",
+    "clean_tags",
     "is_supported",
 ]

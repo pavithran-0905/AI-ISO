@@ -136,7 +136,16 @@ def parse_docx(data: bytes) -> ParsedDocument:
     document = ParsedDocument(format=DocumentFormat.DOCX)
     try:
         source = docx.Document(io.BytesIO(data))
-    except (PackageNotFoundError, KeyError, ValueError, OSError) as error:
+    except (
+        PackageNotFoundError,
+        KeyError,
+        ValueError,
+        OSError,
+        zipfile.BadZipFile,
+    ) as error:
+        # BadZipFile is not an OSError, so a corrupt DOCX escaped this
+        # handler entirely and crashed the worker instead of being recorded
+        # as a parse failure on the document.
         raise DocumentParseError(f"This DOCX could not be opened: {error}") from error
 
     core = source.core_properties

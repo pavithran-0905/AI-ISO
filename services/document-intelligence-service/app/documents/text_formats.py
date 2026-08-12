@@ -31,11 +31,23 @@ from app.documents.parser import (
 )
 from app.models.enums import DocumentFormat
 
-DEFAULT_ENCODINGS = ("utf-8-sig", "utf-8", "utf-16", "cp1252", "latin-1")
+DEFAULT_ENCODINGS = ("utf-8-sig", "utf-8", "cp1252", "latin-1")
 """Tried in order. ``latin-1`` is last and always succeeds, which makes
 it the deliberate fallback rather than a failure -- a document that
 decodes to the wrong glyphs is more useful than one that does not decode
-at all, provided the choice is recorded."""
+at all, provided the choice is recorded.
+
+**UTF-16 is not in this list, and is only tried on a byte-order mark.**
+UTF-16 decodes almost any even-length byte string without raising, so
+attempting it ahead of ``cp1252`` turns an ordinary Western European
+document into plausible-looking CJK mojibake -- silently, with no error
+anywhere. A BOM is the only reliable evidence that a payload really is
+UTF-16."""
+
+_UTF16_BOMS: tuple[tuple[bytes, str], ...] = (
+    (b"\xff\xfe", "utf-16"),
+    (b"\xfe\xff", "utf-16"),
+)
 
 CHARACTERS_PER_PAGE = 3_000
 """How much text counts as a page for formats that have no pages of their
@@ -64,6 +76,12 @@ font table then survives stripping and turns up in the document as
 
 def decode(data: bytes) -> tuple[str, str]:
     """*data* as text, with the encoding that worked."""
+    for bom, encoding in _UTF16_BOMS:
+        if data.startswith(bom):
+            try:
+                return data.decode(encoding), encoding
+            except UnicodeDecodeError:  # pragma: no cover -- a BOM implies it decodes
+                break
     for encoding in DEFAULT_ENCODINGS:
         try:
             return data.decode(encoding), encoding

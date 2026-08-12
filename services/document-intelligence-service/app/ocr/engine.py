@@ -226,6 +226,12 @@ class OcrEngine(Protocol):
         """Recognise text in one image."""
         ...
 
+    def read(
+        self, document: object, data: bytes, *, languages: Sequence[str] = ("eng",)
+    ) -> OcrResult:
+        """Recognise text across every page of one document."""
+        ...
+
 
 class TesseractEngine:
     """OCR through the Tesseract binary, via ``pytesseract``.
@@ -374,6 +380,48 @@ class TesseractEngine:
             )
         return words
 
+    def read(
+        self,
+        document: object,
+        data: bytes,
+        *,
+        languages: Sequence[str] = ("eng",),
+    ) -> OcrResult:
+        """Recognise text across every page of one document.
+
+        This is what the pipeline calls, and it exists because a document is
+        not an image: a TIFF fax is forty frames and a PNG is one, and the
+        caller should not have to know which before it can be read.
+
+        Raises:
+            OcrUnavailableError: When OCR cannot run here at all. Raised
+                rather than returning empty pages, because empty text from
+                a scan is indistinguishable from a genuinely blank scan and
+                is the one failure this service must never produce
+                silently. A per-*page* failure is different and is recorded
+                on that page.
+        """
+        self.probe().require()
+        started = time.perf_counter()
+        frames = _split_frames(data)
+        pages = [
+            self.read_image(frame, page_number=number, languages=languages)
+            for number, frame in enumerate(frames, start=1)
+        ]
+        result = OcrResult(
+            pages=pages,
+            engine=self.kind,
+            languages=list(languages),
+            duration_ms=(time.perf_counter() - started) * 1000,
+        )
+        if not pages:
+            result.error = (
+                "No page image could be decoded from this document, so there was "
+                "nothing to read. PDF pages need rasterising first, which is a "
+                "separate system dependency this deployment does not carry."
+            )
+        return result
+
 
 def _as_float(column: Sequence[object], index: int, *, default: float = 0.0) -> float:
     """One value from a Tesseract output column, or *default*."""
@@ -416,6 +464,35 @@ def _dpi_of(image: object) -> int | None:
         except (TypeError, ValueError):
             return None
     return None
+
+
+def _split_frames(data: bytes) -> list[bytes]:
+    """One PNG per page of *data*, or an empty list if it is not an image.
+
+    Multi-frame formats are split so each page is read and scored on its
+    own -- a forty-page fax averaged into one number hides whichever page
+    was unreadable, which is the page a reviewer needs.
+
+    Returns an empty list rather than raising for a payload that is not a
+    decodable image at all: a PDF reaches here whenever a deployment has no
+    rasteriser, and that is a missing dependency to report rather than a
+    document to blame.
+    """
+    from PIL import Image, UnidentifiedImageError  # noqa: PLC0415
+
+    try:
+        with Image.open(io.BytesIO(data)) as image:
+            count = getattr(image, "n_frames", 1)
+            frames: list[bytes] = []
+            for index in range(count):
+                if count > 1:
+                    image.seek(index)
+                buffer = io.BytesIO()
+                image.convert("RGB").save(buffer, format="PNG")
+                frames.append(buffer.getvalue())
+            return frames
+    except (UnidentifiedImageError, OSError, ValueError):
+        return []
 
 
 __all__ = [

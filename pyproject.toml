@@ -62,8 +62,14 @@ convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
 # Literal status codes / values in test assertions are standard practice, not magic numbers.
-"tests/*" = ["PLR2004"]
-"**/tests/*" = ["PLR2004"]
+#
+# PLC0415 (import not at top level) exists for production code, where a
+# mid-function import hides a dependency from anyone reading the module's
+# header and pays import cost on a hot path. Neither applies in a test: an
+# import inside a test function scopes an optional or heavy dependency to
+# the one test that needs it and keeps that test readable as a single unit.
+"tests/*" = ["PLR2004", "PLC0415"]
+"**/tests/*" = ["PLR2004", "PLC0415"]
 
 # ---------------------------------------------------------------------------
 # Black — formatting

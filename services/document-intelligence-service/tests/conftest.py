@@ -118,7 +118,7 @@ from shared_core.security.jwt import encode_token  # noqa: E402
 from shared_core.storage.client import create_minio_client  # noqa: E402
 from shared_core.storage.wrapper import StorageWrapper  # noqa: E402
 
-import app.documents  # noqa: E402,F401  (registers every parser)
+import app.documents  # noqa: E402  (registers every parser)
 from app.api import deps  # noqa: E402
 from app.classification.classifier import ClassifierConfig, DocumentTemplate  # noqa: E402
 from app.core.factory import create_app  # noqa: E402
@@ -253,7 +253,7 @@ async def storage() -> AsyncIterator[DocumentStorage]:
     )
     try:
         await asyncio.wait_for(store.ensure_ready(), timeout=10)
-    except (*UNREACHABLE_ERRORS, Exception) as exc:  # noqa: BLE001 -- skip, never fail
+    except (*UNREACHABLE_ERRORS, Exception) as exc:
         pytest.skip(f"MinIO is not reachable: {exc}")
     yield store
 
