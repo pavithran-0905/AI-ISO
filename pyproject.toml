@@ -31,7 +31,11 @@ dev = [
 [tool.ruff]
 line-length = 100
 target-version = "py313"
-extend-exclude = ["migrations/versions"]
+# Alembic writes these; they are generated artefacts reviewed as SQL
+# rather than as Python, and every service keeps them under
+# alembic/versions. The original pattern named migrations/versions,
+# which no service uses -- so the exclusion silently covered nothing.
+extend-exclude = ["**/migrations/versions", "**/alembic/versions"]
 
 [tool.ruff.lint]
 select = [
@@ -60,7 +64,7 @@ convention = "google"
 [tool.black]
 line-length = 100
 target-version = ["py313"]
-extend-exclude = "migrations/versions"
+extend-exclude = "(migrations|alembic)/versions"
 
 # ---------------------------------------------------------------------------
 # MyPy — strict static analysis
