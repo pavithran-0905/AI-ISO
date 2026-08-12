@@ -288,7 +288,7 @@ def test_prompt_injection_is_detected() -> None:
 
 
 def test_zero_width_characters_are_an_encoding_anomaly() -> None:
-    findings = scanner.scan_encoding("normal\u200Btext\u202E")
+    findings = scanner.scan_encoding("normal\u200btext\u202e")
     assert findings
     assert findings[0].finding is SecurityFinding.ENCODING_ANOMALY
 
@@ -338,7 +338,7 @@ def test_redacting_clean_text_changes_nothing() -> None:
 
 
 def test_invisible_characters_are_stripped() -> None:
-    assert scanner.strip_invisible("nor\u200Bmal\u202E") == "normal"
+    assert scanner.strip_invisible("nor\u200bmal\u202e") == "normal"
 
 
 def test_a_finding_renders_as_a_plain_dict() -> None:
