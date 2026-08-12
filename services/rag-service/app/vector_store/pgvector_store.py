@@ -149,7 +149,7 @@ class PgVectorStore:
             await self._session.flush()
         except SQLAlchemyError as exc:
             raise VectorStoreError(f"Could not delete vectors: {exc}") from exc
-        return int(result.rowcount or 0)
+        return int(getattr(result, "rowcount", 0) or 0)
 
     async def search(self, query: VectorQuery) -> list[VectorMatch]:
         """Nearest neighbours, access-filtered inside the query itself."""
@@ -239,7 +239,7 @@ class PgVectorStore:
             await self._session.flush()
         except SQLAlchemyError as exc:
             raise VectorStoreError(f"Could not delete vectors: {exc}") from exc
-        return int(result.rowcount or 0)
+        return int(getattr(result, "rowcount", 0) or 0)
 
     async def count(self, organization_id: UUID) -> int:
         """How many vectors this organization has under this model."""

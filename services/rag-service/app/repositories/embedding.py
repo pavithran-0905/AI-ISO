@@ -162,7 +162,7 @@ class EmbeddingVectorRepository(BaseRepository[EmbeddingVector]):
             sql_delete(EmbeddingVector).where(EmbeddingVector.document_id == document_id)
         )
         await self._session.flush()
-        return int(result.rowcount or 0)
+        return int(getattr(result, "rowcount", 0) or 0)
 
     async def delete_for_model(self, organization_id: UUID, model_name: str) -> int:
         """Remove every vector under one model.
@@ -178,7 +178,7 @@ class EmbeddingVectorRepository(BaseRepository[EmbeddingVector]):
             )
         )
         await self._session.flush()
-        return int(result.rowcount or 0)
+        return int(getattr(result, "rowcount", 0) or 0)
 
     async def count_for_org(self, organization_id: UUID, *, model_name: str | None = None) -> int:
         """How many vectors this organization holds."""

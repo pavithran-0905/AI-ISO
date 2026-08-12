@@ -22,7 +22,7 @@ import re
 from typing import Any
 from xml.etree import ElementTree
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 from bs4 import BeautifulSoup
 
 from app.models.enums import SourceKind

@@ -171,7 +171,7 @@ class GraphClient:
             return []
         try:
             async with self._driver.session(database=self._database) as session:
-                result = await session.run(cypher, parameters or {})  # type: ignore[arg-type]
+                result = await session.run(cypher, parameters or {})
                 rows: list[dict[str, Any]] = []
                 async for record in result:
                     rows.append(dict(record))

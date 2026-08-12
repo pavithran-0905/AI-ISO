@@ -239,7 +239,7 @@ class IndexingService:
         """
         result = IndexResult(document_id=document.id)
         pending: list[tuple[DocumentChunk, str]] = []
-        reused: list[tuple[DocumentChunk, list[float]]] = []
+        reused: list[VectorRecord] = []
 
         for chunk in chunks:
             digest = content_hash(chunk.content, model=self._embeddings.model)

@@ -255,7 +255,7 @@ class AnalyticsService:
                     "documents": await self._sources.count_documents(source.id),
                 }
             )
-        rows.sort(key=lambda row: int(row["documents"]), reverse=True)
+        rows.sort(key=lambda row: int(str(row["documents"])), reverse=True)
         return rows
 
     async def _by_source_kind(self, organization_id: UUID) -> dict[str, int]:

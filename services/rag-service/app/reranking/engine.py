@@ -299,11 +299,13 @@ def rerank(
             candidate.key: min(max(judged.get(candidate.key, candidate.score), 0.0), 1.0)
             for candidate in ordered
         }
-        signals = {key: {"llm": value} for key, value in scored.items()}
+        signals: dict[str, dict[str, float]] = {
+            key: {"llm": value} for key, value in scored.items()
+        }
         return _finalise(_by_score(ordered, scored, cut), ordered, chosen, signals, scored)
 
     if chosen is RerankMethod.HYBRID:
-        signals: dict[str, dict[str, float]] = {}
+        signals = {}
         scored = {}
         for candidate in ordered:
             parts = {str(name): _SIGNALS[name](candidate, active) for name in HYBRID_WEIGHTS}

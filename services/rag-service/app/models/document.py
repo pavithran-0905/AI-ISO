@@ -157,7 +157,15 @@ class DocumentVersion(BaseModel):
     itself carried. Kept apart from ``document_metadata``, which is what
     a *human or a rule* asserted about the document."""
     warnings: Mapped[list[str]] = mapped_column(JSON, default=list)
-    created_by: Mapped[str | None] = mapped_column(String(128), default=None)
+    authored_by: Mapped[str | None] = mapped_column(String(128), default=None)
+    """Who asked for this parse, as a caller identifier string.
+
+    Named apart from ``AuditMixin.created_by`` deliberately: that column is
+    a ``UUID``, and redefining it as a ``str`` here would break the
+    substitutability the mixin exists to provide -- the same defect
+    prompt-management-service carried on ``PromptVersion``. Only MyPy
+    finds this; nothing at runtime objects until something reads the
+    column expecting a UUID."""
 
 
 class DocumentChunk(BaseModel):

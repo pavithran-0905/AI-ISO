@@ -457,7 +457,7 @@ class IngestionService:
                 is_current=True,
                 extracted_metadata=extracted,
                 warnings=list(parsed.warnings),
-                created_by=created_by,
+                authored_by=created_by,
             )
         )
 
