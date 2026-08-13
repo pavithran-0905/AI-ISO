@@ -13,7 +13,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from app.rca.enums import ClockSource, PrecedenceVerdict
+from app.root_cause.enums import ClockSource, PrecedenceVerdict
 
 CLOCK_SKEW_TOLERANCE = timedelta(seconds=2)
 """Four times the realistic 500ms cross-region NTP ceiling. It widens the

@@ -21,7 +21,7 @@ import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from app.rca.enums import Unmeasurable
+from app.root_cause.enums import Unmeasurable
 
 MIN_POINTS_FOR_CORRELATION = 2
 """Two points define a line and correlate perfectly; nothing below this

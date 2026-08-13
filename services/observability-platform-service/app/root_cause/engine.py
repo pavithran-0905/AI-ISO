@@ -21,12 +21,12 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from app.rca.correlation import (
+from app.root_cause.correlation import (
     MIN_JACCARD,
     CorrelationResult,
     expected_false_positives,
 )
-from app.rca.enums import (
+from app.root_cause.enums import (
     AnalysisRefusal,
     BlastBucket,
     Direction,
@@ -36,7 +36,7 @@ from app.rca.enums import (
     RecommendationKind,
     WindowProvenance,
 )
-from app.rca.timeline import Timeline
+from app.root_cause.timeline import Timeline
 
 MAX_DEPTH = 4
 """service -> gateway -> service -> datastore -> host. Beyond four hops
