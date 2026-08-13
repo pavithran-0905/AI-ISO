@@ -6,6 +6,17 @@ sync ``psycopg`` DSN Alembic's command API needs via
 :func:`shared_core.database.migration.sync_dsn`, and targets
 ``app.models``' full :data:`~shared_core.database.base.Base.metadata`
 for autogenerate support.
+
+**Uses a service-scoped ``version_table``.** Every AI-IOS service
+connects to the same physical ``aiios`` Postgres database (there is one
+shared instance, not one per service), so Alembic's default single
+``alembic_version`` table cannot record more than one service's
+migration chain at a time -- the second service to run ``upgrade head``
+would fail with "Can't locate revision" against a revision id from a
+different service's history entirely. Naming this service's version
+table ``alembic_version_observability_platform_service`` gives it an
+independent history row, the same way every other table this service
+owns is already namespaced by being defined only in ``app.models``.
 """
 
 from __future__ import annotations
@@ -29,6 +40,8 @@ config.set_main_option("sqlalchemy.url", sync_dsn(get_settings().database.dsn))
 
 target_metadata = Base.metadata
 
+VERSION_TABLE = "alembic_version_observability_platform_service"
+
 
 def run_migrations_offline() -> None:
     """Emit migration SQL without a live database connection."""
@@ -38,6 +51,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        version_table=VERSION_TABLE,
     )
     with context.begin_transaction():
         context.run_migrations()
@@ -51,7 +65,9 @@ def run_migrations_online() -> None:
         poolclass=pool.NullPool,
     )
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection, target_metadata=target_metadata, version_table=VERSION_TABLE
+        )
         with context.begin_transaction():
             context.run_migrations()
 
