@@ -34,6 +34,7 @@ from shared_core.config.settings import (
     MinioSettings,
     RabbitMQSettings,
     RedisSettings,
+    TelemetrySettings,
 )
 
 
@@ -218,6 +219,7 @@ class Settings:
     rabbitmq: RabbitMQSettings
     email: EmailSettings
     minio: MinioSettings
+    telemetry: TelemetrySettings
     service: ObservabilityPlatformServiceSettings
 
 
@@ -231,6 +233,7 @@ def build_settings() -> Settings:
         rabbitmq=shared.rabbitmq,
         email=shared.email,
         minio=shared.minio,
+        telemetry=shared.telemetry,
         service=ObservabilityPlatformServiceSettings(),
     )
 

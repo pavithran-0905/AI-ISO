@@ -15,6 +15,7 @@ from uuid import UUID
 from shared_core.database.repository import BaseRepository
 from shared_core.database.tenant import TenantScope
 from shared_core.exceptions.not_found import NotFoundError
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import AuditAction, ReportStatus, SignalKind
@@ -262,6 +263,15 @@ class RetentionPolicyRepository(BaseRepository[RetentionPolicy]):
         stmt = self._base_select().where(
             RetentionPolicy.organization_id == organization_id,
             RetentionPolicy.is_enabled.is_(True),
+        )
+        return (await self._session.execute(stmt)).scalars().all()
+
+    async def list_organization_ids(self) -> Sequence[UUID]:
+        """Every organization with at least one enabled retention policy."""
+        stmt = (
+            select(RetentionPolicy.organization_id)
+            .distinct()
+            .where(RetentionPolicy.is_enabled.is_(True))
         )
         return (await self._session.execute(stmt)).scalars().all()
 

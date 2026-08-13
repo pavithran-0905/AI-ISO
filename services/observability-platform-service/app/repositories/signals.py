@@ -24,7 +24,7 @@ from shared_core.database.base import BaseModel
 from shared_core.database.repository import BaseRepository
 from shared_core.database.tenant import TenantScope
 from shared_core.exceptions.not_found import NotFoundError
-from sqlalchemy import ColumnElement, and_, or_
+from sqlalchemy import ColumnElement, and_, delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.enums import EventKind, LogLevel, SpanStatus
@@ -67,6 +67,17 @@ class MetricSeriesRepository(BaseRepository[MetricSeries]):
         )
         return (await self._session.execute(stmt)).scalars().first()
 
+    async def list_organization_ids(self) -> Sequence[UUID]:
+        """Every organization with at least one metric series.
+
+        The sweep-scoping seam every leader-elected worker uses: a
+        platform-wide job iterates organizations rather than assuming a
+        single tenant, and this is the cheapest table to ask "which
+        organizations exist" from.
+        """
+        stmt = select(MetricSeries.organization_id).distinct()
+        return (await self._session.execute(stmt)).scalars().all()
+
     async def require_in_org(self, organization_id: UUID, series_id: UUID) -> MetricSeries:
         """Return *series_id*, scoped to *organization_id*.
 
@@ -103,6 +114,22 @@ class MetricSeriesRepository(BaseRepository[MetricSeries]):
         )
         return (await self._session.execute(stmt)).scalars().all()
 
+    async def list_active(
+        self, organization_id: UUID, *, since: datetime, limit: int = 500
+    ) -> Sequence[MetricSeries]:
+        """Series with at least one sample since *since* -- the anomaly
+        sweep's candidate pool. The complement of :meth:`list_stale`."""
+        stmt = (
+            self._base_select()
+            .where(
+                MetricSeries.organization_id == organization_id,
+                MetricSeries.last_seen_at >= since,
+            )
+            .order_by(MetricSeries.last_seen_at.desc())
+            .limit(min(limit, MAX_PAGE_SIZE))
+        )
+        return (await self._session.execute(stmt)).scalars().all()
+
 
 def _cursor_clause(
     model: type[BaseModel], after: tuple[datetime, UUID] | None, time_column: str
@@ -124,11 +151,37 @@ def _cursor_clause(
     )
 
 
+async def _delete_before(
+    session: AsyncSession,
+    model: type[BaseModel],
+    organization_id: UUID,
+    *,
+    time_column: str,
+    older_than: datetime,
+) -> int:
+    """Hard-delete rows older than a retention cutoff, in one statement.
+
+    A permanent delete, not the base repository's soft delete: retained
+    signal data past its policy is gone by design, and a soft-deleted row
+    left sitting in the table forever would defeat the point of a
+    retention sweep while still counting toward storage.
+    """
+    column = getattr(model, time_column)
+    stmt = delete(model).where(model.organization_id == organization_id).where(column < older_than)
+    result = await session.execute(stmt)
+    return result.rowcount or 0  # type: ignore[attr-defined]
+
+
 class MetricRepository(BaseRepository[Metric]):
     """Append-mostly repository for :class:`Metric` samples."""
 
     def __init__(self, session: AsyncSession, *, tenant_scope: TenantScope | None = None) -> None:
         super().__init__(session, Metric, tenant_scope=tenant_scope)
+
+    async def purge_older_than(self, organization_id: UUID, *, older_than: datetime) -> int:
+        return await _delete_before(
+            self._session, Metric, organization_id, time_column="occurred_at", older_than=older_than
+        )
 
     async def list_for_series(
         self,
@@ -162,6 +215,15 @@ class LogEntryRepository(BaseRepository[LogEntry]):
 
     def __init__(self, session: AsyncSession, *, tenant_scope: TenantScope | None = None) -> None:
         super().__init__(session, LogEntry, tenant_scope=tenant_scope)
+
+    async def purge_older_than(self, organization_id: UUID, *, older_than: datetime) -> int:
+        return await _delete_before(
+            self._session,
+            LogEntry,
+            organization_id,
+            time_column="occurred_at",
+            older_than=older_than,
+        )
 
     async def search_window(
         self,
@@ -255,6 +317,40 @@ class TraceSpanRepository(BaseRepository[TraceSpan]):
     def __init__(self, session: AsyncSession, *, tenant_scope: TenantScope | None = None) -> None:
         super().__init__(session, TraceSpan, tenant_scope=tenant_scope)
 
+    async def purge_older_than(self, organization_id: UUID, *, older_than: datetime) -> int:
+        return await _delete_before(
+            self._session,
+            TraceSpan,
+            organization_id,
+            time_column="started_at",
+            older_than=older_than,
+        )
+
+    async def list_organization_ids(self) -> Sequence[UUID]:
+        """Every organization with at least one span, for the topology sweep."""
+        stmt = select(TraceSpan.organization_id).distinct()
+        return (await self._session.execute(stmt)).scalars().all()
+
+    async def list_recent(
+        self, organization_id: UUID, *, since: datetime, limit: int = MAX_PAGE_SIZE
+    ) -> Sequence[TraceSpan]:
+        """Recent spans across every trace, for the topology rebuild sweep.
+
+        Unlike :meth:`list_for_trace`, this is bounded by *limit*: a
+        topology rebuild samples recent traffic to infer the graph, it
+        does not need every span that ever existed in the window.
+        """
+        stmt = (
+            self._base_select()
+            .where(
+                TraceSpan.organization_id == organization_id,
+                TraceSpan.started_at >= since,
+            )
+            .order_by(TraceSpan.started_at)
+            .limit(min(limit, MAX_PAGE_SIZE))
+        )
+        return (await self._session.execute(stmt)).scalars().all()
+
     async def list_for_trace(self, organization_id: UUID, trace_id: str) -> Sequence[TraceSpan]:
         """Every span of one trace, in start order.
 
@@ -304,6 +400,15 @@ class ObservabilityEventRepository(BaseRepository[ObservabilityEvent]):
 
     def __init__(self, session: AsyncSession, *, tenant_scope: TenantScope | None = None) -> None:
         super().__init__(session, ObservabilityEvent, tenant_scope=tenant_scope)
+
+    async def purge_older_than(self, organization_id: UUID, *, older_than: datetime) -> int:
+        return await _delete_before(
+            self._session,
+            ObservabilityEvent,
+            organization_id,
+            time_column="occurred_at",
+            older_than=older_than,
+        )
 
     async def search_window(
         self,
@@ -356,6 +461,15 @@ class ProfileRepository(BaseRepository[Profile]):
 
     def __init__(self, session: AsyncSession, *, tenant_scope: TenantScope | None = None) -> None:
         super().__init__(session, Profile, tenant_scope=tenant_scope)
+
+    async def purge_older_than(self, organization_id: UUID, *, older_than: datetime) -> int:
+        return await _delete_before(
+            self._session,
+            Profile,
+            organization_id,
+            time_column="captured_at",
+            older_than=older_than,
+        )
 
     async def list_for_service(
         self,

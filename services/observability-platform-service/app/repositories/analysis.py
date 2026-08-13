@@ -82,6 +82,21 @@ class ServiceDependencyRepository(BaseRepository[ServiceDependency]):
         )
         return (await self._session.execute(stmt)).scalars().all()
 
+    async def list_for_environment(
+        self, organization_id: UUID, environment: str, *, limit: int = MAX_PAGE_SIZE
+    ) -> Sequence[ServiceDependency]:
+        """Every edge in one environment, for a full topology view."""
+        stmt = (
+            self._base_select()
+            .where(
+                ServiceDependency.organization_id == organization_id,
+                ServiceDependency.environment == environment,
+            )
+            .order_by(ServiceDependency.caller_service, ServiceDependency.callee_service)
+            .limit(min(limit, MAX_PAGE_SIZE))
+        )
+        return (await self._session.execute(stmt)).scalars().all()
+
 
 class ServiceTopologyNodeRepository(BaseRepository[ServiceTopologyNode]):
     """Repository for :class:`ServiceTopologyNode`."""
@@ -148,6 +163,11 @@ class SloRepository(BaseRepository[Slo]):
         )
         if service_name is not None:
             stmt = stmt.where(Slo.service_name == service_name)
+        return (await self._session.execute(stmt)).scalars().all()
+
+    async def list_organization_ids(self) -> Sequence[UUID]:
+        """Every organization with at least one enabled SLO."""
+        stmt = select(Slo.organization_id).distinct().where(Slo.is_enabled.is_(True))
         return (await self._session.execute(stmt)).scalars().all()
 
 
