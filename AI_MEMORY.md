@@ -7654,3 +7654,141 @@ have:
   `downsampled_days` at a realistic default — all three tiers collapse to
   the same short value for the deletion to be authorized at all in a
   test.
+
+---
+
+## Prompt 065 — Enterprise Backup & Disaster Recovery Service
+
+`services/backup-dr-service`, port 8036, Redis db 38, PostgreSQL
+`aiios_backup_dr` (created fresh this prompt — did not pre-exist). 17
+tables, 12 spec endpoints, 9 domain events, 11 pure engines (backup chain
+validation, restore point selection, snapshot expiry/quota, replication
+lag classification, retention planning, checksum verification, DR plan
+sequencing, failover authorization, analytics rates, key rotation,
+immutability transitions), 12 business services, 5 leader-elected
+workers, 317 tests at 97.6% coverage against real PostgreSQL and Redis.
+Ruff, Black and MyPy (scoped to `app/` + `main.py`) all clean.
+
+### Real defects this build found
+
+Hand-verification of every pure engine before any pytest, exactly as in
+every prior prompt, found **zero defects** this round — a first for this
+methodology, and worth noting as a signal the design-then-verify
+discipline is maturing rather than that the engines were simpler. Every
+subsequent bug surfaced later, during MyPy and integration testing
+instead:
+
+- **`app/services/retention.py`'s `apply_plan()` reused the loop variable
+  name `action` across two separate `for` loops** (`plan.tier_actions`
+  then `plan.delete_actions`), which MyPy flagged as a type redefinition
+  (`TierAction` vs `DeleteAction`) rather than a runtime bug — but it is
+  exactly the kind of aliasing that becomes a real bug the next time
+  someone edits one loop and forgets the other shares a name. Fixed by
+  renaming to `tier_action` / `delete_action`.
+- **`app/workers/statistics_rollup.py`'s `_count()` helper typed its
+  `column` and `extra` parameters as bare `object`**, relying on a
+  `# type: ignore[operator]` that didn't actually cover the `arg-type`
+  errors MyPy raised on the `.where(...)` call. Fixed by typing them
+  properly (`InstrumentedAttribute[datetime | None]`,
+  `tuple[ColumnElement[bool], ...]`), which let the `type: ignore` be
+  removed entirely rather than patched.
+- **A worker test read a mutated row through the wrong session and got a
+  stale, unmutated Python object back** — not a bug in the service, but a
+  test-authoring trap worth recording precisely because it looks exactly
+  like a real defect. `BackupSchedulerWorker.tick()` and
+  `ReplicationMonitorWorker.tick()` each open their own new session (via
+  the shared `session_factory`, itself bound to the test's single
+  connection) to make their writes, then commit. Re-querying the *same*
+  row afterward through `repos.schedules.require_by_id(...)` — bound to
+  the **test's own, different** session — returned the test session's
+  already-cached identity-mapped Python object with its original,
+  pre-worker values (`next_run_at` unchanged, `status` still `PENDING`),
+  because a plain `SELECT` does not implicitly overwrite an
+  already-loaded object's attributes from a fresh row. The fix is
+  `await db_session.refresh(entity)` before asserting — confirmed this is
+  the same discipline already recorded from Prompt 064
+  ("Enum normalisers are all verified after `await db_session.refresh(...)`"),
+  now with the concrete mechanism behind *why* it matters spelled out.
+  Three call sites needed it (`BackupSchedulerWorker`,
+  `RetentionSweepWorker`, `ReplicationMonitorWorker`); two ("no due
+  schedules" / "no policies") didn't, since they assert counts rather
+  than mutated field values.
+- **After the `refresh()` fix, a `ReplicationJob.status` comparison via
+  `.value` still failed** — `AttributeError: 'str' object has no
+  attribute 'value'`. `status` columns in this codebase are declared as
+  plain `String(16)`, not a SQLAlchemy `Enum` type, so a value freshly
+  loaded from the database (via `refresh()` or any real `SELECT`) comes
+  back as a plain Python `str`, not the enum instance — only a value
+  *assigned* directly in Python memory (e.g. `job.status =
+  ReplicationStatus.PENDING` at construction) is the actual enum object
+  with a `.value` attribute. Every prior test in this build that checked
+  `.status is SomeEnum.MEMBER` or `.status.value` had only ever done so
+  on objects mutated in-place within the same session, never on a
+  genuinely fresh database round trip — this was the first test to
+  actually force one. Fixed by comparing `job.status == "stalled"`
+  (StrEnum equality against a plain string works either way) instead of
+  reaching for `.value`.
+- **A duplicate-index pattern was found across every model file** (e.g.
+  `BackupReport.kind` gets both an explicit `Index("ix_backup_report_kind",
+  "kind")` in `__table_args__` *and* `index=True` on the column itself,
+  producing two separate indexes over the same column under different
+  auto-generated names) — confirmed via `alembic revision --autogenerate`
+  emitting two `Detected added index` lines per affected column. This
+  turned out to be a **pre-existing, already-committed pattern from
+  Prompt 064** (`services/observability-platform-service/app/models/operations.py`
+  has the identical `Index("ix_obs_report_kind", "kind")` +
+  `index=True` combination), not a new deviation introduced here — left
+  as-is for consistency with established (if suboptimal) precedent rather
+  than fixed unilaterally in only one service. Worth a dedicated cleanup
+  pass across every service's models if this is ever revisited.
+
+### Things worth remembering
+
+- **Redis db assignment is now sequential and must be tracked across
+  services to avoid collision**: 21, 22, 35, 36, 37 (Prompt 064), **38
+  (this prompt)**. Check the highest prior assignment in this file before
+  picking the next one rather than reusing a low number.
+- **`aiios_backup_dr` did not pre-exist** (unlike `aiios_observability`,
+  which Prompt 064 found already migrated from an earlier session) —
+  created fresh via `docker exec aiios_postgres psql -U aiios -tAc
+  "CREATE DATABASE aiios_backup_dr;"` before the first `alembic revision
+  --autogenerate` could even run. A service's dedicated database is not
+  guaranteed to already exist; check first (`SELECT datname FROM
+  pg_database WHERE datname='...'`), then create it, rather than assuming.
+- **The live Docker e2e for this service required an actual
+  `services/backup-dr-service/Dockerfile`, which did not exist yet** —
+  unlike prior prompts continuing this session's methodology, this was
+  the first time in this session a Dockerfile had to be authored from
+  scratch (adapted directly from `observability-platform-service`'s, with
+  the port and service-name substitutions) rather than already being
+  present. Confirm a service Dockerfile exists before assuming the e2e
+  step is just "build and run."
+- **Confirmed the leader-elected worker firing live, unmanually, per the
+  standing verification rule**: seeded a `BackupSchedule` with
+  `next_run_at` one hour in the past directly via `psql` against the
+  running container's database — never through the API, never by calling
+  the worker directly — then waited past one `AIIOS_BACKUP_DR_SERVICE_
+  BACKUP_SCHEDULER_SECONDS=15` interval with no other interaction. The
+  container's own log line (`"backup scheduler sweep completed",
+  started: 1`) and a subsequent `GET /backup/jobs` call both confirmed a
+  real `BackupJob` row was created, `last_run_at` was set, and
+  `next_run_at` was advanced by a full day — entirely from the worker's
+  own leader-elected tick, exactly as the standing "verify queue/worker
+  designs live, unmanually" instruction requires.
+- **`MSYS_NO_PATHCONV=1` was needed again for `docker exec ...
+  rabbitmqctl` and `docker run -e AIIOS_RABBITMQ_VHOST=/aiios`**, not
+  just for `uv run uvicorn` as Prompt 064 first found — the very first
+  container start failed with `AMQPInternalError` because Git Bash had
+  silently rewritten `/aiios` to `C:/Program Files/Git/aiios` inside the
+  `-e` flag passed to `docker run`. Confirms this is a general Git-Bash
+  problem with any command line containing a POSIX-path-shaped token
+  destined for a non-MSYS process, not specific to one tool.
+- **A throwaway JWT keypair's private key is never persisted across
+  sessions** (only the public key gets committed, at
+  `services/backup-dr-service/keys/jwt_public_key.pem`) — regenerating a
+  fresh RSA keypair for e2e testing meant the public key file had to be
+  regenerated and replaced too, then the Docker image rebuilt so the new
+  public key was baked in before the container could verify tokens
+  signed by the new private key. Verified zero `PRIVATE` markers and
+  exactly one `BEGIN PUBLIC KEY` marker in the committed file before
+  treating it as safe to push, per the standing pre-push safety check.
