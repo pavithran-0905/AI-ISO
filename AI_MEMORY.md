@@ -7538,3 +7538,119 @@ in production:
 - **A loaded row's enum column is a plain `str` at runtime.** `row.category
   is DocumentCategory.FORM` is always False. Compare with `==`. (Recorded
   before; cost time again.)
+
+## Prompt 064 — Enterprise Observability Platform Service
+
+`services/observability-platform-service`, port 8035, Redis db 37,
+PostgreSQL `aiios_observability`. 21 tables, 13 spec endpoints, 8 domain
+events, 8 pure analysis engines (anomaly, capacity forecasting, cost
+analytics, root cause, topology, ingestion, retention, search), 9
+business services, 5 leader-elected workers, 658 tests at 97.11%
+coverage against real PostgreSQL and Redis. Ruff, Black and MyPy (scoped
+to `app/` + `main.py`, matching this project's CI convention) all clean.
+
+### Real defects this build found
+
+Hand-verification of every pure engine before any pytest, exactly as in
+every prior prompt, again found defects a green test suite would not
+have:
+
+- **The anomaly engine's leave-one-out baseline let a long enough outage
+  define itself as normal.** Fixed with a trailing-window
+  `exclude_recent` parameter; a mean-AD fallback for zero-MAD series was
+  tried and explicitly rejected as worse than reporting the level
+  departure separately.
+- **The capacity engine's level-shift detector conflated a one-bucket
+  spike with a permanent step** — both produce the same successive
+  difference. Added a persistence check: a step is defined by the level
+  *not returning*, which a magnitude-only test cannot tell from an
+  outlier.
+- **The SLO service persisted `compute_ratio_sli().status`** (which is
+  only ever `HEALTHY`/`BREACHING`/`NO_DATA`) **instead of
+  `classify_status()`'s result**, so a service with a healthy
+  instantaneous ratio but an 80%-spent error budget was never marked
+  `AT_RISK`. Verified with a 9992/10000 window.
+- **`TraceCompletedEvent` fired on every batch that happened to include
+  an already-complete trace's root span**, not only on the
+  `False → True` transition, because the code checked "is a root span
+  present" rather than capturing `was_complete` before mutating
+  `session.is_complete`. Would have republished trace completion on
+  every retried delivery.
+- **`NotificationManager.broadcast(**fields)` rejected structured
+  payload fields as unexpected keyword arguments** — `variables={}` is
+  where structured data belongs, not bare kwargs. Caught by testing
+  notifications against the **real** `shared_core` notification
+  framework (real channel/subscription registries) rather than a mock;
+  a mocked publisher would have silently accepted the malformed call.
+  Separately, `SloBreachedEvent`'s payload was missing `slo_name` and
+  `service_name` (only had `slo_id`), which would have rendered "unknown
+  service" in every SLO breach notification body.
+- **A systemic, project-wide defect, found while doing this prompt's
+  live Docker e2e, not specific to this service:** every AI-IOS service
+  connects to the *same physical* Postgres instance, but Alembic's
+  default single `alembic_version` table can only track one service's
+  migration chain at a time. Running `alembic upgrade head` against the
+  shared bootstrap database (the one named in the root `.env`) failed
+  with "Can't locate revision" against a foreign revision id, because an
+  unrelated auth-service migration had already claimed that table.
+  Fixed for this service by naming a service-scoped version table
+  (`alembic_version_observability_platform_service`) in
+  `alembic/env.py`'s `context.configure()` calls, both online and
+  offline. **This is the same fix every other service's `env.py` should
+  eventually carry** if it is ever migrated against the shared bootstrap
+  database rather than its own dedicated one (see below) — not yet
+  retrofitted onto prompts 011–063 in this session, to keep forward
+  progress on the "one by one, never stop" mandate.
+
+### Things worth remembering
+
+- **Every AI-IOS service has its own dedicated Postgres database**
+  (`aiios_<service>`, e.g. `aiios_observability`), separate from the
+  shared `aiios` database the root `.env` configures for local
+  bootstrapping. A live e2e run against the wrong one still "works" (the
+  migration applies, the app boots) but pollutes a shared resource with
+  a stray schema and stray rows, and — per the defect above — can
+  collide on `alembic_version` with whatever service migrated there
+  last. Confirmed this service's correct database (`aiios_observability`)
+  already existed with its schema pre-migrated from an earlier session,
+  matching the same one-database-per-service pattern already established
+  for `aiios_document_intelligence`, `aiios_rag`, etc. — check for it
+  before assuming the shared bootstrap database is the right target.
+- **Git Bash silently mangles environment variable *values* that look
+  like POSIX paths, not just command-line arguments.**
+  `AIIOS_RABBITMQ_VHOST=/aiios` exported before a native Windows
+  `uv run uvicorn` reached the Python process as
+  `C:/Program Files/Git/aiios`, which the RabbitMQ server correctly
+  rejected as "vhost ... not found" — a genuinely confusing error since
+  nothing in the Python code or the RabbitMQ config was wrong. Fix:
+  `export MSYS_NO_PATHCONV=1` before any command that launches a native
+  (non-MSYS) process with POSIX-path-shaped env vars. The previously
+  recorded fix for command-line arguments (`psql -p /aiios`) is the same
+  root cause showing up in a second place.
+- **A worker's tests can all "pass" while its loop body never executes,
+  if the fixture data's timestamps are pinned to a fixed constant instead
+  of the real clock the worker actually queries against.** Every worker
+  here computes `datetime.now(UTC)` internally and windows its repository
+  queries against it; fixture data built from a fixed historical `NOW`
+  fell outside every worker's real lookback window, so `list_active`,
+  `list_organization_ids`-driven loops, etc. found nothing and the tests
+  passed on assertions weak enough not to notice (`count >= 0`). Fixed by
+  using `datetime.now(UTC)` for worker-facing fixture timestamps and
+  tightening every assertion to an exact expected count once the data
+  was actually reachable. A weak assertion is how a test survives its own
+  setup bug.
+- **This project's mypy gate is scoped to `app/` + `main.py`, never
+  `tests/`** — confirmed from `.github/workflows/ci.yml`
+  (`mypy services/gateway/app services/gateway/main.py`) and the root
+  `pyproject.toml`'s `[[tool.mypy.overrides]] module = "tests.*"`
+  override. Running mypy directly against a bare `tests/` directory from
+  inside a service folder does not reliably pick up that override (module
+  name inference differs from the CI invocation's), producing ~100 spurious
+  `no-untyped-def` findings on ordinary pytest fixtures. Don't chase
+  those; run the gate the way CI runs it.
+- **`RetentionPolicySpec.__post_init__` requires
+  `raw_days <= downsampled_days <= coarse_days`**, so a quick test policy
+  cannot set an aggressively short `coarse_days` while leaving
+  `downsampled_days` at a realistic default — all three tiers collapse to
+  the same short value for the deletion to be authorized at all in a
+  test.
