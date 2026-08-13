@@ -31,7 +31,7 @@ from app.models.analysis import (
     Sli,
     Slo,
 )
-from app.models.enums import AnomalySeverity, NodeHealth
+from app.models.enums import AnomalyMethod, AnomalySeverity, NodeHealth
 
 MAX_PAGE_SIZE = 500
 
@@ -200,6 +200,30 @@ class AnomalyDetectionRepository(BaseRepository[AnomalyDetection]):
 
     def __init__(self, session: AsyncSession, *, tenant_scope: TenantScope | None = None) -> None:
         super().__init__(session, AnomalyDetection, tenant_scope=tenant_scope)
+
+    async def find_existing(
+        self,
+        organization_id: UUID,
+        *,
+        metric_series_id: UUID | None,
+        occurred_at: datetime,
+        method: AnomalyMethod,
+    ) -> AnomalyDetection | None:
+        """The detection already recorded for this instant, if any.
+
+        A sweep that re-scans an overlapping window -- which every sweep
+        does, since the baseline needs history from before the window it
+        is evaluating -- must not create a second row for the same
+        anomaly. Keyed on the same triple the detector itself would
+        reproduce deterministically from the same input.
+        """
+        stmt = self._base_select().where(
+            AnomalyDetection.organization_id == organization_id,
+            AnomalyDetection.metric_series_id == metric_series_id,
+            AnomalyDetection.occurred_at == occurred_at,
+            AnomalyDetection.method == method,
+        )
+        return (await self._session.execute(stmt)).scalars().first()
 
     async def list_recent(
         self,
