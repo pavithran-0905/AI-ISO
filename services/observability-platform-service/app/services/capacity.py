@@ -24,9 +24,19 @@ from app.capacity.engine import (
     forecast_series,
 )
 from app.capacity.enums import BoundKind, ConfidenceLevel, ForecastQualifier, ReductionKind
+from app.events.domain_events import CapacityForecastGeneratedEvent
 from app.models.analysis import CapacityForecast
 from app.models.enums import ForecastQuality, ResourceKind
 from app.repositories.analysis import CapacityForecastRepository
+from app.types import EventPublisher
+
+_SOURCE_SERVICE = "observability-platform-service"
+
+
+async def _noop_publisher(event: object) -> None:
+    """The default publisher for callers with no messaging backend wired
+    up (a hand-verification script, for one)."""
+
 
 _DEGRADED_QUALIFIERS = frozenset(
     {
@@ -62,8 +72,26 @@ def _quality_for(forecast: Forecast) -> ForecastQuality:
 class CapacityForecastService:
     """Forecasts one resource and persists the outcome."""
 
-    def __init__(self, repo: CapacityForecastRepository) -> None:
+    def __init__(
+        self, repo: CapacityForecastRepository, *, publish: EventPublisher = _noop_publisher
+    ) -> None:
         self._repo = repo
+        self._publish = publish
+
+    async def _announce(self, forecast: CapacityForecast) -> CapacityForecast:
+        await self._publish(
+            CapacityForecastGeneratedEvent(
+                source_service=_SOURCE_SERVICE,
+                organization_id=forecast.organization_id,
+                payload={
+                    "forecast_id": str(forecast.id),
+                    "resource_kind": str(forecast.resource_kind),
+                    "quality": str(forecast.quality),
+                    "days_until_exhaustion": forecast.days_until_exhaustion,
+                },
+            )
+        )
+        return forecast
 
     async def forecast_resource(
         self,
@@ -102,7 +130,7 @@ class CapacityForecastService:
         outcome = forecast_series(request)
 
         if isinstance(outcome, ForecastRefused):
-            return await self._repo.create(
+            refused_row = await self._repo.create(
                 CapacityForecast(
                     organization_id=organization_id,
                     service_name=service_name,
@@ -120,10 +148,11 @@ class CapacityForecastService:
                     refusal_reason=f"{outcome.reason!s}: {outcome.remedy}",
                 )
             )
+            return await self._announce(refused_row)
 
         exhaustion = estimate_exhaustion(outcome, ceiling=ceiling) if ceiling is not None else None
         horizon_point = outcome.at_horizon()
-        return await self._repo.create(
+        good_row = await self._repo.create(
             CapacityForecast(
                 organization_id=organization_id,
                 service_name=service_name,
@@ -168,6 +197,7 @@ class CapacityForecastService:
                 },
             )
         )
+        return await self._announce(good_row)
 
 
 __all__ = ["CapacityForecastService"]

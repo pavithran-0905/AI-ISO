@@ -24,8 +24,17 @@ from app.anomaly.engine import (
     detect_statistical,
     merge_outcomes,
 )
+from app.events.domain_events import AnomalyDetectedEvent
 from app.models.analysis import AnomalyDetection
 from app.repositories.analysis import AnomalyDetectionRepository
+from app.types import EventPublisher
+
+_SOURCE_SERVICE = "observability-platform-service"
+
+
+async def _noop_publisher(event: object) -> None:
+    """The default publisher for callers with no messaging backend wired
+    up (a hand-verification script, for one)."""
 
 
 def points_from_metrics(rows: Sequence[tuple[datetime, float]]) -> tuple[Point, ...]:
@@ -36,8 +45,11 @@ def points_from_metrics(rows: Sequence[tuple[datetime, float]]) -> tuple[Point, 
 class AnomalyDetectionService:
     """Detects and persists anomalies for one metric series."""
 
-    def __init__(self, repo: AnomalyDetectionRepository) -> None:
+    def __init__(
+        self, repo: AnomalyDetectionRepository, *, publish: EventPublisher = _noop_publisher
+    ) -> None:
         self._repo = repo
+        self._publish = publish
 
     async def sweep_series(
         self,
@@ -97,6 +109,20 @@ class AnomalyDetectionService:
                 )
             )
             persisted.append(row)
+            await self._publish(
+                AnomalyDetectedEvent(
+                    source_service=_SOURCE_SERVICE,
+                    organization_id=organization_id,
+                    payload={
+                        "detection_id": str(row.id),
+                        "metric_series_id": str(metric_series_id) if metric_series_id else None,
+                        "service_name": service_name,
+                        "severity": str(row.severity),
+                        "method": str(row.method),
+                        "deviation": row.deviation,
+                    },
+                )
+            )
         return tuple(persisted)
 
 

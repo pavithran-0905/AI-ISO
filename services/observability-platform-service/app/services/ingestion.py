@@ -28,6 +28,11 @@ from uuid import UUID
 from shared_core.database.tenant import TenantScope
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.events.domain_events import (
+    LogIngestedEvent,
+    MetricCollectedEvent,
+    TraceCompletedEvent,
+)
 from app.ingestion.pipeline import (
     AcceptedSignal,
     IngestionLimits,
@@ -67,6 +72,16 @@ from app.repositories.signals import (
     TraceSpanRepository,
 )
 from app.services.labels import fingerprint_labels
+from app.types import EventPublisher
+
+_SOURCE_SERVICE = "observability-platform-service"
+
+
+async def _noop_publisher(event: object) -> None:
+    """The default publisher: ingestion works with no messaging backend
+    wired up, since a great many callers (a hand-verification script,
+    for one) have no queue to publish to and should not be forced to
+    provide a fake one just to construct the service."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -204,10 +219,12 @@ class IngestionService:
         organization_id: UUID,
         limits: IngestionLimits,
         tenant_scope: TenantScope | None = None,
+        publish: EventPublisher = _noop_publisher,
     ) -> None:
         self._session = session
         self._organization_id = organization_id
         self._limits = limits
+        self._publish = publish
         scope = tenant_scope or TenantScope(organization_id=organization_id)
         self._series_repo = MetricSeriesRepository(session, tenant_scope=scope)
         self._metric_repo = MetricRepository(session, tenant_scope=scope)
@@ -234,6 +251,7 @@ class IngestionService:
         result = ingest_batch(raw, self._limits, now=now)
 
         series_cache: dict[tuple[str, str], MetricSeries] = {}
+        accepted_per_series: dict[UUID, int] = {}
         for accepted in result.accepted:
             sample = by_key[accepted.dedupe_key]
             fingerprint = fingerprint_labels(sample.labels)
@@ -265,6 +283,7 @@ class IngestionService:
 
             series.last_seen_at = max(series.last_seen_at, accepted.occurred_at)
             series.sample_count += 1
+            accepted_per_series[series.id] = accepted_per_series.get(series.id, 0) + 1
 
             await self._metric_repo.create(
                 Metric(
@@ -278,6 +297,23 @@ class IngestionService:
                     min_value=sample.min_value,
                     max_value=sample.max_value,
                     buckets=dict(sample.buckets),
+                )
+            )
+
+        # One event per series touched, not per sample: a batch of a
+        # thousand points for one series is one collection event, and
+        # publishing a thousand would flood every subscriber for no
+        # information a count could not carry.
+        for series_key, series in series_cache.items():
+            await self._publish(
+                MetricCollectedEvent(
+                    source_service=_SOURCE_SERVICE,
+                    organization_id=self._organization_id,
+                    payload={
+                        "metric_series_id": str(series.id),
+                        "series_name": series_key[0],
+                        "accepted_count": accepted_per_series.get(series.id, 0),
+                    },
                 )
             )
         return result
@@ -316,6 +352,18 @@ class IngestionService:
                     span_id=line.span_id,
                     attributes=dict(line.attributes),
                     labels=dict(line.labels),
+                )
+            )
+        if lines:
+            parse_failed = sum(1 for line in lines if line.parse_failed)
+            await self._publish(
+                LogIngestedEvent(
+                    source_service=_SOURCE_SERVICE,
+                    organization_id=self._organization_id,
+                    payload={
+                        "accepted_count": result.accepted_count,
+                        "parse_failed_count": parse_failed,
+                    },
                 )
             )
         return result
@@ -400,6 +448,7 @@ class IngestionService:
             )
             self._session.add(session)
 
+        was_complete = session.is_complete
         session.started_at = min(session.started_at, earliest)
         session.span_count += len(spans)
         session.error_span_count += error_count
@@ -420,6 +469,25 @@ class IngestionService:
             session.is_complete = True
 
         await self._session.flush()
+
+        if not was_complete and session.is_complete:
+            # Published once, at the False -> True transition, from the
+            # now-final counts. Without the was_complete guard, every later
+            # batch that happens to include the root span's trace_id (a
+            # retried delivery, say) would republish the same completion.
+            await self._publish(
+                TraceCompletedEvent(
+                    source_service=_SOURCE_SERVICE,
+                    organization_id=self._organization_id,
+                    payload={
+                        "trace_id": trace_id,
+                        "root_service_name": session.root_service_name,
+                        "span_count": session.span_count,
+                        "has_error": session.has_error,
+                        "duration_ms": session.duration_ms,
+                    },
+                )
+            )
 
     async def ingest_events(self, events: Sequence[RawEvent], *, now: datetime) -> IngestionResult:
         by_key = {event.dedupe_key: event for event in events}

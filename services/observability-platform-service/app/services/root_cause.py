@@ -18,6 +18,7 @@ from collections.abc import Mapping, Sequence
 from datetime import datetime
 from uuid import UUID
 
+from app.events.domain_events import RootCauseCompletedEvent
 from app.models.analysis import RootCauseReport
 from app.models.enums import CauseConfidence
 from app.repositories.analysis import RootCauseReportRepository
@@ -31,6 +32,15 @@ from app.root_cause.engine import (
 )
 from app.root_cause.enums import Direction, EvidenceTier, PathQuality
 from app.root_cause.timeline import Signal, build_timeline, find_onset
+from app.types import EventPublisher
+
+_SOURCE_SERVICE = "observability-platform-service"
+
+
+async def _noop_publisher(event: object) -> None:
+    """The default publisher for callers with no messaging backend wired
+    up (a hand-verification script, for one)."""
+
 
 _CONFIDENCE_BY_TIER: Mapping[EvidenceTier, CauseConfidence] = {
     EvidenceTier.MECHANISM_AND_TIMING: CauseConfidence.STRONG,
@@ -88,8 +98,11 @@ def _build_candidate(
 class RootCauseAnalysisService:
     """Assembles evidence for a candidate pool and persists the finding."""
 
-    def __init__(self, repo: RootCauseReportRepository) -> None:
+    def __init__(
+        self, repo: RootCauseReportRepository, *, publish: EventPublisher = _noop_publisher
+    ) -> None:
         self._repo = repo
+        self._publish = publish
 
     async def analyse_incident(
         self,
@@ -150,7 +163,7 @@ class RootCauseAnalysisService:
         )
 
         top = result.ranked[0] if result.ranked else None
-        return await self._repo.create(
+        report = await self._repo.create(
             RootCauseReport(
                 organization_id=organization_id,
                 service_name=symptom_service,
@@ -213,6 +226,19 @@ class RootCauseAnalysisService:
                 },
             )
         )
+        await self._publish(
+            RootCauseCompletedEvent(
+                source_service=_SOURCE_SERVICE,
+                organization_id=organization_id,
+                payload={
+                    "report_id": str(report.id),
+                    "service_name": symptom_service,
+                    "is_conclusive": result.is_conclusive,
+                    "top_candidate_service": (top.candidate.service if top is not None else None),
+                },
+            )
+        )
+        return report
 
 
 __all__ = ["RootCauseAnalysisService"]

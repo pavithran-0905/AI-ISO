@@ -15,7 +15,9 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from uuid import UUID
 
+from app.events.domain_events import SloBreachedEvent
 from app.models.analysis import Sli, Slo
+from app.models.enums import SliStatus
 from app.repositories.analysis import SliRepository, SloRepository
 from app.slo.engine import (
     DEFAULT_AT_RISK_FRACTION,
@@ -28,6 +30,19 @@ from app.slo.engine import (
     evaluate_burn,
     project_exhaustion,
 )
+from app.types import EventPublisher
+
+_SOURCE_SERVICE = "observability-platform-service"
+
+_BREACH_STATUSES = frozenset({SliStatus.BREACHING, SliStatus.AT_RISK, SliStatus.EXHAUSTED})
+"""Not HEALTHY, not NO_DATA. An all-clear is not the same kind of
+notification as an incident, and a consumer paging on this event must
+not receive both under one name."""
+
+
+async def _noop_publisher(event: object) -> None:
+    """The default publisher for callers with no messaging backend wired
+    up (a hand-verification script, for one)."""
 
 
 def objective_from_slo(slo: Slo) -> Objective:
@@ -50,9 +65,16 @@ def objective_from_slo(slo: Slo) -> Objective:
 class SloEvaluationService:
     """Evaluates one SLO's counted window and persists the result."""
 
-    def __init__(self, slo_repo: SloRepository, sli_repo: SliRepository) -> None:
+    def __init__(
+        self,
+        slo_repo: SloRepository,
+        sli_repo: SliRepository,
+        *,
+        publish: EventPublisher = _noop_publisher,
+    ) -> None:
         self._slo_repo = slo_repo
         self._sli_repo = sli_repo
+        self._publish = publish
 
     async def evaluate(
         self,
@@ -117,7 +139,24 @@ class SloEvaluationService:
                 "burn_alert_reason": alert.reason,
             },
         )
-        return await self._sli_repo.create(record)
+        created = await self._sli_repo.create(record)
+        if status in _BREACH_STATUSES:
+            await self._publish(
+                SloBreachedEvent(
+                    source_service=_SOURCE_SERVICE,
+                    organization_id=slo.organization_id,
+                    payload={
+                        "slo_id": str(slo.id),
+                        "slo_name": slo.name,
+                        "service_name": slo.service_name,
+                        "sli_id": str(created.id),
+                        "status": str(status),
+                        "value": result.value,
+                        "error_budget_remaining": (budget.remaining_events if budget else None),
+                    },
+                )
+            )
+        return created
 
     @staticmethod
     def _at_risk_fraction(slo: Slo) -> float:
