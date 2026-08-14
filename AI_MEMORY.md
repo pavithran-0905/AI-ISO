@@ -7792,3 +7792,150 @@ instead:
   signed by the new private key. Verified zero `PRIVATE` markers and
   exactly one `BEGIN PUBLIC KEY` marker in the committed file before
   treating it as safe to push, per the standing pre-push safety check.
+
+---
+
+## Prompt 066 — Enterprise Multi-Cluster Management Service
+
+`services/multi-cluster-management-service`, port 8037, Redis db 39,
+PostgreSQL `aiios_multi_cluster` (created fresh — did not pre-exist). 16
+tables, 15 spec endpoints, 8 domain events, 11 pure engines (lifecycle
+transitions, credential validation, health aggregation, capacity
+classification, upgrade skew validation, policy targeting/drift, GitOps
+sync classification, compliance scoring, workload placement affinity,
+federation distribution planning, fleet analytics), 14 business services,
+5 leader-elected workers, 230 tests at 95.9% coverage against real
+PostgreSQL and Redis. Ruff, Black, MyPy all clean.
+
+**Scope boundary, decided up front and documented in the README**: per
+docs/066's own "DO NOT IMPLEMENT" (no Kubernetes distribution, no
+container runtime, no cloud vendor managed control plane), GitOps sync
+classification, service mesh, and federation are built as real, tested
+*decision logic* with no live external-system client wired up — the same
+"declared seam" pattern `services/backup-dr-service` established for
+MinIO/target-specific I/O in Prompt 065. Cordon/drain toggle this
+service's own state rather than calling a live cluster's API server,
+since this build holds no cluster credentials capable of doing so.
+
+### Real defects this build found — the important one
+
+Hand-verification of all 11 pure engines again found **zero defects**
+before any pytest, continuing the pattern from the second half of Prompt
+065. But this prompt's *integration and live e2e* testing surfaced a
+genuinely important, previously-undocumented defect class that was only
+partially understood before:
+
+- **`is`/`is not` comparison against an enum member is unsafe on *any*
+  attribute that might have come from the ORM, not just ones loaded by a
+  different session.** Prompt 065 had already found that a value read
+  through a *different* SQLAlchemy session comes back as a plain `str`
+  for a plain-`String`-typed column rather than the enum instance. This
+  prompt found the sharper, more dangerous version of the same fact:
+  **within the very same session**, whether a row returns its
+  already-cached Python object (enum preserved) or a freshly
+  materialized one (plain `str`) depends on whether anything still holds
+  a strong reference to the earlier object — because SQLAlchemy's
+  identity map holds objects by *weak* reference. A test that wrote
+  `await service.place_workload(...)` without capturing the return value
+  let CPython garbage-collect that `ClusterWorkload` the instant the
+  statement completed (nothing else referenced it); the next query for
+  the same row inside the very same test, same session, then legitimately
+  re-materialized it from the raw row, and `workload.placement_status is
+  WorkloadPlacementStatus.PLACED` inside `app/services/placement.py`'s
+  `drain_cluster()` silently evaluated `False` for a workload that
+  unambiguously *was* placed. This is not a test-only artifact: in
+  production, a worker or a later request handling the same row is under
+  no obligation to be the same session, or even a session where the
+  object is still referenced — so the bug is real and live, not
+  test-harness noise. Diagnosed by writing a byte-for-byte copy of the
+  failing test into an isolated file (where it passed), which ruled out
+  file-level import side effects and pointed at object lifetime instead;
+  confirmed by adding `type(workload.placement_status)` to a debug print,
+  which showed `<class 'str'>` instead of the enum. **Audited and fixed
+  every `is`/`is not` comparison against an enum member across the whole
+  service** (`app/services/placement.py`, `app/services/fleet.py`,
+  `app/services/policies.py`, `app/services/upgrades.py`,
+  `app/workers/health_sweep.py`, `app/health/engine.py`) — all switched
+  to `==`/`!=`, which works correctly for both a genuine enum instance
+  and a freshly-materialized plain string, since `StrEnum` equality is
+  value-based either way.
+- **The same defect class also broke `.value` access, not just identity
+  comparison** — found by the live Docker e2e, not by any unit test.
+  `app/lifecycle/engine.py`'s `validate_transition()` called
+  `current.value` where `current` was `cluster.lifecycle_state` on an
+  object freshly loaded by `repos.clusters.require_in_org(...)` inside a
+  real HTTP request (a genuinely fresh session every time, so this path
+  reliably hit the bug on literally every call, not just occasionally).
+  A live `DELETE /clusters/{id}` call crashed with
+  `AttributeError: 'str' object has no attribute 'value'` wrapped in a
+  generic 500. Fixed by coercing both `current` and `target` through
+  `ClusterLifecycleState(...)` at the top of the function — a `StrEnum`'s
+  constructor accepts its own string value and returns the canonical
+  member, so the coercion is a no-op for an already-genuine enum and a
+  real fix for a freshly-loaded plain string.
+- **A second, independent defect surfaced by the same live e2e call,
+  after the above was fixed**: `DELETE /clusters/{id}` had no handling
+  for `TransitionRefusedError` at all, so a cluster in any lifecycle
+  state that cannot validly reach `DECOMMISSIONING` (i.e. anything other
+  than `ACTIVE` or `SUSPENDED`) crashed the route with an unhandled
+  exception and a generic 500, rather than a clear result. The
+  automated test suite never caught this because its one delete test
+  happened to construct a cluster already in `ACTIVE` state (a valid
+  transition) — an entirely reasonable-looking test that nonetheless
+  never exercised the refusal path. Live e2e testing tried the more
+  realistic case (a cluster straight from `POST /clusters`, still
+  `DISCOVERED`) and found it immediately. Fixed by catching
+  `TransitionRefusedError` in the route and re-raising as
+  `shared_core.exceptions.conflict.ConflictError` (HTTP 409), matching
+  this codebase's established convention of passing only the internal
+  diagnostic detail as the exception's positional `message` and letting
+  the exception class's generic `default_user_message` reach the client
+  — the same pattern every other `NotFoundError`/`AuthorizationError`
+  call site in this codebase already follows. Added a regression test
+  (`test_delete_cluster_invalid_transition_is_conflict`) exercising
+  exactly this state.
+
+### Things worth remembering
+
+- **Redis db assignment continues sequentially**: 21, 22, 35, 36, 37, 38
+  (Prompt 065), **39 (this prompt)**.
+- **`ClusterVersion.version` collided with `BaseEntityMixin.version`**,
+  the optimistic-locking counter every AI-IOS entity already carries —
+  MyPy caught it immediately (`Incompatible types in assignment...
+  base class "VersionMixin" defined the type as "int"`), before any
+  runtime test could. Renamed to `version_label` with a docstring noting
+  exactly why. Worth checking for on every future service: `version` (and
+  the rest of `BaseEntityMixin`'s standard columns — `id`, `created_at`,
+  `updated_at`, `is_active`, `organization_id`, `project_id`, etc.) is
+  reserved on every entity and must never be reused for a
+  domain-specific field, however natural the name reads for that
+  field's actual meaning (a cluster's Kubernetes version string is a
+  textbook case of a name that reads perfectly naturally right up until
+  it collides).
+- **A `ClusterWorkload.cluster_id` foreign key had to be made nullable
+  mid-build**, before any migration was applied against real data: a
+  workload placement that finds no eligible cluster is still worth
+  recording (`placement_status == FAILED`), and there is no cluster to
+  reference in that case — a `NOT NULL` FK cannot represent "we tried,
+  and there was nothing." Caught during service-layer implementation,
+  before the first `alembic revision --autogenerate`, by simply noticing
+  the model and the service method's own docstring disagreed.
+- **Running a live e2e against the same database the test suite also
+  targets pollutes tests that iterate across all organizations, not just
+  the specific rows the e2e run touched.** After the e2e session, four
+  worker tests started failing (found counts off by exactly one) because
+  `list_organization_ids()`-driven workers (health sweep, statistics
+  rollup) iterate the whole table, and a real, `COMMIT`-ed cluster left
+  over from `curl` testing was still sitting in `aiios_multi_cluster`
+  (unlike a test's own SAVEPOINT-isolated data, which rolls back
+  automatically). Fixed by `TRUNCATE ... RESTART IDENTITY CASCADE`-ing
+  every table after each e2e session, before considering the work done
+  — now treated as a mandatory last step of live e2e testing, not an
+  optional cleanup.
+- **FastAPI route registration order determines matching, and the
+  fleet-wide `GET /clusters/health` / `/capacity` / `/compliance` /
+  `/statistics` / `/reports` routes must be declared before the
+  parameterized `GET /clusters/{cluster_id}`** — confirmed both by a
+  dedicated smoke test (`test_fleet_health_route_not_swallowed_by_detail_route`)
+  and by the live e2e's `openapi.json` path listing showing the literal
+  paths ahead of the parameterized one in registration order.
