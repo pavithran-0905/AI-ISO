@@ -8480,3 +8480,108 @@ in detail:
   e2e run. Never manually triggered.
   `TRUNCATE ... RESTART IDENTITY CASCADE`-ed every table afterward,
   before considering the work done.
+
+## Prompt 072 — Enterprise Mobile API Service
+
+`services/mobile-api-service`, port 8043, Redis db 45, PostgreSQL
+`aiios_mobile_api`. 14 tables across devices/sessions/profiles/tokens,
+sync jobs/queue, push tokens/notifications, app versions/configuration,
+telemetry/analytics events, and reports/audit; 13 spec REST endpoints;
+9 domain events; 10 pure engines (session expiry/warning windows and
+offline-auth eligibility, device trust transitions, sync job/queue
+transitions with conflict detection/resolution and retry backoff, push
+delivery transitions with retry eligibility and token usability,
+numeric dotted-version parsing/comparison, remote-configuration scope
+matching and platform-override resolution, QR token generation/expiry,
+deep-link build/parse round trip, device integrity scoring plus
+certificate-fingerprint format and replay-attack detection, statistics
+aggregation math); 15 service classes; 5 leader-elected workers; 218
+tests at 97.06% coverage against real PostgreSQL and Redis. Ruff,
+Black, MyPy all clean.
+
+**Scope boundary, decided up front and documented in the README**: per
+docs/072's own "DO NOT IMPLEMENT" section (Native Android SDK, Native
+iOS SDK, Mobile UI Applications, Mobile Device Operating Systems), this
+service is the backend platform those clients talk to, never a client
+of its own. Two further declared seams follow directly from that:
+actually calling Firebase Cloud Messaging / Apple Push Notification
+Service is out of scope, so `PushDeliveryRetrySweepWorker` treats "the
+device has a currently usable registered push token" as the honest
+proxy for delivery; and this service does not own the arbitrary
+downstream AI-IOS resources a queued offline sync action ultimately
+targets, so `SyncQueueRetrySweepWorker`'s conflict detection only fires
+when a queue item's own `payload` carries an optional
+`server_updated_at` hint (what a real deployment's call to the owning
+service would have populated) — absent that hint, there is nothing this
+service could truthfully detect a conflict against, so the item is
+applied clean. The pure conflict/retry/transition engines themselves
+are fully implemented and fully tested regardless; only the "learn the
+real external state" half of each picture is the seam.
+
+**A second architectural decision drove the whole build**: `POST
+/mobile/sync` and the push-registration path both only *enqueue* --
+`MobileSyncJob`/`MobileSyncQueueItem` rows are created `PENDING`/
+`QUEUED` and the request returns immediately; every state transition
+after that (apply, conflict, retry, complete/fail; delivered/failed)
+happens exclusively inside the two respective sweep workers, never in a
+route. This was deliberately chosen (mirroring how a real mobile
+client's own background sync and push delivery work) specifically so
+the worker would be the *primary* processor rather than a "sweep
+leftovers" safety net nothing would ever really exercise -- satisfying
+[[verify_queue_worker_designs_live_unmanually]] by construction rather
+than by after-the-fact testing discipline. Proven live: a `POST
+/mobile/sync` call against the running Docker container left its job
+`PENDING` and its item `QUEUED`; with
+`AIIOS_MOBILE_API_SERVICE_SYNC_QUEUE_RETRY_SWEEP_SECONDS=15` and
+nothing else touching the row, the next autonomous tick (visible in the
+container's own structured logs, `processed: 1`) applied the item and
+moved the job to `COMPLETED` -- confirmed independently via `psql`,
+never manually triggered.
+
+Hand-verification of all 10 pure engines found **zero defects** in one
+combined run (70 checks). Full integration and live-e2e testing also
+found **zero new defects** -- this build proactively checked every
+domain field name against the reserved-column list before the first
+migration was generated (`MobileDevice.app_version_label`,
+`MobileAppVersion.version_label`, rather than a bare `version` either
+place would have naturally read as), and every enum-typed column access
+in services/workers was written as `EnumClass(value)` coercion from the
+start rather than retrofitted after a crash -- the discipline 071's two
+defects motivated held completely on this build.
+
+### Things worth remembering
+
+- **Redis db assignment continues sequentially**: ..., 44 (Prompt 071),
+  **45 (this prompt)**. Port assignment: ..., 8042 (Prompt 071), **8043
+  (this prompt)**.
+- **QR onboarding tokens live in Redis, not Postgres** -- docs/072 lists
+  fourteen tables and none of them is a QR-token table, so `QrService`
+  stores the one-time enrollment payload through
+  `shared_core.cache.manager.CacheManager` with a TTL matching the
+  configured `qr_token_ttl_minutes`, and redemption reads-then-deletes
+  the key so a second redemption attempt finds nothing. Worth
+  remembering as a general pattern: a value whose entire lifecycle is
+  "exists briefly, gets consumed exactly once" belongs in the cache
+  framework, not a table nobody would ever need to audit or report on.
+- **Five of the fourteen tables have no `POST` route at all**
+  (`MobileAppVersion`, `MobileConfiguration`, `MobileReport`,
+  `MobileTelemetryEvent`, `MobileAnalyticsEvent`) -- docs/072's REST
+  APIs section lists exactly 13 endpoints and none of them create these;
+  they are populated by internal service methods (exercised directly by
+  tests) matching the same "admin/internal-managed, read-only over
+  HTTP" pattern `services/administration-portal-service` established
+  for its own diagnostics tables in Prompt 070. `GET /mobile/statistics`
+  itself has no backing rollup table either -- it aggregates
+  `mobile_analytics`/`mobile_telemetry` live, on every call. Confirms
+  this is now a recurring, legitimate AI-IOS pattern, not a one-off:
+  check a spec's REST APIs section for what it does *not* list before
+  assuming every table needs a create route.
+- **Most of this service's own routes are end-user routes, not
+  administrator routes** -- a first for this run of prompts. Every
+  other recent service (069-071) gated nearly everything behind
+  `require_administrator`; here, only `GET /mobile/statistics` and
+  `GET /mobile/reports` (fleet-wide operational views) are admin-gated,
+  since the other 11 routes are the mobile client acting on behalf of
+  its own already-authenticated caller. Worth checking explicitly per
+  service, not assuming the administrator-gating ratio from the
+  previous few prompts carries over.
