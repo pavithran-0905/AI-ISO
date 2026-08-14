@@ -7939,3 +7939,132 @@ partially understood before:
   dedicated smoke test (`test_fleet_health_route_not_swallowed_by_detail_route`)
   and by the live e2e's `openapi.json` path listing showing the literal
   paths ahead of the parameterized one in registration order.
+
+## Prompt 067 — Enterprise Edge Management Service
+
+`services/edge-management-service`, port 8038, Redis db 40, PostgreSQL
+`aiios_edge` (created fresh — did not pre-exist). 17 tables, 13 spec
+endpoints (plus a conventional `GET /edge/devices/{id}` for detail
+navigation), 9 domain events, 11 pure engines (device lifecycle
+transitions, enrollment credential validation, health aggregation,
+synchronization conflict resolution/retry, store-and-forward backoff,
+OTA version-skew validation/rollback decision, edge AI promotion/
+inference-target selection, industrial protocol connectivity
+classification, digital twin sync classification, configuration
+rollback validation, fleet analytics), 17 business services, 5
+leader-elected workers, 216 tests at 97.3% coverage against real
+PostgreSQL and Redis. Ruff, Black, MyPy all clean.
+
+**Scope boundary, decided up front and documented in the README**: per
+docs/067's own "DO NOT IMPLEMENT" (no PLC firmware, no industrial
+control logic, no real-time OS, no vendor-specific hardware drivers),
+industrial protocol connectivity and digital twin sync are built as
+real, tested *decision logic* with no live external-system client wired
+up — the same "declared seam" pattern `services/backup-dr-service`
+established in Prompt 065 and `services/multi-cluster-management-service`
+continued in Prompt 066. Remote access grants/refuses based on this
+service's own `is_online` signal and records the decision on the audit
+trail, rather than opening a live tunnel to the device.
+
+### Real defects this build found
+
+Hand-verification of all 11 pure engines found **zero defects** before
+any pytest — continuing the pattern from 065/066, helped this time by
+proactively applying 066's own lessons from the start (every engine
+using `==` never `is` against enum members from its first draft;
+`EdgeFirmware.version_label` never `version`;
+`app.devices.engine.validate_transition()` coercing through
+`DeviceLifecycleState(...)` before any live e2e could find the gap the
+way 066's `lifecycle.engine` bug was found). But integration and live
+e2e testing still surfaced two new, real defects this proactive
+posture didn't anticipate:
+
+- **`EdgeConfiguration.is_active` collided with `SoftDeleteMixin
+  .is_active`**, the soft-delete flag every repository's
+  `_base_select()` filters on (`is_active.is_(True)`) to exclude deleted
+  rows from every query. The model used `is_active` to mean "this is the
+  currently-applied configuration revision" — a natural-sounding
+  domain name that happens to be the exact reserved column name. Setting
+  it to `False` to mark a superseded revision (`ConfigurationService
+  .apply()`'s own normal, expected behavior) silently made
+  `_base_select()` treat that row as soft-deleted, so it vanished from
+  `list_for_device()` and every other query from that point on — not an
+  exception, just data that quietly stopped being visible. MyPy caught
+  nothing (both the mixin's and the domain field's type is `bool`, so
+  there was no type mismatch to flag, unlike the `version`/int collision
+  066 found). Caught by an integration test
+  (`test_apply_deactivates_previous_active_revision`) asserting the
+  superseded row was still findable via `list_for_device()` after being
+  marked non-current — it raised `StopIteration` instead, since the row
+  had disappeared from the query entirely. Fixed by renaming the domain
+  field to `is_current` across the model, repository, and service, with
+  a docstring on the field explaining exactly why `is_active` was wrong.
+  **This is the same reserved-column bug class 066 found for `version`,
+  just on `is_active` instead** — worth explicitly checking every
+  `BaseEntityMixin`/`SoftDeleteMixin`/`VersionMixin` reserved name
+  (`id`, `created_at`, `updated_at`, `is_active`, `organization_id`,
+  `project_id`, `version`) against every new model field on every future
+  service, not just `version`.
+- **`ProtocolService.record_check()` classified a fresh check against
+  the *prior* `last_checked_at` instead of the check being performed
+  right now**, so the very first check on any newly-registered protocol
+  endpoint always reported `UNKNOWN` even with `had_error=False` — the
+  engine's `classify_connectivity()` correctly returns `UNKNOWN` for a
+  `None` prior `last_checked_at` per its own documented contract
+  (`app.protocols.engine`'s own docstring: "connectivity this service
+  has not verified recently is not evidence either way"), but that
+  contract is for `app.workers.protocol_sweep`'s *reclassification*
+  case (nothing new happened, re-evaluate staleness), not for "a check
+  literally just happened." Caught by a service-layer integration test
+  expecting `CONNECTED` after registering an endpoint and recording one
+  error-free check. Fixed by updating `protocol.last_checked_at = now`
+  *before* calling `classify_connectivity()`, so a fresh, error-free
+  check classifies against itself (`now - now == 0`) and correctly
+  reports `CONNECTED`.
+
+### Things worth remembering
+
+- **Redis db assignment continues sequentially**: 21, 22, 35, 36, 37,
+  38, 39 (Prompt 066), **40 (this prompt)**.
+- **Applying a prior service's hard-won lessons proactively measurably
+  worked**: three separate defect classes 066 discovered reactively (`is`
+  vs `==`, `.value` access on a possibly-fresh ORM attribute, and the
+  `version` reserved-column collision) were built correctly from the
+  first draft here and produced zero corresponding defects in this
+  build — the only two real defects found were genuinely new ones
+  (`is_active` reserved-column collision on a *different* mixin field;
+  a check-ordering bug specific to this service's own protocol-check
+  semantics) that no amount of applying 066's specific lessons could
+  have caught, because they were different mistakes. The methodology
+  (hand-verify pure engines, defensively code against known bug classes,
+  but still run full integration + live e2e testing) is what caught
+  them, not any specific remembered rule.
+- **Alembic migration had to be regenerated twice against real
+  (empty) data** — once for the `EdgeApplication.version` /
+  `EdgeAiModel.version` → `version_label` rename (mirroring 066's
+  `ClusterVersion` fix, applied proactively before the first
+  autogenerate even ran) combined into the same DB rebuild as the
+  `EdgeConfiguration.is_active` → `is_current` rename found by tests
+  afterward. Both times: `DROP DATABASE`/`CREATE DATABASE`, delete the
+  stale revision file, re-run `alembic revision --autogenerate`, `alembic
+  upgrade head` — acceptable only because no real data existed yet at
+  either point.
+- **`uv run alembic` from within the service directory does not pick up
+  the root `.env`'s database connection fields** (host/port/name/user/
+  password) — every `alembic revision --autogenerate` / `alembic upgrade
+  head` invocation needs the full `AIIOS_DATABASE_*` set passed
+  explicitly on the command line (with `AIIOS_DATABASE_NAME` overridden
+  to this service's own database), not just `AIIOS_DATABASE_NAME`, since
+  none of the others fall back to the root `.env`'s defaults from that
+  working directory.
+- **Live e2e confirmed all five leader-elected workers fire
+  autonomously on their own schedule with real database writes**,
+  watched directly in the container's structured JSON logs across
+  several 10s/30s intervals (`scheduler.job.execute` /
+  `shared_core.database.audit` "update" entries with incrementing
+  `version` on the same `EdgeDevice` row) — never manually triggered,
+  matching the standing rule that a queue/worker design must be proven
+  live, not just covered by a unit test calling `tick()` directly.
+  `TRUNCATE ... RESTART IDENTITY CASCADE`-ed every table afterward,
+  before considering the work done, per 066's established mandatory
+  last step.
