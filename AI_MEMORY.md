@@ -8068,3 +8068,110 @@ posture didn't anticipate:
   `TRUNCATE ... RESTART IDENTITY CASCADE`-ed every table afterward,
   before considering the work done, per 066's established mandatory
   last step.
+
+## Prompt 068 — Enterprise Cloud Management Service
+
+`services/cloud-management-service`, port 8039, Redis db 41, PostgreSQL
+`aiios_cloud` (created fresh — did not pre-exist). 20 tables, 15 spec
+endpoints, 8 domain events, 10 pure engines (account credential
+validation/health classification, resource lifecycle transitions,
+governance tag/naming/quota policy evaluation, FinOps budget
+classification/forecasting/idle-detection/rightsizing, capacity growth
+forecasting/scaling recommendations, drift hash comparison/severity
+classification, IaC deployment state transitions, service catalog
+approval workflow, compliance scoring/remediation scheduling, fleet
+analytics), 14 business services, 5 leader-elected workers, 229 tests
+at 96.5% coverage against real PostgreSQL and Redis. Ruff, Black, MyPy
+all clean.
+
+**Scope boundary, decided up front and documented in the README**: per
+docs/068's own "DO NOT IMPLEMENT" (no cloud provider APIs, no
+hypervisors, no billing engines, no provider-specific internal
+services), FinOps classification, resource discovery, drift, and IaC
+are all built as real, tested *decision logic* with no live external
+system wired up — the same "declared seam" pattern every prior service
+since Prompt 065 established. `CloudCompute.utilization_fraction` is a
+reading supplied by monitoring integration (Prompt 044) that this
+service classifies, never measures itself.
+
+### Real defects this build found
+
+Hand-verification of all 10 pure engines again found **zero defects**
+before any pytest — this build applied 066's and 067's lessons
+proactively from the very first line of every engine and model
+(`==` never `is` against enum members throughout; `CloudResource
+.cloud_project_id` deliberately not named `project_id`, since that is
+one of `BaseEntityMixin`'s own reserved columns and a wholly different
+concept from a cloud provider's own project/resource-group/OU — the
+exact class of collision 067 found reactively via `EdgeConfiguration
+.is_active`, checked proactively here from the model's first draft
+instead). Integration testing found **zero additional defects** either
+— all 39 service-layer tests and all 23 API tests passed on the first
+run, a first for this session's services. The only real design
+correction happened during design itself, before any test ran:
+
+- **`CloudAccountService.revalidate()`'s first draft passed the
+  freshly-set `last_validated_at` into `is_account_stale()` as both the
+  "last validated at" and "now" arguments**, which is a tautology (a
+  timestamp is never stale relative to itself) that would have made the
+  `is_stale` branch of `classify_account_health()` structurally
+  unreachable from this call site — not a runtime bug, since revalidate
+  always produces `is_stale=False`, but dead, misleading code carrying
+  an unused parameter (`stale_threshold_minutes`) that implied a
+  staleness check was actually happening inline. Caught by re-reading
+  the method's own docstring against what it computed, before writing
+  the corresponding test. Fixed by removing the parameter and the
+  tautological call entirely: `revalidate()` always sets
+  `is_stale=False` (a revalidation that just ran cannot be stale by
+  definition), and the *separate* `AccountHealthSweepWorker` is the only
+  place that computes real staleness, from elapsed time since the last
+  revalidation, without calling `validate_credential` again. This is a
+  clean separation this service's design gave a name to explicitly: an
+  *active* check (`revalidate`) versus a *passive* reclassification
+  (the health sweep) are different operations with different truth
+  conditions, and conflating them in one function signature was the
+  actual mistake, not any specific line of logic.
+
+### Things worth remembering
+
+- **Redis db assignment continues sequentially**: 21, 22, 35, 36, 37,
+  38, 39, 40 (Prompt 067), **41 (this prompt)**.
+- **Applying two prior services' hard-won lessons proactively measurably
+  worked again**: zero `is`/`==` defects, zero reserved-column
+  collisions, and — new this time — zero integration-test defects at
+  all. The pattern across 066/067/068 is now clear enough to state
+  plainly: each service that inherits this codebase's accumulated
+  lessons needs progressively less reactive debugging, provided the
+  lessons are actually re-read and applied at each new model/engine's
+  *first draft*, not discovered again independently. The cross-session
+  memory file `aiios_reserved_column_names.md` (written during Prompt
+  067) is what made the `cloud_project_id` naming decision automatic
+  here rather than a second rediscovery.
+- **`GET /cloud/providers` has no corresponding `POST` in docs/068's own
+  REST APIs section** — confirmed by re-reading the spec's exact route
+  list (15 routes, `GET /cloud/providers` listed once, no `POST`
+  alongside it, unlike `/cloud/accounts` and `/cloud/budgets` which both
+  have `GET`+`POST` pairs). Provider registration is therefore
+  administrative/out-of-band, not a tenant-facing write path in this
+  build — live e2e testing registered a provider directly via `psql`
+  (matching how a real deployment would seed providers through
+  migration/admin tooling) rather than through the API, and this is a
+  deliberate reading of the spec, not an oversight.
+- **A cross-service reference column (`CloudKubernetes
+  .cluster_reference_id`, pointing at `services/multi-cluster-management-service`'s
+  own `Cluster.id`) is deliberately not a foreign key** — that table
+  lives in a different service's database entirely, and Postgres cannot
+  enforce a constraint across databases. Stored as a bare
+  `Mapped[uuid.UUID | None]` with no `ForeignKey(...)`, consistent with
+  every other cross-service reference pattern this platform has used
+  since `services/cloud-management-service` is the first to actually
+  need one for Kubernetes (Prompt 066 integration, per docs/068's own
+  "Integrate Prompt 066" instruction under KUBERNETES MANAGEMENT).
+- **Live e2e confirmed all five leader-elected workers fire
+  autonomously on their own schedule with real database writes**,
+  watched directly in the container's structured JSON logs across the
+  30s/60s intervals (`account health sweep completed` with `checked`
+  going from `0` to `1` after the API created an account mid-run, and
+  `drift sweep completed` firing on its own cadence) — never manually
+  triggered. `TRUNCATE ... RESTART IDENTITY CASCADE`-ed every table
+  afterward, before considering the work done.
