@@ -8271,3 +8271,99 @@ before any test ran:
   running total. Never manually triggered.
   `TRUNCATE ... RESTART IDENTITY CASCADE`-ed every table afterward,
   before considering the work done.
+
+## Prompt 070 — Enterprise Administration Portal Service
+
+`services/administration-portal-service`, port 8041, Redis db 43,
+PostgreSQL `aiios_admin`. 25 tables across settings/configuration/
+feature-flags, organizations/tenants and every per-tenant
+administrative record, admin sessions/actions, background jobs,
+maintenance/announcements, API keys/usage, security settings/events,
+diagnostics/health checks, and reporting, 16 spec REST endpoints, 10
+domain events, 9 pure engines (organization/tenant/job/maintenance
+lifecycle transitions, tenant limit-vs-usage classification, feature
+flag evaluation with kill switch/scheduled rollout/deterministic
+percentage bucketing/version constraints, health latency
+classification/worst-of aggregation, password policy/IP allowlist/
+session expiry, API key hash/expiry/rotation/rate-limit checks,
+availability-rate analytics), roughly 20 service classes across 15
+files, 5 leader-elected workers, 247 tests at 97.4% coverage against
+real PostgreSQL and Redis. Ruff, Black, MyPy all clean.
+
+**This is the first AI-IOS service whose own domain data
+(`Organization`/`Tenant`) mirrors a concept another service already
+owns** (`services/organization-service`, Prompt 033) rather than being
+wholly original to it — resolved by treating this service's own
+`Organization`/`Tenant` rows as its own administrative view, scoped by
+`organization_id` exactly like every other table in the platform (the
+same tenant-isolation discipline `services/license-billing-service`'s
+`Customer` model already established), with `Organization.external_ref`
+as an unenforced cross-service correlation id, never a foreign key.
+
+**Scope boundary, decided up front and documented in the README**: per
+docs/070's own "DO NOT IMPLEMENT" section (Identity Provider Software,
+Operating System Administration, Cloud Provider Administration,
+Third-party Monitoring Systems), `notify_license_expiration` is real
+and tested but has no internal caller — license data belongs to
+`services/license-billing-service`, so nothing in this service's own
+data can source that trigger. The statistics rollup's `user_count` is
+documented as a scoped proxy (distinct administrators with an enabled
+session), not a true end-user count, since end users belong to the
+identity/auth service.
+
+Hand-verification of all 9 pure engines again found **zero defects**
+before any pytest, in one combined run covering deterministic rollout
+bucketing, worst-of health aggregation, exponential backoff, window
+overlap detection, and password-policy violation naming. Integration
+testing found **zero new-class defects**; the one design correction
+happened while writing the test itself, not the implementation:
+
+- **`DiagnosticsService.record_health_check`'s first test assumed the
+  very first reading for a component would never publish
+  `PlatformHealthChanged`**, reasoning there was "no prior status to
+  cross from." Re-reading the actual comparison
+  (`previous_status != status`, where `previous_status` is `None` for
+  a first-ever reading) showed `None != HEALTHY` is `True` — the first
+  reading *does* publish, correctly: going from "no data" to "healthy"
+  is itself a real crossing an operator watching platform health would
+  want to know about, not a null event. The test's assumption was
+  wrong, not the code; fixed by correcting the assertion rather than
+  changing the implementation to match a mistaken expectation.
+
+### Things worth remembering
+
+- **Redis db assignment continues sequentially**: ..., 41 (Prompt 068),
+  42 (Prompt 069), **43 (this prompt)**.
+- **Docs/070's own REST APIs section lists only 16 routes despite
+  naming far more capability areas** (API Management, Security
+  Administration, Maintenance, Organization Management, Announcements
+  all have rich "Support" sections but no listed route) — confirmed by
+  counting the spec's own route list exactly, the same reading
+  discipline `services/cloud-management-service` applied to
+  `GET /cloud/providers` having no `POST` counterpart in Prompt 068.
+  Every one of those capability areas still has a full, real,
+  hand-verified engine/service/repository/worker layer and full test
+  coverage; they are simply exercised through workers and direct
+  service-layer integration tests rather than a REST route, consistent
+  with the "declared logic, spec-scoped routing" precedent rather than
+  a gap.
+- **The health sweep worker is the first AI-IOS worker to take a live
+  `AsyncEngine` and a live Redis client as constructor dependencies**,
+  rather than only a `session_factory` — it performs a real database
+  latency check (via `shared_core.database.health.check_database_health`)
+  and a real Redis `PING`, timed itself, then classifies both through
+  the same `app.diagnostics.engine.classify_latency_status` pipeline
+  for cross-component consistency. Its own tests pass `pg_engine` and
+  `cache_framework` fixtures directly rather than a mock, so a broken
+  latency check would fail the test, not just the assertion.
+- **Live e2e confirmed two workers (health sweep, statistics rollup)
+  fire autonomously on their own 60-second schedule with real database
+  writes**, watched both in the container's structured JSON logs
+  (`health sweep completed` / `statistics rollup completed`) and
+  directly via `psql` — `health_checks` held real `database`/`cache`
+  readings (both `healthy`, sourced from an actual Postgres round-trip
+  and a real Redis `PING` against the live container's own
+  dependencies) and `system_statistics` correctly reflected the one
+  tenant created through the live API. Never manually triggered.
+  `TRUNCATE ... RESTART IDENTITY CASCADE`-ed every table afterward,
+  before considering the work done.
