@@ -8367,3 +8367,116 @@ happened while writing the test itself, not the implementation:
   tenant created through the live API. Never manually triggered.
   `TRUNCATE ... RESTART IDENTITY CASCADE`-ed every table afterward,
   before considering the work done.
+
+## Prompt 071 — Enterprise SDK & CLI Service
+
+`services/sdk-cli-service`, port 8042, Redis db 44, PostgreSQL
+`aiios_sdk_cli`. 14 tables across SDK languages/versions/packages/
+downloads/releases, CLI versions/plugins/profiles/sessions/usage/
+updates, and reporting, 12 spec REST endpoints, 8 domain events, 9 pure
+engines (semantic version parsing/comparison/compatibility/breaking-
+change detection, SDK release lifecycle transitions, CLI update
+lifecycle transitions, CLI plugin lifecycle transitions, CLI session
+expiry, default-profile selection, typed model/enum code-stub
+rendering for Python/TypeScript/Go, package checksum computation/
+verification, adoption-rate analytics), 15 service classes across 10
+files, 5 leader-elected workers, 167 tests at 96.4% coverage against
+real PostgreSQL and Redis. Ruff, Black, MyPy all clean.
+
+**Scope boundary, decided up front and documented in the README**: per
+docs/071's own "DO NOT IMPLEMENT" section (Custom Programming
+Languages, IDE Development, Third-party Package Managers, External
+Build Systems), this service does not contain five hand-written
+production SDK codebases or a real CLI binary — it is the tracking,
+orchestration, and code-generation *backend* for those artifacts.
+`app/generator/engine.py` renders real, tested Python/TypeScript/Go
+model and enum source text from a caller-supplied structured
+description (not a live OpenAPI spec ingestion); CLI update attempts
+record a caller-reported outcome (`CliUpdateRequest.succeeded`) rather
+than downloading/applying a real binary, the same declared-seam pattern
+`services/license-billing-service`'s `PaymentCreateRequest.succeeded`
+established in Prompt 069.
+
+Hand-verification of all 9 pure engines found **zero defects** in one
+combined run. Integration testing found **two genuine, reactively
+discovered defects** — the first time this session that the
+proactively-applied lessons from 067/069/070 were insufficient to
+prevent a new instance of an already-known bug class, worth recording
+in detail:
+
+- **`SdkVersion.version`, `CliVersion.version`, and `CliPlugin.version`
+  all collided with `BaseEntityMixin`'s own reserved `version` column**
+  (the integer optimistic-locking counter every `BaseRepository.update()`
+  increments) — despite the reserved-column-names lesson being applied
+  proactively to every *other* field in this service's models from the
+  first draft, `version` itself was missed because it is the single
+  most natural name for a domain concept that is *literally* a version
+  string, and the existing memory file's example list (`id`,
+  `created_at`, `updated_at`, `is_active`, `organization_id`,
+  `project_id`, `version`) was read but not connected to "a field named
+  exactly `version`" until the first `service.update()` call on any of
+  the three raised `TypeError: can only concatenate str (not "int") to
+  str` inside `increment_version()`. This is the exact `version` entry
+  the memory file already named, encountered for the first time in this
+  session because no prior service had a domain concept naturally
+  called "version" -- confirming the lesson needs to be checked against
+  every field name individually, not pattern-matched against "does this
+  sound like an unusual reserved name." Fixed by renaming to
+  `version_label` in all three models (matching
+  `services/cloud-management-service`'s own `CloudCatalogItem.version_label`
+  precedent from Prompt 068 for the identical situation), regenerating
+  the initial migration from scratch (no real data existed yet), and
+  updating every dependent repository/service/worker/route/test —
+  external API contracts kept the field named `version`, only the ORM
+  column changed.
+- **A freshly-loaded `PluginStatus` column's `.value` access raised
+  `AttributeError: 'str' object has no attribute 'value'`** in
+  `POST /cli/plugins/install`'s conflict-message formatting — the
+  `is`/`==` lesson from `services/multi-cluster-management-service` was
+  applied to comparisons throughout this service's engines, but this
+  was a `.value` *attribute access* on a route-layer variable holding a
+  plain `str` fresh from `repos.cli_plugins.find_by_name(...)`, a
+  different call shape the lesson's prior phrasing ("comparison") did
+  not obviously cover. Fixed by coercing through `PluginStatus(plugin.status)`
+  before use; the cross-session memory file's wording should be
+  broadened to cover `.value` access, not only `==`/`is` comparison.
+- (Not a defect, but caught and fixed before any test ran:) **`POST
+  /sdk/generate`'s first draft let `app.generator.engine`'s own
+  `ValueError` propagate unguarded**, which an API test surfaced as the
+  raw exception crossing the ASGI transport into the test itself rather
+  than a structured 4xx response. Fixed by catching `ValueError` at the
+  route boundary and re-raising as `shared_core.exceptions.ValidationError`.
+
+### Things worth remembering
+
+- **Redis db assignment continues sequentially**: ..., 42 (Prompt 069),
+  43 (Prompt 070), **44 (this prompt)**.
+- **`aiios_reserved_column_names.md` needs an explicit callout that
+  `version` bites domain concepts that are *literally* versions** —
+  this prompt is the concrete example to add: SDK/CLI/plugin version
+  strings are exactly the kind of field a spec's own vocabulary
+  (`sdk_versions`, `cli_versions`, "SDK Version Compatibility") pushes a
+  first draft toward naming `version`, and the fix (`version_label`) is
+  now precedented twice (068's `CloudCatalogItem`, this prompt's three
+  models) — worth checking for by name, not just recalling the list.
+- **One idempotent statistics table intentionally serves two spec
+  routes**: docs/071 names only `cli_statistics` (no separate
+  `sdk_statistics` table), so `GET /sdk/statistics` and
+  `GET /cli/statistics` both read the same underlying per-window rollup
+  — confirmed by re-reading the spec's own DATABASE TABLES section
+  exactly, the same reading discipline applied to docs/068's
+  `GET /cloud/providers` route-count exercise in Prompt 068 and
+  docs/070's 16-route count in Prompt 070.
+- **Live e2e confirmed the statistics rollup worker fires autonomously
+  on its own 60-second schedule with a real database write**, watched
+  both in the container's structured JSON logs (`statistics rollup
+  completed` with `organizations: 1`) and directly via `psql` — the
+  rolled-up row's zero counts for the just-completed hour window
+  correctly excluded the SDK generation/CLI update/plugin install
+  events created through the live API during the same run, since all
+  three landed in the *current*, still-open hour rather than the
+  completed one being rolled up -- the same window-boundary proof
+  `services/license-billing-service` established in Prompt 069's own
+  e2e run. Never manually triggered.
+  `TRUNCATE ... RESTART IDENTITY CASCADE`-ed every table afterward,
+  before considering the work done.
