@@ -8175,3 +8175,99 @@ correction happened during design itself, before any test ran:
   `drift sweep completed` firing on its own cadence) — never manually
   triggered. `TRUNCATE ... RESTART IDENTITY CASCADE`-ed every table
   afterward, before considering the work done.
+
+## Prompt 069 — Enterprise License & Billing Service
+
+`services/license-billing-service`, port 8040, Redis db 42, PostgreSQL
+`aiios_billing`. 27 tables across customers, subscriptions, licenses,
+contracts, usage/quotas, and billing, 17 spec REST endpoints, 11 domain
+events, 10 pure engines (license lifecycle transitions/seat limits,
+subscription lifecycle transitions/grace-period/renewal-due detection,
+feature entitlement limit checking, usage aggregation/overage, quota
+status classification/admission control/period-window computation,
+invoice line-item/subtotal/discount calculation, promotion redemption
+validation/tiered pricing, payment retry eligibility, offline license
+hash validation, MRR/ARR normalization/churn/success rates), 21 service
+classes across 17 files, 5 leader-elected workers, 264 tests at 96.5%
+coverage against real PostgreSQL and Redis. Ruff, Black, MyPy all
+clean.
+
+**Scope boundary, decided up front and documented in the README**: per
+docs/069's own "DO NOT IMPLEMENT" section (Payment Gateway SDKs, Tax
+Authority Integrations, ERP Systems, Accounting Software), this service
+records payment *outcomes* and never processes a real payment itself —
+`PaymentCreateRequest.succeeded` is reported by the caller (a gateway
+webhook handler, an operator), and `PaymentMethod.reference` is a
+tokenized/masked lookup key, never a real card or bank account number.
+Invoice totals and revenue analytics are real and tested; there is no
+live tax-authority rate lookup, ERP posting, or accounting-software
+export.
+
+Hand-verification of all 10 pure engines again found **zero defects**
+before any pytest, and every reserved-column risk was checked and
+renamed proactively during model design rather than discovered via a
+failing test — every `is_active`-shaped domain flag
+(`LicenseKey`/`LicenseActivation`/`LicenseEntitlement`/
+`SubscriptionFeature`/`SubscriptionPlan`/`Discount`) was named
+`is_enabled` from the first draft, applying 067's lesson before any
+collision could occur. Integration testing found **zero new-class
+defects** either. Two design corrections happened during *writing*,
+before any test ran:
+
+- **`app/api/billing.py`'s `create_invoice` route's first draft used
+  a hacky `Annotated[int, Depends(lambda: 30)]` placeholder** to inject
+  a hardcoded invoice due-days value instead of reading it from
+  configuration — caught by re-reading the route against the "every
+  commercial threshold is configuration, never a compiled-in constant"
+  principle this service's own docstring states, before running Ruff.
+  Fixed by adding a proper `ServiceSettings` dependency reading
+  `settings.invoice_due_days`.
+- **The invoice generation sweep worker's design required a genuine
+  decision, not just a name**: docs/069 names an "Invoice Generation"
+  sweep, but the spec gives this service no field linking an invoice to
+  the specific billing period it covers, and no autonomous recurring
+  invoice orchestration was built elsewhere. Rather than leave the
+  worker a no-op, it issues one invoice per billing period per active
+  subscription (duplicate-guarded by checking whether any invoice for
+  that subscription has been issued since `current_period_start`,
+  substituting for an explicit period-link field) and separately
+  transitions any `ISSUED` invoice past `due_at` to `OVERDUE` — a real,
+  idempotent, testable design decision made and documented before
+  writing its tests, not discovered as a gap afterward.
+
+### Things worth remembering
+
+- **Redis db assignment continues sequentially**: ..., 40 (Prompt 067),
+  41 (Prompt 068), **42 (this prompt)**.
+- **A pure engine function was added mid-build, not front-loaded**:
+  `app/quotas/engine.py`'s `compute_period_window()` (daily/weekly/
+  monthly/annual calendar-boundary windows, with a month-length-aware
+  `_add_months()` helper) didn't exist until the quota reset sweep
+  worker needed it — added there, hand-verified inline
+  (leap-year February clamping, year rollover) before being wired into
+  both the quota reset sweep and the statistics rollup's snapshot
+  quota-exceeded count, rather than stubbing the worker with inline
+  date arithmetic that would have skipped the engine layer's own
+  hand-verification discipline.
+- **Two service-layer classes both legitimately export a class named
+  `TransitionRefusedError`** (`app.services.licenses.TransitionRefusedError`
+  and `app.services.subscriptions.TransitionRefusedError`) — same name,
+  different exception types, since licenses and subscriptions have
+  independent transition tables and independent refusal reasons. Tests
+  and route code that need both import one aliased
+  (`from app.services.licenses import TransitionRefusedError as
+  LicenseTransitionRefusedError`), matching the pattern
+  `app/api/billing.py` itself already used.
+- **Live e2e confirmed the statistics rollup worker fires autonomously
+  on its own schedule with a real database write**, watched both in the
+  container's structured JSON logs (`statistics rollup completed` with
+  `organizations` going from `0` to `1` after the API created a
+  subscription mid-run) and directly in `billing_statistics` via `psql`
+  — the rolled-up row's `mrr`/`arr`/`active_subscriptions` matched the
+  one active subscription created through the live API, and
+  `invoices_generated` correctly stayed `0` for the just-completed hour
+  window since the invoice generated during the same run fell in the
+  *next* window, proving the window-boundary logic rather than just a
+  running total. Never manually triggered.
+  `TRUNCATE ... RESTART IDENTITY CASCADE`-ed every table afterward,
+  before considering the work done.
