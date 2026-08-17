@@ -1,0 +1,1117 @@
+# FRONTEND PROMPT 006
+# Enterprise Monitoring & Observability Experience
+
+## ROLE
+
+Act as a Principal Product Designer, Enterprise Observability UX Architect, Frontend Architect, Senior Next.js/React Engineer, Data Visualization Specialist, Accessibility Engineer, and Infrastructure Operations UX Specialist.
+
+Frontend Prompts 001–005 are complete.
+
+Use the existing frontend architecture, design system, application shell, authentication, permissions, and Dashboard patterns.
+
+==================================================
+CRITICAL BACKEND V1 FREEZE
+==================================================
+
+AI-IOS Backend V1 is COMPLETE and FROZEN.
+
+THIS IS A FRONTEND-ONLY PROMPT.
+
+DO NOT:
+
+- modify backend source code
+- modify backend APIs
+- add backend endpoints
+- modify database schemas
+- modify database migrations
+- modify backend authentication
+- modify backend RBAC
+- modify backend business logic
+- modify backend configuration
+- modify backend service contracts
+
+If a monitoring capability is missing from Backend V1:
+
+1. Document it.
+2. Do not modify the backend.
+3. Do not fabricate data.
+4. Build the best possible frontend state using existing V1 capabilities.
+5. Record the limitation in:
+   docs/frontend/backend-v1-integration-limitations.md
+
+Backend changes are forbidden unless explicitly authorized in a separate request.
+
+==================================================
+1. OBJECTIVE
+==================================================
+
+Build the production-grade AI-IOS Monitoring experience.
+
+The Monitoring module must allow an operator to:
+
+- understand infrastructure health
+- inspect assets
+- identify degraded/failed resources
+- inspect detailed status
+- monitor operational metrics
+- investigate problems
+- move from summary → detail
+- filter large datasets
+- search assets
+- inspect time-series information
+- understand recent changes
+- recover from partial data failures
+
+The experience must be:
+
+- enterprise-grade
+- premium
+- technically sophisticated
+- information-dense
+- highly readable
+- responsive
+- accessible
+- fast
+- operationally focused
+
+Do not create a generic monitoring template.
+
+==================================================
+2. INSPECT BACKEND V1 FIRST
+==================================================
+
+Before implementing UI, inspect the actual Backend V1 monitoring capabilities.
+
+Inspect the source-verified backend feature matrix and actual APIs related to:
+
+- monitoring
+- observability
+- asset health
+- metrics
+- service health
+- infrastructure state
+- health checks
+- monitoring history
+- events
+
+Determine:
+
+- actual endpoints
+- request parameters
+- response structures
+- pagination
+- filtering
+- sorting
+- status values
+- timestamps
+- permissions
+
+Do not invent any endpoint.
+
+Do not infer response fields from endpoint names.
+
+==================================================
+3. MONITORING INFORMATION ARCHITECTURE
+==================================================
+
+Create the Monitoring module around operator workflows.
+
+Recommended structure:
+
+Monitoring
+├── Overview
+├── Assets
+├── Services
+├── Metrics
+├── Events
+└── Detail
+
+Only implement sections supported by Backend V1.
+
+Do not expose unsupported routes.
+
+==================================================
+4. MONITORING OVERVIEW
+==================================================
+
+Create:
+
+/monitoring
+
+The Overview page should answer:
+
+- What is healthy?
+- What is degraded?
+- What has failed?
+- What changed recently?
+- What requires investigation?
+
+Use real Backend V1 data.
+
+Potential sections:
+
+1. Health Summary
+2. Asset Health
+3. Service Health
+4. Critical Issues
+5. Recent Events
+6. Metric Trends
+
+Only render sections for which actual data exists.
+
+==================================================
+5. HEALTH SUMMARY
+==================================================
+
+Create reusable summary metrics:
+
+- Healthy
+- Warning
+- Failed/Critical
+- Unknown
+- Total
+
+Use canonical Prompt 002 status tokens.
+
+Do not create a second status system.
+
+Status must communicate through:
+
+- icon
+- label
+- semantic colour
+
+not colour alone.
+
+==================================================
+6. ASSET HEALTH TABLE
+==================================================
+
+Create an enterprise-grade asset health table.
+
+Possible columns based on actual API data:
+
+- Asset
+- Type
+- Status
+- Health
+- Last Seen
+- Environment
+- Location
+- Updated
+- Actions
+
+Only include columns backed by real data.
+
+Support:
+
+- sorting
+- filtering
+- pagination
+- search
+- column visibility where useful
+- row actions
+- loading
+- empty
+- error
+- partial data
+
+Do not fabricate fields.
+
+==================================================
+7. MACHINE TERMINOLOGY
+==================================================
+
+Use terminology already established by the platform.
+
+If the backend/product contract uses:
+
+Machine
+
+use "Machine".
+
+Do not casually replace established platform terminology with:
+
+Node
+
+unless the backend contract explicitly requires it.
+
+Maintain terminology consistency across:
+
+- table
+- detail page
+- filters
+- breadcrumbs
+- user guide
+- documentation
+
+==================================================
+8. ASSET DETAIL
+==================================================
+
+Create the foundation for:
+
+/monitoring/assets/[id]
+
+The detail experience should support, where V1 provides the data:
+
+- identity
+- type
+- status
+- health
+- metadata
+- recent events
+- metrics
+- related services
+- last update
+- operational state
+
+Use a clear hierarchy:
+
+Identity
+↓
+Current Health
+↓
+Key Metrics
+↓
+Events
+↓
+Related Information
+
+Do not invent relationships.
+
+==================================================
+9. SERVICE HEALTH
+==================================================
+
+If Backend V1 provides service health information, create a service-health view.
+
+Display:
+
+- service name
+- status
+- health
+- last update
+- relevant metrics
+- version where available
+- actions where supported
+
+Do not claim a service is healthy merely because its frontend page loads.
+
+==================================================
+10. METRICS EXPERIENCE
+==================================================
+
+If actual V1 metric APIs exist, create the metrics experience.
+
+Support:
+
+- metric selector
+- time range
+- aggregation where supported
+- chart
+- current value
+- min/max/average where supported
+- loading
+- empty
+- error
+
+Do not calculate unsupported aggregations.
+
+==================================================
+11. TIME RANGE
+==================================================
+
+If supported by V1:
+
+- Last 15 minutes
+- Last hour
+- Last 6 hours
+- Last 24 hours
+- Last 7 days
+- Custom
+
+Only expose ranges supported by the backend.
+
+Do not fetch huge datasets unnecessarily.
+
+==================================================
+12. TIME-SERIES VISUALIZATION
+==================================================
+
+Use the design system chart rules.
+
+Charts must support:
+
+- light theme
+- dark theme
+- tooltip
+- readable axis
+- loading
+- empty
+- error
+- accessible textual summary
+
+Do not make critical monitoring information available only through charts.
+
+Provide tabular/data summaries where appropriate.
+
+==================================================
+13. EVENT TIMELINE
+==================================================
+
+If V1 provides monitoring events, create a timeline.
+
+Each event may contain:
+
+- timestamp
+- severity/status
+- title
+- source
+- description
+- affected asset
+- navigation target
+
+Only show actual fields.
+
+Use chronological ordering based on real timestamps.
+
+==================================================
+14. FILTER SYSTEM
+==================================================
+
+Create reusable monitoring filters.
+
+Possible filters:
+
+- status
+- asset type
+- environment
+- service
+- severity
+- time range
+- search
+
+Only implement filters supported by the actual APIs.
+
+Filters must:
+
+- be URL/share-link friendly where practical
+- preserve state on navigation where appropriate
+- support reset
+- show active filter count
+- work with keyboard
+- remain responsive
+
+==================================================
+15. SEARCH
+==================================================
+
+Provide monitoring-specific search.
+
+Search should operate against actual V1 capabilities.
+
+Do not create a fake client-side search over incomplete datasets when the backend provides server-side search.
+
+If only client-side filtering is possible:
+
+document the limitation and ensure it is used only for appropriately sized data.
+
+==================================================
+16. TABLE DENSITY
+==================================================
+
+Monitoring tables may contain large datasets.
+
+Provide a density strategy:
+
+- comfortable
+- compact
+
+Do not create tiny unreadable rows.
+
+Persist preference only through the existing frontend client-state architecture.
+
+==================================================
+17. ROW INTERACTION
+==================================================
+
+A monitoring table row should support:
+
+- selecting/opening detail
+- keyboard interaction
+- contextual actions where supported
+
+Do not make the entire row accidentally clickable if it contains destructive actions.
+
+Use clear action affordances.
+
+==================================================
+18. DETAIL DRAWER VS PAGE
+==================================================
+
+Use:
+
+Drawer
+
+for quick inspection when the dataset remains visible.
+
+Use:
+
+Full detail page
+
+when the user needs deeper investigation.
+
+Do not place every detail inside a drawer.
+
+Establish a consistent pattern.
+
+==================================================
+19. STATUS FILTERING
+==================================================
+
+Use canonical statuses.
+
+Examples:
+
+Healthy
+Warning
+Critical
+Failed
+Running
+Stopped
+Degraded
+Unknown
+Maintenance
+
+Only expose statuses actually returned by V1.
+
+If the backend uses different raw values:
+
+map them in the frontend adapter layer.
+
+Do not modify backend values.
+
+==================================================
+20. PARTIAL FAILURE
+==================================================
+
+Monitoring is operationally critical.
+
+If one monitoring query fails:
+
+do not blank the entire page.
+
+Example:
+
+Asset data available
+Metrics unavailable
+
+Show:
+
+Asset table
++
+Metrics unavailable state
+
+with retry.
+
+==================================================
+21. STALE DATA
+==================================================
+
+If data has a last-updated timestamp:
+
+show it where useful.
+
+If cached data is being displayed:
+
+make stale state understandable.
+
+Do not falsely display cached data as real-time.
+
+==================================================
+22. REFRESH
+==================================================
+
+Support:
+
+- manual refresh
+- background refresh where justified
+- last updated timestamp
+- refresh loading state
+
+Do not create aggressive polling.
+
+Use the backend's actual capabilities.
+
+If V1 provides WebSocket/SSE:
+
+consume the existing implementation only.
+
+Do not create backend streaming infrastructure.
+
+==================================================
+23. REAL-TIME INDICATOR
+==================================================
+
+Only show:
+
+Live
+Real-time
+Connected
+
+when the frontend has actual evidence of a live connection.
+
+Otherwise use:
+
+Last updated: <timestamp>
+
+Do not create fake real-time indicators.
+
+==================================================
+24. ALERT CROSS-LINKING
+==================================================
+
+If Monitoring data contains alerts or related alert identifiers:
+
+allow navigation to the Alerting module.
+
+Use centralized route metadata.
+
+Do not create fake alert relationships.
+
+==================================================
+25. AUTOMATION CROSS-LINKING
+==================================================
+
+If monitoring data contains supported automation references:
+
+allow navigation to the corresponding Automation workflow.
+
+Do not invent relationships.
+
+==================================================
+26. DASHBOARD INTEGRATION
+==================================================
+
+The Dashboard Prompt 005 should link into Monitoring.
+
+Ensure:
+
+Dashboard health card
+    ↓
+Monitoring Overview
+
+Failed asset
+    ↓
+Monitoring Asset Detail
+
+Health trend
+    ↓
+Monitoring Metrics
+
+Use the centralized routing system.
+
+Do not duplicate monitoring logic inside Dashboard.
+
+==================================================
+27. API ARCHITECTURE
+==================================================
+
+Use:
+
+Monitoring Page
+↓
+Monitoring Hooks
+↓
+Monitoring API Module
+↓
+Shared API Client
+↓
+Backend V1
+
+Components must not directly call HTTP.
+
+Keep API adapters separate from UI.
+
+==================================================
+28. TYPES
+==================================================
+
+Create strict frontend types from actual V1 API responses.
+
+Separate:
+
+API types
+
+from
+
+UI/domain view models
+
+where transformation is required.
+
+Do not use:
+
+any
+
+to bypass mismatches.
+
+==================================================
+29. QUERY ARCHITECTURE
+==================================================
+
+Use TanStack Query.
+
+Create predictable query keys.
+
+Support:
+
+- pagination
+- filters
+- sorting
+- stale time
+- refetch
+- retry
+- cancellation
+
+Avoid unnecessary global state.
+
+==================================================
+30. PERFORMANCE
+==================================================
+
+Monitoring may contain thousands of records.
+
+Use appropriate techniques:
+
+- server-side pagination
+- server-side filtering
+- virtualization where genuinely needed
+- query caching
+- lazy-loaded charts
+- efficient rendering
+
+Do not load all assets into the browser unless V1 requires it.
+
+==================================================
+31. ACCESSIBILITY
+==================================================
+
+Target WCAG 2.2 AA.
+
+Ensure:
+
+- tables are keyboard navigable
+- filters are labelled
+- status is text-readable
+- charts have summaries
+- drawers manage focus
+- dialogs manage focus
+- pagination is accessible
+- loading is announced where appropriate
+- errors are accessible
+
+==================================================
+32. RESPONSIVE DESIGN
+==================================================
+
+Desktop:
+
+Data-dense table and multi-panel experience.
+
+Tablet:
+
+Reduced columns and responsive filters.
+
+Narrow viewport:
+
+Use cards/list/detail patterns where a table becomes unusable.
+
+Do not simply overflow horizontally without a deliberate UX strategy.
+
+==================================================
+33. EMPTY STATES
+==================================================
+
+Support:
+
+No assets
+No metrics
+No events
+No services
+No results
+
+Messages must explain:
+
+- what is empty
+- why it may be empty where known
+- what the user can do next
+
+Do not use generic "No data" everywhere.
+
+==================================================
+34. ERROR STATES
+==================================================
+
+Support:
+
+- API failure
+- permission denied
+- timeout
+- partial service failure
+- invalid filter
+- unavailable metric
+
+Do not expose internal backend details.
+
+==================================================
+35. LOADING STATES
+==================================================
+
+Use:
+
+- table skeleton
+- metric skeleton
+- chart skeleton
+- detail skeleton
+
+Avoid page-wide blocking loaders when only one section is loading.
+
+==================================================
+36. USER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/user-guide/monitoring.md
+
+Document:
+
+- Monitoring Overview
+- Asset health
+- Service health
+- Metrics
+- Events
+- Search
+- Filters
+- Time range
+- Refresh
+- Asset detail
+- Status meanings
+- Troubleshooting
+
+Only document implemented capabilities.
+
+==================================================
+37. DEVELOPER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/developer-guide/monitoring.md
+
+Document:
+
+- feature structure
+- API modules
+- query architecture
+- filter model
+- table architecture
+- detail architecture
+- chart architecture
+- permission handling
+- error handling
+- performance decisions
+
+==================================================
+38. RFI / RFP DOCUMENTATION
+==================================================
+
+Create:
+
+docs/frontend/rfi/monitoring.md
+
+Document:
+
+- monitoring UX
+- operational visibility
+- scalable data presentation
+- responsive behaviour
+- accessibility
+- permission-aware data
+- partial failure handling
+- performance
+
+Clearly separate:
+
+Implemented V1 frontend capabilities
+
+from
+
+Unavailable/planned capabilities.
+
+==================================================
+39. BACKEND V1 LIMITATIONS
+==================================================
+
+For every requested monitoring capability not available from V1:
+
+record:
+
+- capability
+- backend service
+- API availability
+- frontend impact
+- current handling
+
+File:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+DO NOT modify backend.
+
+==================================================
+40. TESTING
+==================================================
+
+Create tests for:
+
+### Overview
+
+- healthy state
+- warning state
+- failed state
+- unknown state
+- loading
+- empty
+- error
+- partial failure
+
+### Table
+
+- rendering
+- sorting
+- filtering
+- pagination
+- selection
+- keyboard navigation
+
+### Detail
+
+- correct data
+- loading
+- error
+- navigation
+
+### Metrics
+
+- time range
+- loading
+- empty
+- error
+- chart accessibility
+
+### Permissions
+
+- restricted data hidden
+- allowed data visible
+
+==================================================
+41. E2E TESTING
+==================================================
+
+Where the existing environment supports it:
+
+- Monitoring route access
+- Asset list
+- Search
+- Filter
+- Asset detail
+- Refresh
+- Navigation from Dashboard
+
+Do not invent credentials.
+
+Do not modify backend to make tests pass.
+
+==================================================
+42. DESIGN SYSTEM COMPLIANCE
+==================================================
+
+Use Prompt 002 components and tokens.
+
+Do not create a separate monitoring visual language.
+
+Do not introduce random colours.
+
+Do not introduce another icon library.
+
+Do not create competing status badges.
+
+==================================================
+43. DASHBOARD INTEGRATION TEST
+==================================================
+
+Verify:
+
+Dashboard
+→ Monitoring Overview
+
+and:
+
+Dashboard health metric
+→ relevant Monitoring view
+
+work correctly.
+
+==================================================
+44. DEPENDENCY SAFETY
+==================================================
+
+Prefer existing dependencies.
+
+Do not add a chart library if the repository already provides a suitable one.
+
+If a dependency is genuinely required:
+
+- explain why
+- make the smallest change
+- inspect lockfile diff
+- validate
+
+Do not run destructive package installation commands.
+
+==================================================
+45. BACKEND FREEZE VERIFICATION
+==================================================
+
+Before completion verify:
+
+[ ] Backend source unchanged.
+[ ] Backend APIs unchanged.
+[ ] Database unchanged.
+[ ] Migrations unchanged.
+[ ] Backend configuration unchanged.
+[ ] Backend dependencies unchanged.
+
+Backend modifications MUST be zero.
+
+==================================================
+46. VALIDATION
+==================================================
+
+Run:
+
+- typecheck
+- lint
+- unit tests
+- production build
+- applicable E2E tests
+
+Do not claim success without execution.
+
+==================================================
+47. GIT SAFETY
+==================================================
+
+Before commit:
+
+- inspect git status
+- inspect changed files
+- verify no secrets
+- verify no .env files
+- verify no credentials
+- verify no backend changes
+- verify no unnecessary dependency changes
+- verify lockfile changes
+
+==================================================
+48. COMMIT
+==================================================
+
+If all applicable validation passes:
+
+feat(frontend): implement enterprise monitoring experience
+
+Push according to the repository workflow.
+
+==================================================
+49. DEFINITION OF DONE
+==================================================
+
+[ ] Monitoring Overview implemented.
+[ ] Actual V1 monitoring APIs consumed.
+[ ] No fabricated monitoring data.
+[ ] Health summary implemented.
+[ ] Asset health experience implemented where supported.
+[ ] Asset detail implemented where supported.
+[ ] Service health implemented where supported.
+[ ] Metrics implemented where supported.
+[ ] Events implemented where supported.
+[ ] Search implemented where supported.
+[ ] Filters implemented where supported.
+[ ] Pagination implemented where supported.
+[ ] Loading states implemented.
+[ ] Empty states implemented.
+[ ] Error states implemented.
+[ ] Partial failure handling implemented.
+[ ] Refresh implemented.
+[ ] Stale-data behaviour is honest.
+[ ] Real-time indicator is only shown when real.
+[ ] Dashboard cross-links work.
+[ ] Permission handling works.
+[ ] Responsive design works.
+[ ] Accessibility requirements met.
+[ ] User guide created.
+[ ] Developer guide created.
+[ ] RFI documentation created.
+[ ] Backend V1 untouched.
+[ ] No backend API changes.
+[ ] No database changes.
+[ ] No unnecessary dependencies.
+[ ] Typecheck passes.
+[ ] Lint passes.
+[ ] Tests pass.
+[ ] Production build passes.
+[ ] Applicable E2E tests pass.
+[ ] Git working tree is clean except explicitly pre-existing files.
+
+==================================================
+50. FINAL REPORT
+==================================================
+
+Provide:
+
+1. Monitoring implementation summary
+2. Backend V1 APIs consumed
+3. Pages/routes created
+4. Components created
+5. Data/query architecture
+6. Health/status mapping
+7. Filters/search
+8. Asset detail
+9. Metrics/charts
+10. Events
+11. Dashboard integration
+12. Permission handling
+13. Loading/empty/error behaviour
+14. Accessibility results
+15. Responsive results
+16. Tests
+17. E2E tests
+18. Typecheck
+19. Lint
+20. Production build
+21. Dependency changes
+22. Lockfile changes
+23. Backend files changed — MUST BE ZERO
+24. Backend V1 integration limitations
+25. Git commit
+26. Known limitations
+27. Recommended next frontend prompt
+
+Do not modify the backend.
+
+Do not fabricate monitoring capabilities.
+
+Proceed with implementation.

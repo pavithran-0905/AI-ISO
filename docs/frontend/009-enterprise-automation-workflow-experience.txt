@@ -1,0 +1,1151 @@
+# FRONTEND PROMPT 009
+# Enterprise Automation, Workflow & Job Orchestration Experience
+
+## ROLE
+
+Act as a Principal Product Designer, Enterprise Automation UX Architect, Workflow UX Specialist, Frontend Architect, Senior Next.js/React Engineer, Accessibility Engineer, and Enterprise Operations Platform Specialist.
+
+Frontend Prompts 001–008 are COMPLETE.
+
+Treat the existing frontend implementation as the source of truth.
+
+==================================================
+CRITICAL BACKEND V1 FREEZE
+==================================================
+
+AI-IOS Backend V1 is COMPLETE and FROZEN.
+
+THIS IS A FRONTEND-ONLY PROMPT.
+
+DO NOT:
+
+- modify backend source code
+- modify automation-service
+- modify workflow-related backend services
+- add backend APIs
+- change backend APIs
+- modify database schemas
+- modify migrations
+- modify authentication
+- modify RBAC
+- modify backend business logic
+- modify backend configuration
+- modify backend dependencies
+
+If a required automation capability is unavailable:
+
+1. Document it.
+2. Do not fabricate it.
+3. Do not modify backend.
+4. Build only supported frontend functionality.
+5. Record the limitation in:
+   docs/frontend/backend-v1-integration-limitations.md
+
+Backend modifications MUST remain ZERO.
+
+==================================================
+1. OBJECTIVE
+==================================================
+
+Build the production-grade AI-IOS Automation experience.
+
+The frontend must allow users to understand and operate automation workflows supported by Backend V1.
+
+Where supported, provide:
+
+- automation overview
+- automation inventory
+- workflow/job details
+- execution history
+- execution status
+- workflow configuration
+- run automation
+- execution monitoring
+- logs/output
+- retry/cancel actions
+- scheduling
+- targets
+- variables/parameters
+- execution results
+
+Only implement capabilities actually supported by Backend V1.
+
+The UX must be:
+
+- enterprise-grade
+- premium
+- operationally clear
+- safe
+- predictable
+- accessible
+- responsive
+- scalable
+
+==================================================
+2. INSPECT BACKEND V1 FIRST
+==================================================
+
+Before writing UI, inspect the actual V1 automation implementation.
+
+Inspect:
+
+- automation-service
+- workflow/job APIs
+- execution APIs
+- target APIs
+- scheduling APIs
+- status values
+- parameter schemas
+- permissions
+- pagination
+- filtering
+- logs/output
+- cancellation
+- retry
+- actual execution lifecycle
+
+Do not infer behaviour from filenames.
+
+Do not invent endpoints.
+
+Do not invent statuses.
+
+==================================================
+3. INFORMATION ARCHITECTURE
+==================================================
+
+Use user workflows rather than backend service names.
+
+Recommended:
+
+Automation
+├── Overview
+├── Automations
+├── Executions
+├── Schedules
+├── Targets
+└── Detail
+
+Only create sections backed by V1.
+
+==================================================
+4. AUTOMATION OVERVIEW
+==================================================
+
+Create:
+
+/automation
+
+The overview should answer:
+
+- What automations exist?
+- What is running?
+- What failed?
+- What completed recently?
+- What is scheduled?
+- What requires attention?
+
+Use actual V1 data.
+
+Potential metrics:
+
+- total automations
+- running
+- successful
+- failed
+- scheduled
+- recent executions
+
+Only display supported metrics.
+
+==================================================
+5. AUTOMATION LIST
+==================================================
+
+Create an enterprise table.
+
+Possible columns:
+
+- Name
+- Type
+- Status
+- Owner
+- Last execution
+- Next scheduled run
+- Target
+- Updated
+- Actions
+
+Only include confirmed fields.
+
+Support:
+
+- search
+- filtering
+- sorting
+- pagination
+- row actions
+- loading
+- empty
+- error
+
+==================================================
+6. AUTOMATION DETAIL
+==================================================
+
+Create a detail experience.
+
+Show where supported:
+
+- identity
+- description
+- type
+- current state
+- owner
+- parameters
+- target
+- schedule
+- execution history
+- latest result
+- logs
+- available actions
+
+Use clear hierarchy.
+
+==================================================
+7. EXECUTION EXPERIENCE
+==================================================
+
+Create:
+
+/automation/executions
+
+where supported.
+
+Show:
+
+- execution ID
+- automation
+- status
+- target
+- started
+- completed
+- duration
+- triggered by
+- result
+
+Only use real V1 fields.
+
+==================================================
+8. EXECUTION STATUS
+==================================================
+
+Use actual V1 execution states.
+
+Possible concepts:
+
+Queued
+Running
+Succeeded
+Failed
+Cancelled
+Timed Out
+
+Do not assume these exact values.
+
+Inspect the backend and use the canonical values.
+
+Create a frontend semantic mapping layer if necessary.
+
+==================================================
+9. EXECUTION DETAIL
+==================================================
+
+Create:
+
+/automation/executions/[id]
+
+Show:
+
+- execution identity
+- automation
+- target
+- parameters where safe
+- lifecycle
+- status
+- timestamps
+- output
+- logs
+- result
+- error information safe for users
+
+Never expose secrets.
+
+==================================================
+10. RUN AUTOMATION
+==================================================
+
+If V1 supports manual execution:
+
+create a Run Automation workflow.
+
+Flow:
+
+Select Automation
+↓
+Review Parameters
+↓
+Select Target where supported
+↓
+Review
+↓
+Confirm
+↓
+Submit
+↓
+Execution Detail
+
+The user must understand what will happen before execution.
+
+==================================================
+11. DESTRUCTIVE / HIGH-IMPACT ACTIONS
+==================================================
+
+Automation may modify infrastructure.
+
+For actions that can materially affect infrastructure:
+
+provide:
+
+- clear action description
+- target
+- parameters
+- confirmation
+- permission check
+- submission state
+- result
+
+Do not use ambiguous labels like:
+
+"Go"
+
+Use explicit labels such as:
+
+"Run Automation"
+
+only when accurate.
+
+==================================================
+12. DOUBLE-SUBMISSION PROTECTION
+==================================================
+
+During execution submission:
+
+- disable duplicate submission
+- show progress
+- prevent accidental double execution
+- wait for backend confirmation
+- handle timeout safely
+
+Do not automatically retry a potentially destructive action unless V1 explicitly supports safe idempotency.
+
+==================================================
+13. PARAMETERS
+==================================================
+
+If automation parameters are exposed by V1:
+
+render them dynamically from the actual schema.
+
+Support appropriate types:
+
+- text
+- number
+- boolean
+- select
+- secret/password field where appropriate
+- arrays/objects where V1 supports them
+
+Do not hardcode parameters for individual automation types.
+
+==================================================
+14. PARAMETER VALIDATION
+==================================================
+
+Validate:
+
+- required fields
+- type
+- ranges
+- allowed values
+- format
+
+where supported by the actual V1 schema.
+
+Backend remains authoritative.
+
+==================================================
+15. SECRET PARAMETERS
+==================================================
+
+Never display secret values unnecessarily.
+
+For secret parameters:
+
+- use password-style input
+- prevent accidental exposure
+- do not log values
+- do not place secrets into URLs
+- do not store them unnecessarily in persistent client state
+
+==================================================
+16. TARGET SELECTION
+==================================================
+
+If V1 supports target selection:
+
+provide a clear target selector.
+
+Show only information available from V1.
+
+Potential:
+
+- Machine
+- Host
+- Environment
+- Group
+
+Do not invent target relationships.
+
+Use platform terminology consistently.
+
+==================================================
+17. EXECUTION LOGS
+==================================================
+
+If V1 provides execution logs:
+
+create a professional log viewer.
+
+Support:
+
+- timestamps
+- severity where available
+- searchable text
+- auto-scroll where appropriate
+- pause/follow behaviour if streaming exists
+- copy where appropriate
+- loading
+- empty
+- error
+
+Do not expose sensitive credentials in logs.
+
+==================================================
+18. LIVE EXECUTION
+==================================================
+
+If V1 provides WebSocket/SSE/streaming:
+
+consume the existing implementation.
+
+Show:
+
+- Running
+- connection state where appropriate
+- live output
+- completion
+
+Do not invent real-time functionality.
+
+If only polling exists:
+
+use existing polling/query behaviour.
+
+==================================================
+19. RETRY
+==================================================
+
+If V1 supports retry:
+
+provide retry action.
+
+Before retry:
+
+show what will be retried and target where relevant.
+
+Do not retry automatically.
+
+==================================================
+20. CANCEL
+==================================================
+
+If V1 supports cancellation:
+
+provide cancellation.
+
+Require confirmation when appropriate.
+
+Do not show "Cancelled" until backend confirms it.
+
+==================================================
+21. EXECUTION HISTORY
+==================================================
+
+Support:
+
+- filtering
+- pagination
+- sorting
+- search
+- date/time range
+
+Only use V1-supported fields.
+
+==================================================
+22. SCHEDULING
+==================================================
+
+If Automation V1 supports schedules:
+
+create scheduling UI.
+
+Support actual V1 concepts:
+
+- recurrence
+- timezone
+- start
+- end
+- enabled/disabled
+- target
+- parameters
+
+Do not invent cron behaviour unless V1 explicitly exposes cron.
+
+==================================================
+23. SCHEDULE MANAGEMENT
+==================================================
+
+Support where V1 allows:
+
+- create
+- edit
+- enable
+- disable
+- delete
+
+Use confirmations for destructive changes.
+
+Show next execution when backend provides it.
+
+==================================================
+24. AUTOMATION SEARCH / FILTERS
+==================================================
+
+Implement only supported filters.
+
+Possible:
+
+- status
+- type
+- owner
+- target
+- schedule state
+
+Do not create fake filters.
+
+==================================================
+25. PERMISSIONS
+==================================================
+
+Use the existing permission system.
+
+Potential permissions:
+
+- view automation
+- create
+- edit
+- execute
+- cancel
+- retry
+- schedule
+- delete
+
+Only use permissions confirmed in V1.
+
+Frontend permission checks are UX controls.
+
+Backend authorization remains authoritative.
+
+==================================================
+26. MONITORING INTEGRATION
+==================================================
+
+Where actual V1 relationships exist:
+
+Automation
+→ Target
+→ Monitoring
+
+Monitoring
+→ Automation
+
+Do not invent relationships.
+
+==================================================
+27. ALERTING INTEGRATION
+==================================================
+
+Where V1 provides relationships:
+
+Automation failure
+→ Alert
+
+Alert
+→ Automation execution
+
+Only implement confirmed relationships.
+
+==================================================
+28. DASHBOARD INTEGRATION
+==================================================
+
+Where supported:
+
+Dashboard automation metrics
+→ Automation
+
+Dashboard failed executions
+→ filtered Automation view
+
+Do not duplicate automation API logic in Dashboard.
+
+==================================================
+29. API ARCHITECTURE
+==================================================
+
+Use:
+
+Automation Page
+↓
+Automation Hooks
+↓
+Automation API Module
+↓
+Shared API Client
+↓
+Backend V1
+
+Components must not call HTTP directly.
+
+==================================================
+30. TYPES
+==================================================
+
+Use strict TypeScript.
+
+Separate:
+
+Backend API types
+↓
+Adapters
+↓
+Frontend domain/view models
+
+Do not use `any`.
+
+==================================================
+31. QUERY ARCHITECTURE
+==================================================
+
+Use TanStack Query.
+
+Queries:
+
+- automation list
+- automation detail
+- execution list
+- execution detail
+- schedules
+- targets
+- logs where applicable
+
+Mutations:
+
+- create
+- update
+- run
+- retry
+- cancel
+- schedule
+- enable
+- disable
+- delete
+
+Only implement actual V1 operations.
+
+==================================================
+32. CACHE INVALIDATION
+==================================================
+
+After mutations:
+
+- invalidate affected queries
+- update confirmed state
+- avoid stale execution status
+- refresh related dashboard information when appropriate
+
+Do not use unsafe optimistic updates for infrastructure operations.
+
+==================================================
+33. LOADING STATES
+==================================================
+
+Use existing primitives.
+
+Support:
+
+- table
+- detail
+- execution
+- logs
+- run form
+- schedule form
+
+Avoid unnecessary full-page loaders.
+
+==================================================
+34. EMPTY STATES
+==================================================
+
+Examples:
+
+"No automations configured."
+
+"No executions found."
+
+"No scheduled automations."
+
+"No execution logs available."
+
+Make the next action clear where appropriate.
+
+==================================================
+35. ERROR STATES
+==================================================
+
+Support:
+
+- API unavailable
+- permission denied
+- invalid automation
+- invalid target
+- execution failure
+- cancellation failure
+- timeout
+- schedule failure
+
+Never expose backend stack traces.
+
+==================================================
+36. RESPONSIVE UX
+==================================================
+
+Desktop:
+
+Data-dense automation workspace.
+
+Tablet:
+
+Responsive tables and forms.
+
+Narrow viewport:
+
+Prioritize:
+
+Automation
+Status
+Target
+Execution
+Actions
+
+Move secondary information into detail views.
+
+==================================================
+37. ACCESSIBILITY
+==================================================
+
+Target WCAG 2.2 AA.
+
+Ensure:
+
+- forms labelled
+- execution status accessible
+- logs keyboard navigable
+- dialogs manage focus
+- confirmation actions accessible
+- errors announced
+- status not colour-only
+
+==================================================
+38. SAFETY UX
+==================================================
+
+Because automation may affect infrastructure:
+
+Before execution, show a confirmation summary:
+
+Automation
+Target
+Parameters
+Expected action
+
+Then:
+
+[Cancel]
+[Run Automation]
+
+Do not hide important execution context.
+
+==================================================
+39. USER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/user-guide/automation.md
+
+Document:
+
+- Automation overview
+- Automations
+- Running automation
+- Parameters
+- Targets
+- Executions
+- Logs
+- Retry
+- Cancel
+- Scheduling
+- Troubleshooting
+
+Only document supported functionality.
+
+==================================================
+40. DEVELOPER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/developer-guide/automation.md
+
+Document:
+
+- feature structure
+- API architecture
+- execution lifecycle
+- query architecture
+- mutations
+- cache invalidation
+- parameter rendering
+- secret handling
+- permissions
+- logs
+- real-time behaviour
+- error handling
+
+==================================================
+41. RFI / RFP DOCUMENTATION
+==================================================
+
+Create:
+
+docs/frontend/rfi/automation.md
+
+Document:
+
+- enterprise automation UX
+- workflow execution
+- infrastructure safety
+- permission-aware actions
+- execution visibility
+- auditability where supported
+- responsive design
+- accessibility
+- maintainability
+
+Clearly distinguish:
+
+Implemented V1
+
+from
+
+Unavailable/planned.
+
+==================================================
+42. BACKEND V1 LIMITATIONS
+==================================================
+
+Record unsupported automation capabilities in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Include:
+
+- capability
+- V1 availability
+- frontend impact
+- current UX handling
+
+Do not modify backend.
+
+==================================================
+43. TESTING
+==================================================
+
+Create tests for:
+
+### Automation list
+
+- render
+- search
+- filter
+- sort
+- pagination
+- loading
+- empty
+- error
+
+### Run workflow
+
+- parameter rendering
+- validation
+- confirmation
+- submission
+- duplicate prevention
+- success
+- failure
+
+### Execution
+
+- detail
+- status
+- logs
+- retry
+- cancel
+
+### Scheduling
+
+- create
+- edit
+- enable
+- disable
+- delete
+
+### Permissions
+
+- view
+- execute
+- edit
+- cancel
+- schedule
+
+### Accessibility
+
+- keyboard
+- focus
+- dialogs
+- forms
+- status
+
+==================================================
+44. E2E
+==================================================
+
+Where the environment permits:
+
+- open Automation
+- inspect automation
+- run an approved test automation
+- inspect execution
+- view logs
+- retry/cancel where supported
+- navigate from Dashboard
+
+Use existing test credentials and safe test automation only.
+
+Do not invent credentials.
+
+Do not execute destructive production automation.
+
+Do not modify backend.
+
+==================================================
+45. DESIGN SYSTEM
+==================================================
+
+Use Prompt 002.
+
+Reuse:
+
+- Monitoring table patterns
+- Alerting status patterns
+- Reporting form patterns
+- existing dialogs
+- existing drawers
+- existing PageHeader
+
+Do not create another visual language.
+
+==================================================
+46. DEPENDENCY SAFETY
+==================================================
+
+Use existing dependencies.
+
+Do not introduce a workflow/canvas library unless the actual V1 capability genuinely requires one.
+
+If a dependency is necessary:
+
+- explain why
+- minimize bundle impact
+- inspect lockfile
+- validate
+
+==================================================
+47. BACKEND FREEZE VERIFICATION
+==================================================
+
+Verify:
+
+[ ] Backend source changes = 0
+[ ] Backend API changes = 0
+[ ] Database changes = 0
+[ ] Migration changes = 0
+[ ] Backend config changes = 0
+[ ] Backend dependency changes = 0
+
+==================================================
+48. VALIDATION
+==================================================
+
+Run:
+
+- typecheck
+- lint
+- unit tests
+- production build
+- applicable E2E
+
+Do not claim success without execution.
+
+==================================================
+49. GIT SAFETY
+==================================================
+
+Before commit:
+
+- inspect git status
+- inspect changed files
+- verify no secrets
+- verify no .env
+- verify no credentials
+- verify no backend modifications
+- inspect dependencies
+- inspect lockfile
+
+==================================================
+50. COMMIT
+==================================================
+
+If validation passes:
+
+feat(frontend): implement enterprise automation experience
+
+Push according to repository workflow.
+
+==================================================
+51. DEFINITION OF DONE
+==================================================
+
+[ ] Automation Overview implemented.
+[ ] Automation list implemented.
+[ ] Automation detail implemented.
+[ ] Execution list implemented.
+[ ] Execution detail implemented.
+[ ] Run workflow implemented where supported.
+[ ] Parameter rendering implemented where supported.
+[ ] Target selection implemented where supported.
+[ ] Logs implemented where supported.
+[ ] Retry implemented where supported.
+[ ] Cancel implemented where supported.
+[ ] Scheduling implemented where supported.
+[ ] Search/filter implemented where supported.
+[ ] Permissions implemented.
+[ ] Safety confirmation implemented.
+[ ] Loading states implemented.
+[ ] Empty states implemented.
+[ ] Error states implemented.
+[ ] Responsive UX implemented.
+[ ] Accessibility requirements met.
+[ ] Dashboard integration implemented.
+[ ] Monitoring integration implemented where supported.
+[ ] Alerting integration implemented where supported.
+[ ] User guide created.
+[ ] Developer guide created.
+[ ] RFI documentation created.
+[ ] Backend V1 untouched.
+[ ] No backend API changes.
+[ ] No database changes.
+[ ] No unnecessary dependencies.
+[ ] Typecheck passes.
+[ ] Lint passes.
+[ ] Tests pass.
+[ ] Production build passes.
+[ ] Applicable E2E passes.
+[ ] Git state clean except explicitly pre-existing files.
+
+==================================================
+52. FINAL REPORT
+==================================================
+
+Provide:
+
+1. Automation implementation summary
+2. Actual V1 APIs consumed
+3. Routes created
+4. Components created
+5. Execution lifecycle
+6. Run workflow
+7. Parameter handling
+8. Target handling
+9. Logs
+10. Retry/cancel
+11. Scheduling
+12. Permission handling
+13. Dashboard integration
+14. Monitoring/Alerting integration
+15. Loading/empty/error handling
+16. Accessibility
+17. Responsive behaviour
+18. User guide
+19. Developer guide
+20. RFI documentation
+21. Tests
+22. E2E
+23. Typecheck
+24. Lint
+25. Production build
+26. Dependency changes
+27. Lockfile changes
+28. Backend files changed — MUST BE ZERO
+29. Backend V1 limitations
+30. Git commit
+31. Known limitations
+32. Recommended next frontend prompt
+
+Do not modify the backend.
+
+Do not fabricate automation capabilities.
+
+Proceed with implementation.

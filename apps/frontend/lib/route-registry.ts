@@ -36,6 +36,18 @@ export const ROUTE_REGISTRY: readonly RouteMeta[] = [
     feature: null,
     showInNav: true,
   },
+  {
+    path: "/design-system",
+    title: "Design System Showcase",
+    breadcrumb: "Design System",
+    roles: null,
+    feature: null,
+    /** Internal/dev-only (docs/frontend Prompt 002 §25) — registered
+     * for completeness, never surfaced in navigation. The route itself
+     * additionally 404s outside development — see the page's own
+     * `env.appEnv` gate. */
+    showInNav: false,
+  },
 ];
 
 export function getRouteMeta(path: string): RouteMeta | undefined {

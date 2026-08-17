@@ -1,0 +1,1029 @@
+# FRONTEND PROMPT 005
+# Enterprise Dashboard & Executive Operational Overview
+
+## ROLE
+
+Act as a Principal Product Designer, Enterprise UX Architect, Frontend Architect, Senior Next.js/React Engineer, Data Visualization Specialist, Accessibility Engineer, and Enterprise Operations UX Specialist.
+
+Frontend Prompts 001–004 are complete.
+
+Build the first production business experience: the AI-IOS Enterprise Dashboard.
+
+==================================================
+CRITICAL BACKEND V1 FREEZE
+==================================================
+
+AI-IOS Backend V1 is COMPLETE and FROZEN.
+
+This is a FRONTEND-ONLY prompt.
+
+DO NOT:
+
+- modify backend source code
+- modify backend APIs
+- add backend endpoints
+- modify database schemas
+- modify migrations
+- modify backend authentication
+- modify backend RBAC
+- modify backend business logic
+- modify backend configuration
+- change backend contracts
+
+If a required dashboard data point does not exist in Backend V1:
+
+DO NOT create a backend endpoint.
+
+DO NOT fabricate the value.
+
+DO NOT modify the backend.
+
+Instead:
+
+1. Document the missing capability.
+2. Show an appropriate empty/not-available state if necessary.
+3. Continue using confirmed V1 data.
+
+==================================================
+1. OBJECTIVE
+==================================================
+
+Build the AI-IOS Enterprise Dashboard.
+
+The dashboard must answer, within a few seconds:
+
+1. What is the overall platform state?
+2. Is anything unhealthy?
+3. What requires attention?
+4. What is currently running?
+5. What changed recently?
+6. Where should the operator go next?
+
+The dashboard must be:
+
+- Premium
+- Enterprise-grade
+- Operationally useful
+- Information-dense
+- Highly scannable
+- Calm
+- Responsive
+- Accessible
+- Fast
+- Consistent with Prompts 001–004
+
+Do NOT create a generic SaaS dashboard template.
+
+==================================================
+2. SOURCE OF TRUTH
+==================================================
+
+Before implementation inspect:
+
+- backend-feature-matrix.md
+- actual Backend V1 API contracts
+- existing frontend API client
+- authentication/session architecture
+- route registry
+- design system
+- application shell
+- existing dashboard bootstrap module
+- existing dashboard components
+
+The actual Backend V1 implementation is the only source of truth for available data.
+
+Do not infer metrics from service names.
+
+==================================================
+3. EXISTING DASHBOARD MODULE
+==================================================
+
+Prompt 001 identified an existing:
+
+modules/dashboard/
+
+Inspect it carefully.
+
+Do NOT blindly delete it.
+
+Determine:
+
+- what is reusable
+- what is placeholder/bootstrap code
+- what is obsolete
+- what can be migrated
+- what should remain
+
+If replacement is necessary:
+
+preserve useful behaviour and types where possible.
+
+Do not introduce duplicate dashboard implementations.
+
+==================================================
+4. DASHBOARD ROUTE
+==================================================
+
+Use the canonical authenticated dashboard route established by Prompt 003.
+
+Do not create duplicate dashboard routes.
+
+The dashboard must render inside the enterprise application shell.
+
+Use:
+
+- global header
+- sidebar
+- breadcrumb if appropriate
+- page header
+- dashboard content
+
+==================================================
+5. DASHBOARD INFORMATION HIERARCHY
+==================================================
+
+Use this hierarchy:
+
+LEVEL 1
+Platform Overview
+
+LEVEL 2
+Operational Health
+
+LEVEL 3
+Attention Required
+
+LEVEL 4
+Recent Activity
+
+LEVEL 5
+Detailed Navigation
+
+Do not give every section equal visual weight.
+
+The most important information must be visually dominant.
+
+==================================================
+6. EXECUTIVE SUMMARY
+==================================================
+
+Create an executive summary area.
+
+Use only real V1 data.
+
+Potential metrics may include, only where supported:
+
+- total managed assets
+- healthy assets
+- warning assets
+- failed assets
+- active alerts
+- running services
+- automation activity
+- recent incidents
+- system availability
+
+If a metric is not available from V1:
+
+do not fake it.
+
+Show an honest unavailable/empty state or omit the metric.
+
+==================================================
+7. KPI / METRIC CARDS
+==================================================
+
+Create reusable enterprise metric cards.
+
+Each card should support:
+
+- label
+- value
+- unit where appropriate
+- semantic status
+- trend where actual historical data exists
+- contextual description
+- click-through action where appropriate
+- loading
+- empty
+- error
+
+Do NOT show fake percentage changes.
+
+Do not show:
+
+"+24%"
+
+unless the backend provides enough historical data to calculate it correctly.
+
+==================================================
+8. HEALTH OVERVIEW
+==================================================
+
+Create a prominent operational health section.
+
+Where actual V1 data supports it, show:
+
+Healthy
+Warning
+Critical/Failed
+Unknown
+
+Use:
+
+- semantic colour
+- icon
+- text
+- count
+
+Do not rely only on colour.
+
+The health section should allow the operator to navigate toward the relevant feature.
+
+==================================================
+9. ATTENTION REQUIRED
+==================================================
+
+Create an "Attention Required" section.
+
+Prioritize:
+
+- critical alerts
+- failed assets
+- degraded services
+- failed automation
+- important warnings
+
+Only show categories supported by actual V1 APIs.
+
+Sort by operational importance where the data supports prioritization.
+
+Do not invent severity.
+
+==================================================
+10. RECENT ACTIVITY
+==================================================
+
+Create a recent activity section where actual backend data exists.
+
+Potential events:
+
+- alert
+- automation
+- report
+- system event
+- configuration event
+- user action
+
+Do not invent event types.
+
+Each activity item should support:
+
+- timestamp
+- title
+- type
+- status
+- source
+- navigation target where available
+
+Use relative time only when the exact timestamp is available.
+
+==================================================
+11. SYSTEM STATUS
+==================================================
+
+Where V1 data supports service health:
+
+show a compact system/service status area.
+
+Examples:
+
+Running
+Degraded
+Stopped
+Unknown
+
+Do not claim a service is healthy merely because the frontend page loaded.
+
+Use actual backend health data only.
+
+==================================================
+12. QUICK ACTIONS
+==================================================
+
+Create a small contextual quick-action section.
+
+Only expose actions that:
+
+- exist in Backend V1
+- have a confirmed frontend workflow
+- are appropriate for the user's permissions
+
+Examples may include:
+
+- View alerts
+- Run validation
+- Create report
+- Open monitoring
+- Open automation
+
+Do NOT implement fake actions.
+
+Do NOT create buttons that lead to nonexistent functionality.
+
+==================================================
+13. DASHBOARD FILTERS
+==================================================
+
+If the available V1 data supports filtering:
+
+provide useful filters.
+
+Possible filters:
+
+- time range
+- organization
+- environment
+- asset
+- severity
+- status
+
+Only implement filters backed by real data.
+
+Do not add decorative filters that do nothing.
+
+==================================================
+14. TIME RANGE
+==================================================
+
+If historical/time-series data is available, support:
+
+- Last hour
+- Last 24 hours
+- Last 7 days
+- Last 30 days
+- Custom
+
+Only provide options that the API can actually support.
+
+Do not calculate fake historical data on the client.
+
+==================================================
+15. DATA REFRESH
+==================================================
+
+Use TanStack Query and the existing API architecture.
+
+Support:
+
+- initial loading
+- cached data
+- background refresh
+- manual refresh
+- stale state
+- error recovery
+
+Do not create uncontrolled polling.
+
+Use a sensible refresh strategy based on the data type.
+
+If real-time WebSocket/SSE data exists in V1:
+
+integrate only the existing contract.
+
+Do not create backend streaming endpoints.
+
+==================================================
+16. PARTIAL DATA
+==================================================
+
+Enterprise dashboards must tolerate partial service availability.
+
+If one backend service is unavailable:
+
+do not make the entire dashboard blank.
+
+Show:
+
+- available sections
+- affected section error state
+- retry
+- clear degraded indication
+
+Example:
+
+"Monitoring data is temporarily unavailable."
+
+Do not expose internal service URLs or stack traces.
+
+==================================================
+17. LOADING STATE
+==================================================
+
+Use the Prompt 001/002 loading primitives.
+
+Do not display a blank dashboard while loading.
+
+Use structural skeletons matching the final layout.
+
+Avoid excessive skeleton animation.
+
+==================================================
+18. EMPTY STATE
+==================================================
+
+Handle:
+
+- no assets
+- no alerts
+- no recent activity
+- no reports
+- no automation activity
+
+Use useful messages.
+
+Example:
+
+"No active alerts"
+
+rather than:
+
+"No data."
+
+Provide contextual navigation where appropriate.
+
+==================================================
+19. ERROR STATE
+==================================================
+
+Each dashboard section should handle its own failure.
+
+Support:
+
+- retry
+- partial failure
+- API unavailable
+- permission denied
+- empty
+
+Do not allow one failed query to destroy the entire dashboard.
+
+==================================================
+20. PERMISSION-AWARE DASHBOARD
+==================================================
+
+Use the existing frontend permission architecture.
+
+If a user cannot access a feature:
+
+- hide the related dashboard section when appropriate
+- or show a permission-safe state where context is important
+
+Do not expose sensitive data to users who lack permission.
+
+Backend remains authoritative.
+
+==================================================
+21. RESPONSIVE DASHBOARD
+==================================================
+
+Desktop:
+
+Multi-column operational layout.
+
+Tablet:
+
+Reduced columns.
+
+Narrow viewport:
+
+Single-column or appropriately prioritized layout.
+
+Do not simply shrink desktop cards.
+
+Preserve:
+
+- hierarchy
+- readability
+- actions
+- data meaning
+
+==================================================
+22. VISUAL DESIGN
+==================================================
+
+Use Prompt 002 design system.
+
+Dashboard should have:
+
+- restrained surfaces
+- clear hierarchy
+- subtle separators
+- strong typography
+- meaningful status colours
+- controlled density
+- minimal decorative effects
+
+Do NOT use:
+
+- huge hero banners
+- excessive gradients
+- unnecessary glass cards
+- excessive rounded containers
+- decorative 3D elements
+- meaningless animations
+
+==================================================
+23. DASHBOARD GRID
+==================================================
+
+Create a responsive dashboard grid that supports:
+
+- full-width sections
+- half-width sections
+- compact KPI cards
+- wide charts
+- activity panels
+- attention panels
+
+Avoid arbitrary grid spans that become fragile.
+
+Use a documented layout system.
+
+==================================================
+24. DATA VISUALIZATION
+==================================================
+
+Only implement charts where actual V1 data supports them.
+
+Potential charts:
+
+- health trend
+- alert trend
+- activity trend
+- automation activity
+- service status
+
+Do not create charts merely to make the dashboard look impressive.
+
+A chart must answer a useful operational question.
+
+Every chart must support:
+
+- loading
+- empty
+- error
+- tooltip
+- legend where required
+- accessible summary
+- dark theme
+- light theme
+
+==================================================
+25. CHART ACCESSIBILITY
+==================================================
+
+Charts must have an accessible textual summary.
+
+Do not make critical information available only visually.
+
+If a chart cannot be made meaningfully accessible:
+
+provide an equivalent data summary/table.
+
+==================================================
+26. DASHBOARD NAVIGATION
+==================================================
+
+Dashboard elements should be actionable where appropriate.
+
+Example:
+
+Failed assets → Monitoring/Validation
+
+Active alerts → Alerting
+
+Reports → Reporting
+
+Automation failures → Automation
+
+Only link to routes that actually exist.
+
+Use the centralized route registry.
+
+Do not hardcode paths throughout components.
+
+==================================================
+27. API ARCHITECTURE
+==================================================
+
+Every dashboard API integration must follow:
+
+Dashboard Page
+    ↓
+Dashboard Hook
+    ↓
+Dashboard API module
+    ↓
+Shared API Client
+    ↓
+Existing Backend V1 API
+
+Do NOT call HTTP directly from components.
+
+Do NOT introduce a second API client.
+
+==================================================
+28. TYPES
+==================================================
+
+Use strict TypeScript types.
+
+API response types must reflect actual V1 responses.
+
+Do not use:
+
+any
+
+to bypass mismatched backend contracts.
+
+If the backend response is inconsistent:
+
+document the V1 limitation rather than silently transforming unknown data.
+
+==================================================
+29. CACHING
+==================================================
+
+Use TanStack Query.
+
+Define appropriate:
+
+- query keys
+- stale times
+- retry behaviour
+- refetch behaviour
+
+Do not create unnecessary global Zustand state for server data.
+
+==================================================
+30. USER EXPERIENCE
+==================================================
+
+The dashboard should support this operator workflow:
+
+Open AI-IOS
+↓
+Understand system state
+↓
+Identify problems
+↓
+Prioritize attention
+↓
+Navigate to affected area
+↓
+Take action
+
+The user should not need to explore multiple pages merely to understand whether the platform is healthy.
+
+==================================================
+31. FIRST-TIME EXPERIENCE
+==================================================
+
+If the user has no configured assets/data:
+
+provide a useful onboarding-style empty state.
+
+Do not show fake sample infrastructure data.
+
+Explain what the user can do next using capabilities actually available in V1.
+
+==================================================
+32. REFRESH EXPERIENCE
+==================================================
+
+Provide:
+
+- refresh action
+- last updated timestamp when available
+- loading indicator during refresh
+- graceful stale data behaviour
+- error indication
+
+Do not cause the entire dashboard to flash on every refresh.
+
+==================================================
+33. PERFORMANCE
+==================================================
+
+Dashboard must remain performant.
+
+Use:
+
+- parallel query loading where appropriate
+- query caching
+- lazy loading for heavy visualizations
+- code splitting where useful
+- memoization only when justified
+
+Do not load every future AI-IOS module into the initial dashboard bundle.
+
+==================================================
+34. TESTING
+==================================================
+
+Create meaningful tests for:
+
+### Rendering
+
+- dashboard loads
+- authenticated access
+- correct sections render
+
+### Data
+
+- healthy state
+- warning state
+- failed state
+- empty state
+- partial API failure
+- complete API failure
+
+### Permissions
+
+- restricted sections hidden
+- allowed sections visible
+
+### Interaction
+
+- refresh
+- navigation
+- quick actions
+- filters where implemented
+
+### Accessibility
+
+- keyboard navigation
+- accessible labels
+- status announcements
+- chart alternatives
+
+==================================================
+35. E2E
+==================================================
+
+Create/update Playwright tests for:
+
+- authenticated dashboard access
+- unauthenticated redirect
+- dashboard rendering
+- refresh
+- navigation from dashboard
+- empty/degraded state where test environment supports it
+
+Do not invent credentials.
+
+Use existing approved test setup.
+
+If backend availability prevents execution:
+
+document it.
+
+Do not modify backend.
+
+==================================================
+36. USER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/user-guide/dashboard.md
+
+Document:
+
+- dashboard purpose
+- KPI cards
+- health overview
+- attention required
+- recent activity
+- quick actions
+- refresh
+- filters
+- empty states
+- degraded states
+
+Only document implemented features.
+
+==================================================
+37. DEVELOPER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/developer-guide/dashboard.md
+
+Document:
+
+- dashboard architecture
+- query structure
+- API modules
+- component structure
+- state management
+- caching
+- permission handling
+- error handling
+- extension guidelines
+
+==================================================
+38. RFI / RFP
+==================================================
+
+Create:
+
+docs/frontend/rfi/dashboard.md
+
+Document:
+
+- enterprise dashboard architecture
+- operational visibility
+- modularity
+- responsive design
+- accessibility
+- permission-aware presentation
+- data integrity
+- degraded-service handling
+
+Clearly separate:
+
+Implemented V1 frontend capabilities
+
+from
+
+Future/planned capabilities.
+
+==================================================
+39. BACKEND V1 INTEGRATION LIMITATIONS
+==================================================
+
+If a requested dashboard metric or section cannot be backed by an existing V1 API:
+
+update:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Record:
+
+- requested capability
+- backend V1 availability
+- frontend impact
+- current UX handling
+
+DO NOT modify backend.
+
+==================================================
+40. DEPENDENCY SAFETY
+==================================================
+
+Use existing dependencies.
+
+Do not introduce a charting library unless the repository already has one or a dependency is genuinely necessary.
+
+If a new dependency is required:
+
+- explain why
+- make the smallest change
+- inspect lockfile
+- validate
+- do not regenerate unrelated lockfile content
+
+Never run destructive install commands.
+
+==================================================
+41. BACKEND FREEZE VERIFICATION
+==================================================
+
+Before completion verify:
+
+[ ] No backend source files changed.
+[ ] No backend API files changed.
+[ ] No database files changed.
+[ ] No migrations changed.
+[ ] No backend configuration changed.
+[ ] No backend dependencies changed.
+
+Backend modifications MUST be zero.
+
+==================================================
+42. VALIDATION
+==================================================
+
+Run:
+
+- typecheck
+- lint
+- unit tests
+- production build
+- applicable E2E tests
+
+Do not claim success without execution.
+
+==================================================
+43. GIT SAFETY
+==================================================
+
+Before commit:
+
+- inspect git status
+- inspect changed files
+- verify no secrets
+- verify no .env
+- verify no credentials
+- verify no backend changes
+- verify dependency changes
+- verify lockfile changes
+
+==================================================
+44. COMMIT
+==================================================
+
+If all applicable validation passes:
+
+feat(frontend): implement enterprise operational dashboard
+
+Push according to the repository workflow.
+
+==================================================
+45. DEFINITION OF DONE
+==================================================
+
+[ ] Real Dashboard page implemented.
+[ ] Existing dashboard bootstrap code reviewed and reused/replaced appropriately.
+[ ] Dashboard uses actual Backend V1 data.
+[ ] No fabricated metrics.
+[ ] KPI system implemented where supported.
+[ ] Health overview implemented.
+[ ] Attention-required section implemented where supported.
+[ ] Recent activity implemented where supported.
+[ ] System status implemented where supported.
+[ ] Quick actions only expose real functionality.
+[ ] Permission-aware dashboard implemented.
+[ ] Loading states implemented.
+[ ] Empty states implemented.
+[ ] Partial failure handling implemented.
+[ ] Error handling implemented.
+[ ] Refresh behaviour implemented.
+[ ] Responsive layout implemented.
+[ ] Light theme works.
+[ ] Dark theme works.
+[ ] Accessibility requirements met.
+[ ] Dashboard documentation created.
+[ ] User guide created.
+[ ] Developer guide created.
+[ ] RFI documentation created.
+[ ] Backend V1 remains untouched.
+[ ] No backend API changes.
+[ ] No database changes.
+[ ] No unnecessary dependencies.
+[ ] Typecheck passes.
+[ ] Lint passes.
+[ ] Tests pass.
+[ ] Production build passes.
+[ ] Applicable E2E tests pass.
+[ ] Git working tree is clean except explicitly pre-existing files.
+
+==================================================
+46. FINAL REPORT
+==================================================
+
+Provide:
+
+1. Dashboard implementation summary
+2. Existing dashboard code reused/removed
+3. Actual Backend V1 APIs consumed
+4. KPI data sources
+5. Health data sources
+6. Alert/activity data sources
+7. Sections implemented
+8. Sections unavailable because of V1 limitations
+9. Permission behaviour
+10. Loading/empty/error behaviour
+11. Responsive behaviour
+12. Accessibility results
+13. Tests
+14. E2E tests
+15. Typecheck
+16. Lint
+17. Production build
+18. Dependency changes
+19. Lockfile changes
+20. Backend files changed — MUST BE ZERO
+21. Backend V1 integration limitations
+22. Git commit
+23. Known limitations
+24. Recommended next frontend prompt
+
+Do not modify the backend.
+
+Do not fabricate backend data.
+
+Proceed with implementation.

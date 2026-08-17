@@ -1,0 +1,1095 @@
+# FRONTEND PROMPT 007
+# Enterprise Alerting, Incident & Notification Experience
+
+## ROLE
+
+Act as a Principal Product Designer, Enterprise Incident Management UX Architect, Frontend Architect, Senior Next.js/React Engineer, Accessibility Engineer, and Operations Platform UX Specialist.
+
+Frontend Prompts 001–006 are complete.
+
+Use the existing:
+
+- apps/frontend architecture
+- API client
+- authentication architecture
+- permission system
+- routing
+- application shell
+- design system
+- Dashboard
+- Monitoring experience
+- testing architecture
+- documentation structure
+
+as the foundation.
+
+==================================================
+CRITICAL BACKEND V1 FREEZE
+==================================================
+
+AI-IOS Backend V1 is COMPLETE and FROZEN.
+
+THIS IS A FRONTEND-ONLY PROMPT.
+
+DO NOT:
+
+- modify backend source code
+- modify alerting-service
+- modify backend APIs
+- add backend endpoints
+- modify database schemas
+- modify migrations
+- modify backend authentication
+- modify backend RBAC
+- modify backend business logic
+- modify backend configuration
+- modify backend dependencies
+- change backend service contracts
+
+If a required Alerting capability does not exist in V1:
+
+1. Document it.
+2. Do not fabricate it.
+3. Do not modify the backend.
+4. Build the best possible frontend state using confirmed V1 capabilities.
+5. Record the limitation in:
+   docs/frontend/backend-v1-integration-limitations.md
+
+Backend modifications MUST remain ZERO.
+
+==================================================
+1. OBJECTIVE
+==================================================
+
+Build the production-grade AI-IOS Alerting and Incident experience.
+
+The experience must allow operators to:
+
+- see active alerts
+- understand severity
+- identify affected assets/services
+- investigate alert details
+- acknowledge alerts where V1 supports it
+- resolve/close alerts where V1 supports it
+- filter and search alerts
+- understand alert lifecycle
+- inspect alert history
+- correlate alerts with Monitoring
+- navigate to affected resources
+- manage alert-related workflows supported by V1
+
+The UX must be:
+
+- premium
+- operationally focused
+- information-dense
+- highly scannable
+- accessible
+- responsive
+- calm under high alert volume
+- consistent with Monitoring
+
+==================================================
+2. INSPECT BACKEND V1 FIRST
+==================================================
+
+Before implementation inspect the actual Alerting V1 implementation.
+
+Inspect:
+
+- alerting-service
+- actual API routes
+- request schemas
+- response schemas
+- status values
+- severity values
+- alert lifecycle
+- acknowledgement behaviour
+- suppression behaviour
+- maintenance-window behaviour
+- notification/channel information
+- pagination
+- filtering
+- sorting
+- timestamps
+- permissions
+
+Do NOT infer API behaviour.
+
+Do NOT invent fields.
+
+Do NOT invent alert states.
+
+==================================================
+3. ALERTING INFORMATION ARCHITECTURE
+==================================================
+
+Use a user-centric structure rather than mirroring backend tables.
+
+Recommended:
+
+Alerting
+├── Overview
+├── Active Alerts
+├── Alert History
+├── Alert Detail
+└── Notification/Policy areas only if V1 supports them
+
+Do not create routes for unsupported capabilities.
+
+==================================================
+4. ALERTING OVERVIEW
+==================================================
+
+Create the main Alerting page.
+
+Route should follow the centralized route registry.
+
+The overview should answer:
+
+- How many active alerts?
+- How severe are they?
+- What needs immediate attention?
+- Which assets/services are affected?
+- What recently changed?
+
+Use actual V1 data.
+
+==================================================
+5. ALERT SUMMARY
+==================================================
+
+Create summary metrics where supported:
+
+- Critical
+- High
+- Warning
+- Informational
+- Acknowledged
+- Unresolved
+- Resolved
+
+Only show statuses/severities that actually exist in V1.
+
+Do not invent severity levels.
+
+Use Prompt 002 semantic status tokens.
+
+==================================================
+6. ACTIVE ALERT TABLE
+==================================================
+
+Create an enterprise-grade active alert table.
+
+Possible columns, only when supported:
+
+- Severity
+- Alert
+- Status
+- Source
+- Asset
+- Service
+- Created
+- Updated
+- Acknowledged By
+- Actions
+
+Support:
+
+- sorting
+- filtering
+- pagination
+- search
+- column visibility where useful
+- row actions
+- loading
+- empty
+- error
+- partial failure
+
+Do not fabricate fields.
+
+==================================================
+7. ALERT SEVERITY
+==================================================
+
+Use one canonical visual hierarchy.
+
+Severity must communicate through:
+
+- icon
+- text
+- semantic colour
+- visual emphasis
+
+Do NOT use red/orange/yellow alone.
+
+Avoid making the entire screen visually alarming.
+
+Critical alerts should be prominent without turning the entire application into a warning state.
+
+==================================================
+8. ALERT STATUS
+==================================================
+
+Use actual V1 lifecycle states.
+
+Possible concepts include:
+
+- Open
+- Acknowledged
+- Suppressed
+- Resolved
+- Closed
+
+Only use states confirmed by the backend.
+
+Create a frontend mapping layer if necessary.
+
+Do not modify backend values.
+
+==================================================
+9. ALERT DETAIL
+==================================================
+
+Create:
+
+/alerting/alerts/[id]
+
+where the route structure matches the actual application convention.
+
+The detail page should present:
+
+1. Alert identity
+2. Severity
+3. Current status
+4. Source
+5. Affected asset/service
+6. Created timestamp
+7. Updated timestamp
+8. Acknowledgement information
+9. Description
+10. Relevant metadata
+11. Lifecycle/history
+12. Available actions
+
+Only render fields supported by V1.
+
+==================================================
+10. ALERT LIFECYCLE TIMELINE
+==================================================
+
+If V1 provides lifecycle/history information:
+
+show:
+
+Created
+→ Triggered
+→ Acknowledged
+→ Suppressed
+→ Resolved
+
+or the actual V1 lifecycle.
+
+Use exact timestamps.
+
+Do not invent intermediate events.
+
+==================================================
+11. ALERT ACTIONS
+==================================================
+
+Only expose actions supported by V1.
+
+Potential actions:
+
+- Acknowledge
+- Resolve
+- Reopen
+- Suppress
+- Unsuppress
+- Open affected asset
+- Open monitoring
+- View related activity
+
+Do not create buttons that do nothing.
+
+Every destructive or state-changing action must:
+
+- require confirmation where appropriate
+- show loading
+- prevent duplicate submission
+- display success/error feedback
+- update the relevant query cache
+
+==================================================
+12. ACKNOWLEDGEMENT UX
+==================================================
+
+If V1 supports acknowledgement:
+
+Provide:
+
+- clear action
+- confirmation where appropriate
+- current acknowledgement status
+- acknowledgement actor
+- acknowledgement timestamp
+- loading state
+- error state
+
+Do not allow duplicate acknowledgement requests.
+
+==================================================
+13. RESOLUTION UX
+==================================================
+
+If V1 supports resolution:
+
+Provide:
+
+- clear resolution action
+- confirmation
+- current state
+- resolution timestamp
+- resolution actor where available
+- success/error feedback
+
+Do not pretend an alert is resolved until the backend confirms the mutation.
+
+==================================================
+14. SUPPRESSION / MAINTENANCE
+==================================================
+
+If V1 supports suppression or maintenance windows:
+
+represent them clearly.
+
+Distinguish:
+
+Active Alert
+Suppressed Alert
+Maintenance-related Alert
+
+Do not hide operational information without explaining why.
+
+Use exact V1 semantics.
+
+==================================================
+15. SEARCH
+==================================================
+
+Implement alert search using actual V1 search/filter capabilities.
+
+Search may support:
+
+- alert name
+- source
+- asset
+- service
+- identifier
+
+Only expose searchable fields confirmed by V1.
+
+Do not perform incomplete client-side searching over paginated datasets.
+
+==================================================
+16. FILTERS
+==================================================
+
+Where supported:
+
+- severity
+- status
+- source
+- asset
+- service
+- time range
+- acknowledgement
+- suppression
+
+Filters must:
+
+- be keyboard accessible
+- show active filter count
+- support reset
+- preserve state when appropriate
+- work responsively
+- use URL state where appropriate
+
+Do not create filters that have no backend meaning.
+
+==================================================
+17. ALERT HISTORY
+==================================================
+
+If V1 provides alert history:
+
+create a historical view.
+
+Support:
+
+- date/time
+- severity
+- status
+- source
+- asset
+- resolution state
+
+Provide appropriate pagination.
+
+Do not load the complete alert history into the browser.
+
+==================================================
+18. ALERT GROUPING
+==================================================
+
+If V1 provides grouping or correlation:
+
+represent it.
+
+If V1 does not provide alert correlation:
+
+DO NOT invent correlation logic.
+
+Do not create a frontend-only grouping system that changes the operational meaning of alerts.
+
+==================================================
+19. ALERT FLOOD UX
+==================================================
+
+Enterprise systems may generate many alerts.
+
+Design the UI to remain usable during alert bursts.
+
+Prioritize:
+
+1. Critical
+2. High
+3. Warning
+4. Informational
+
+Use:
+
+- compact rows
+- clear severity
+- sorting
+- filtering
+- grouping only where supported
+
+Do not use excessive animations for new alerts.
+
+==================================================
+20. NEW ALERT INDICATORS
+==================================================
+
+If the frontend receives actual real-time alert updates through an existing V1 mechanism:
+
+show subtle new-alert indicators.
+
+Do not implement fake real-time behaviour.
+
+If only polling/query refresh is available:
+
+use the existing V1 contract.
+
+Do not create backend streaming endpoints.
+
+==================================================
+21. REFRESH
+==================================================
+
+Support:
+
+- manual refresh
+- background refresh where justified
+- last updated
+- loading state
+- stale data indication
+
+Do not use aggressive polling.
+
+==================================================
+22. PARTIAL FAILURE
+==================================================
+
+If alert summary loads but alert details fail:
+
+keep available information visible.
+
+Show localized errors.
+
+Do not blank the whole page.
+
+==================================================
+23. MONITORING INTEGRATION
+==================================================
+
+Create navigation between Alerting and Monitoring.
+
+Examples:
+
+Alert
+→ Affected Asset
+→ Monitoring Detail
+
+Monitoring Asset
+→ Related Alerts
+
+Only implement relationships actually available in V1.
+
+Do not fabricate asset-alert relationships.
+
+==================================================
+24. DASHBOARD INTEGRATION
+==================================================
+
+Dashboard alert summary must link to Alerting.
+
+Examples:
+
+Critical Alerts
+→ Alerting filtered to critical
+
+Active Alerts
+→ Alerting overview
+
+Do not duplicate alert-fetching logic inside Dashboard.
+
+Use the existing Alerting query/API layer.
+
+==================================================
+25. PERMISSIONS
+==================================================
+
+Use the existing permission architecture.
+
+Different users may have:
+
+- view alerts
+- acknowledge alerts
+- resolve alerts
+- manage policies
+
+Only expose actions confirmed by actual permissions.
+
+Frontend permission checks are UX controls.
+
+Backend authorization remains authoritative.
+
+==================================================
+26. API ARCHITECTURE
+==================================================
+
+Use:
+
+Alerting Page
+↓
+Alerting Hook
+↓
+Alerting API Module
+↓
+Shared API Client
+↓
+Existing Backend V1
+
+Components MUST NOT directly call HTTP.
+
+Mutations must use the centralized API layer.
+
+==================================================
+27. TYPES
+==================================================
+
+Create strict TypeScript types from actual V1 responses.
+
+Where transformation is needed:
+
+API Type
+↓
+Adapter
+↓
+UI Model
+
+Do not use:
+
+any
+
+to bypass contract differences.
+
+==================================================
+28. QUERY / CACHE ARCHITECTURE
+==================================================
+
+Use TanStack Query.
+
+Create predictable query keys for:
+
+- alert list
+- alert detail
+- summary
+- history
+- related data
+
+After mutations:
+
+- invalidate appropriate queries
+- update cached detail/list where safe
+- prevent stale alert state
+
+Do not duplicate server state in Zustand.
+
+==================================================
+29. OPTIMISTIC UI
+==================================================
+
+Only use optimistic updates where safe.
+
+For critical alert state changes:
+
+prefer confirmed backend response before showing the final state.
+
+Do not make an alert appear resolved if the backend mutation fails.
+
+==================================================
+30. LOADING STATES
+==================================================
+
+Use Prompt 002 loading primitives.
+
+Support:
+
+- summary loading
+- table loading
+- detail loading
+- mutation loading
+- history loading
+
+Avoid unnecessary full-page blocking.
+
+==================================================
+31. EMPTY STATES
+==================================================
+
+Examples:
+
+"No active alerts"
+
+"No alerts match your filters"
+
+"No alert history available"
+
+"No notification policy data available"
+
+Messages must be contextual.
+
+==================================================
+32. ERROR STATES
+==================================================
+
+Support:
+
+- API unavailable
+- timeout
+- permission denied
+- invalid alert ID
+- mutation failure
+- partial service failure
+
+Do not expose:
+
+- stack traces
+- database errors
+- internal URLs
+- sensitive service information
+
+==================================================
+33. RESPONSIVE DESIGN
+==================================================
+
+Desktop:
+
+Data-dense alert table.
+
+Tablet:
+
+Reduced columns and responsive filters.
+
+Narrow viewport:
+
+Prioritize:
+
+Severity
+Alert
+Status
+Time
+Action
+
+Move secondary information into detail view.
+
+Do not create unreadable horizontal overflow.
+
+==================================================
+34. ACCESSIBILITY
+==================================================
+
+Target WCAG 2.2 AA.
+
+Ensure:
+
+- alert severity is text-readable
+- tables are keyboard accessible
+- actions have accessible names
+- confirmation dialogs manage focus
+- status updates can be announced appropriately
+- filters are labelled
+- timestamps are understandable
+- icons are not the only communication method
+
+==================================================
+35. NOTIFICATION UI
+==================================================
+
+If V1 provides user notifications:
+
+integrate them with Prompt 003 notification area.
+
+If V1 does not provide the required notification capability:
+
+build only the UI contract that can be supported and document the limitation.
+
+Do not add backend notification infrastructure.
+
+==================================================
+36. USER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/user-guide/alerting.md
+
+Document:
+
+- Alerting overview
+- Severity
+- Alert status
+- Searching
+- Filtering
+- Alert detail
+- Acknowledgement
+- Resolution
+- Suppression where supported
+- Alert history
+- Monitoring integration
+- Troubleshooting
+
+Only document implemented V1 capabilities.
+
+==================================================
+37. DEVELOPER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/developer-guide/alerting.md
+
+Document:
+
+- feature structure
+- API architecture
+- query architecture
+- mutation architecture
+- cache invalidation
+- status mapping
+- permission handling
+- alert detail
+- error handling
+- performance
+- real-time behaviour if available
+
+==================================================
+38. RFI / RFP DOCUMENTATION
+==================================================
+
+Create:
+
+docs/frontend/rfi/alerting.md
+
+Document:
+
+- enterprise alert visibility
+- severity handling
+- incident workflow
+- scalability
+- accessibility
+- responsive design
+- permission-aware actions
+- integration with Monitoring
+- data integrity
+
+Clearly separate:
+
+Implemented V1 capabilities
+
+from
+
+Unavailable/planned capabilities.
+
+==================================================
+39. BACKEND V1 LIMITATIONS
+==================================================
+
+For every unavailable alerting capability:
+
+record:
+
+- requested capability
+- backend service
+- V1 API availability
+- frontend impact
+- current UX handling
+
+Do not modify backend.
+
+==================================================
+40. TESTING
+==================================================
+
+Create tests for:
+
+### Alert list
+
+- rendering
+- loading
+- empty
+- error
+- pagination
+- filtering
+- search
+- sorting
+
+### Severity
+
+- correct semantic mapping
+- accessible labels
+
+### Alert detail
+
+- rendering
+- lifecycle
+- loading
+- error
+- invalid ID
+
+### Mutations
+
+- acknowledge
+- resolve
+- suppression where supported
+- success
+- failure
+- duplicate submission prevention
+
+### Permissions
+
+- view permission
+- action permission
+
+### Accessibility
+
+- keyboard
+- focus
+- dialog
+- status announcements
+
+==================================================
+41. E2E
+==================================================
+
+Where environment permits:
+
+- open Alerting
+- filter alerts
+- search
+- open detail
+- acknowledge
+- resolve
+- navigate to Monitoring
+- navigate from Dashboard
+
+Use only approved existing test credentials/data.
+
+Do not invent credentials.
+
+Do not modify backend.
+
+==================================================
+42. DESIGN SYSTEM COMPLIANCE
+==================================================
+
+Use Prompt 002 design tokens.
+
+Use Prompt 006 Monitoring patterns where appropriate.
+
+Do not create a separate alerting visual language.
+
+Do not create a second status/severity system.
+
+==================================================
+43. DEPENDENCY SAFETY
+==================================================
+
+Use existing dependencies.
+
+Do not introduce unnecessary libraries.
+
+Do not run destructive installation commands.
+
+Do not regenerate pnpm-lock.yaml unnecessarily.
+
+If a dependency is genuinely required:
+
+- explain why
+- make minimal change
+- inspect lockfile
+- validate
+
+==================================================
+44. BACKEND FREEZE VERIFICATION
+==================================================
+
+Before completion verify:
+
+[ ] Backend source files changed = 0
+[ ] Backend API changes = 0
+[ ] Database changes = 0
+[ ] Migration changes = 0
+[ ] Backend configuration changes = 0
+[ ] Backend dependency changes = 0
+
+If any backend change exists:
+
+STOP and report it.
+
+==================================================
+45. VALIDATION
+==================================================
+
+Run:
+
+- typecheck
+- lint
+- unit tests
+- production build
+- applicable E2E tests
+
+Do not claim success without execution.
+
+==================================================
+46. GIT SAFETY
+==================================================
+
+Before commit:
+
+- inspect git status
+- inspect changed files
+- verify no secrets
+- verify no .env
+- verify no credentials
+- verify no backend modifications
+- inspect dependency changes
+- inspect lockfile changes
+
+==================================================
+47. COMMIT
+==================================================
+
+If all applicable validation passes:
+
+feat(frontend): implement enterprise alerting experience
+
+Push according to repository workflow.
+
+==================================================
+48. DEFINITION OF DONE
+==================================================
+
+[ ] Alerting overview implemented.
+[ ] Actual V1 alerting APIs consumed.
+[ ] No fabricated alerts/data.
+[ ] Active alert table implemented.
+[ ] Severity system implemented.
+[ ] Alert status system implemented.
+[ ] Alert detail implemented where supported.
+[ ] Lifecycle timeline implemented where supported.
+[ ] Acknowledgement implemented where supported.
+[ ] Resolution implemented where supported.
+[ ] Suppression implemented where supported.
+[ ] Search implemented where supported.
+[ ] Filters implemented where supported.
+[ ] History implemented where supported.
+[ ] Monitoring integration implemented where supported.
+[ ] Dashboard integration implemented.
+[ ] Permission-aware actions implemented.
+[ ] Loading states implemented.
+[ ] Empty states implemented.
+[ ] Error states implemented.
+[ ] Partial failure handled.
+[ ] Refresh handled.
+[ ] Responsive behaviour implemented.
+[ ] Accessibility requirements met.
+[ ] User guide created.
+[ ] Developer guide created.
+[ ] RFI documentation created.
+[ ] Backend V1 untouched.
+[ ] No backend API changes.
+[ ] No database changes.
+[ ] No unnecessary dependencies.
+[ ] Typecheck passes.
+[ ] Lint passes.
+[ ] Tests pass.
+[ ] Production build passes.
+[ ] Applicable E2E tests pass.
+[ ] Git working tree clean except explicitly pre-existing files.
+
+==================================================
+49. FINAL REPORT
+==================================================
+
+Provide:
+
+1. Alerting implementation summary
+2. Backend V1 APIs consumed
+3. Routes created
+4. Components created
+5. Alert status/severity mapping
+6. Alert lifecycle implementation
+7. Search/filter implementation
+8. Mutation implementation
+9. Monitoring integration
+10. Dashboard integration
+11. Permission handling
+12. Loading/empty/error handling
+13. Accessibility results
+14. Responsive results
+15. User guide
+16. Developer guide
+17. RFI documentation
+18. Tests
+19. E2E tests
+20. Typecheck
+21. Lint
+22. Production build
+23. Dependency changes
+24. Lockfile changes
+25. Backend files changed — MUST BE ZERO
+26. Backend V1 integration limitations
+27. Git commit
+28. Known limitations
+29. Recommended next frontend prompt
+
+Do not modify the backend.
+
+Do not fabricate alerting capabilities.
+
+Proceed with implementation.

@@ -1,6 +1,6 @@
 # components/navigation/
 
-Generic navigation primitives (breadcrumbs, tabs, command palette, primary
-nav item) reading from `@/lib/route-registry`. Nothing lives here yet —
-built when `layouts/main-layout.tsx` grows real primary navigation in a
-later frontend prompt.
+`Tabs`, `Accordion` (docs/frontend Prompt 002 §12). Primary navigation
+itself (sidebar, breadcrumbs, command palette) is still empty — built
+when `layouts/main-layout.tsx` grows real navigation in a later
+frontend prompt, reading from `@/lib/route-registry`.

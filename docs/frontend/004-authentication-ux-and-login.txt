@@ -1,0 +1,828 @@
+# FRONTEND PROMPT 004
+# Enterprise Authentication UX, Login Flow & Session UI
+
+## ROLE
+
+Act as a Principal Frontend Architect, Enterprise UX Designer, Authentication UX Specialist, Senior Next.js/React Engineer, Accessibility Engineer, Security UX Engineer, and QA Engineer.
+
+Frontend Prompts 001, 002, and 003 are complete.
+
+Use the existing implementation as the source of truth.
+
+==================================================
+CRITICAL BACKEND V1 FREEZE
+==================================================
+
+AI-IOS Backend V1 is COMPLETE and FROZEN.
+
+This prompt is FRONTEND ONLY.
+
+DO NOT:
+
+- modify backend code
+- modify authentication-service
+- modify api-gateway-service
+- modify RBAC service
+- modify backend APIs
+- modify JWT implementation
+- modify database
+- modify database migrations
+- modify backend configuration
+- add backend endpoints
+- change backend contracts
+- fix backend authentication issues
+
+If an authentication limitation is discovered:
+
+1. Document it.
+2. Implement the best possible frontend behaviour using the existing V1 contract.
+3. Do not modify the backend.
+4. Mark it as Backend V1 Integration Limitation.
+
+==================================================
+1. OBJECTIVE
+==================================================
+
+Implement the production-grade AI-IOS authentication user experience.
+
+The authentication experience must be:
+
+- Premium
+- Professional
+- Simple
+- Secure
+- Accessible
+- Fast
+- Responsive
+- Enterprise appropriate
+- Consistent with the Prompt 002 design system
+- Integrated with the Prompt 001 authentication architecture
+- Integrated with the Prompt 003 application shell
+
+Implement the actual login experience and session UX.
+
+Do not implement registration unless the existing V1 backend explicitly supports it.
+
+Do not invent authentication capabilities.
+
+==================================================
+2. INSPECT EXISTING AUTH CONTRACT
+==================================================
+
+Before implementation inspect:
+
+- apps/frontend/auth/
+- existing AuthGuard
+- session handling
+- API client
+- route guards
+- permission architecture
+- backend authentication-service
+- backend API gateway authentication contract
+- existing environment configuration
+- existing login-related API definitions
+
+Use the actual V1 contract.
+
+Do not guess request or response fields.
+
+==================================================
+3. LOGIN PAGE
+==================================================
+
+Create the production login page.
+
+Route:
+
+/login
+
+The page must contain:
+
+- AI-IOS product identity
+- clear welcome/title
+- username/email field according to actual backend contract
+- password field
+- show/hide password
+- remember/session option only if supported by actual architecture
+- Sign In button
+- loading state
+- authentication error state
+- validation errors
+- keyboard accessibility
+
+Do not add fields that the backend does not support.
+
+==================================================
+4. LOGIN UX
+==================================================
+
+The login flow must follow:
+
+Login Page
+    ↓
+Client Validation
+    ↓
+Authentication API
+    ↓
+Session Establishment
+    ↓
+Authenticated User State
+    ↓
+Permission Initialization
+    ↓
+Application Shell
+    ↓
+Requested/Default Destination
+
+Do not duplicate backend authentication logic.
+
+==================================================
+5. FORM VALIDATION
+==================================================
+
+Use the existing form architecture.
+
+Use:
+
+- React Hook Form
+- Zod
+
+where compatible with the existing repository.
+
+Client validation should only validate:
+
+- required fields
+- valid basic format
+- safe input constraints
+
+Do not attempt to reproduce backend authentication rules that are unknown.
+
+Backend remains authoritative.
+
+==================================================
+6. LOGIN BUTTON STATES
+==================================================
+
+The Sign In button must support:
+
+Default
+
+Loading
+
+Success transition
+
+Error recovery
+
+Disabled when required fields are invalid/submitting.
+
+During authentication:
+
+- prevent duplicate submission
+- show clear progress
+- preserve accessibility
+- avoid confusing page jumps
+
+==================================================
+7. ERROR HANDLING
+==================================================
+
+Handle at least:
+
+400
+401
+403
+429
+500
+502
+503
+network error
+timeout
+unknown error
+
+For authentication failures:
+
+Do NOT expose:
+
+- stack traces
+- backend internals
+- database errors
+- security-sensitive details
+
+Use user-friendly messages.
+
+Example:
+
+"Unable to sign in with those credentials."
+
+Do not unnecessarily reveal whether a username exists.
+
+==================================================
+8. SESSION EXPIRATION
+==================================================
+
+Integrate with the existing session architecture.
+
+When the authenticated session expires:
+
+- detect unauthorized response
+- preserve intended destination where safe
+- redirect to login
+- explain that the session expired
+- avoid infinite redirect loops
+
+Do not modify backend token behaviour.
+
+==================================================
+9. AUTHENTICATED REDIRECT
+==================================================
+
+After successful login:
+
+If a safe return URL exists:
+
+redirect there.
+
+Otherwise:
+
+redirect to the canonical authenticated landing page.
+
+Do not allow unsafe external redirect URLs.
+
+Validate return destinations.
+
+==================================================
+10. PROTECTED ROUTES
+==================================================
+
+Wire the existing AuthGuard into the application routing architecture.
+
+Public:
+
+/login
+
+Protected:
+
+all authenticated application routes
+
+Unauthenticated users must not access protected pages.
+
+Do not implement frontend-only security claims.
+
+Backend remains authoritative.
+
+==================================================
+11. LOGOUT
+==================================================
+
+Integrate logout into the existing account menu.
+
+Logout must:
+
+- clear frontend session state
+- clear relevant cached server state
+- clear sensitive client state
+- redirect to login
+- prevent returning to protected pages through stale client state
+
+Do not modify backend logout implementation.
+
+==================================================
+12. USER SESSION STATE
+==================================================
+
+Use the existing authentication architecture.
+
+Expose only confirmed user/session data.
+
+Do not invent:
+
+- role
+- organization
+- tenant
+- permissions
+
+if the current backend response does not provide them.
+
+If role/organization data is unavailable because of the known Backend V1 limitation:
+
+document it and display only available information.
+
+==================================================
+13. KNOWN BACKEND V1 LIMITATION
+==================================================
+
+Prompt 001 identified that the current login contract does not populate:
+
+- role
+- organization_id
+
+inside JWT claims.
+
+This is a BACKEND V1 limitation.
+
+Do NOT fix it.
+
+The frontend must:
+
+- use whatever confirmed identity/session information is available
+- keep permission handling compatible with the existing frontend architecture
+- avoid inventing missing claims
+- document the limitation
+
+Update:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+if additional authentication limitations are discovered.
+
+==================================================
+14. LOGIN PAGE DESIGN
+==================================================
+
+Use the Prompt 002 design system.
+
+Design direction:
+
+- premium
+- minimal
+- trustworthy
+- enterprise
+- focused
+
+Avoid:
+
+- excessive gradients
+- decorative animation
+- marketing-heavy layout
+- unnecessary illustrations
+- excessive cards
+
+The login page should make the authentication task obvious.
+
+==================================================
+15. RESPONSIVE LOGIN
+==================================================
+
+Support:
+
+- desktop
+- laptop
+- tablet
+- narrow viewport
+
+At narrow widths:
+
+- no horizontal overflow
+- form remains usable
+- buttons remain accessible
+- errors remain visible
+- keyboard remains usable
+
+==================================================
+16. ACCESSIBILITY
+==================================================
+
+Target WCAG 2.2 AA.
+
+Ensure:
+
+- proper form labels
+- accessible input names
+- password toggle accessible name
+- visible focus
+- keyboard navigation
+- error announcements
+- loading announcement where appropriate
+- sufficient contrast
+- logical tab order
+
+Do not use placeholder text as the only label.
+
+==================================================
+17. PASSWORD VISIBILITY
+==================================================
+
+Implement a show/hide password control.
+
+Requirements:
+
+- accessible button
+- clear state
+- keyboard accessible
+- does not submit the form
+- does not expose password value elsewhere
+
+Use the existing icon system.
+
+==================================================
+18. AUTHENTICATION LOADING
+==================================================
+
+Provide clear loading behaviour.
+
+During login:
+
+- disable duplicate submission
+- show progress
+- preserve entered values unless security requirements require clearing
+- avoid flicker
+- avoid multiple simultaneous requests
+
+==================================================
+19. NETWORK FAILURE
+==================================================
+
+If the authentication API cannot be reached:
+
+Show a clear message such as:
+
+"Unable to connect to the authentication service. Please try again."
+
+Do not expose:
+
+- service internals
+- ports
+- stack traces
+- database information
+
+Provide retry.
+
+==================================================
+20. ACCESSIBLE ERROR PRESENTATION
+==================================================
+
+Authentication errors must:
+
+- be visible
+- be associated with the relevant form where appropriate
+- be announced to assistive technology
+- not rely only on colour
+- remain visible until resolved or dismissed intentionally
+
+==================================================
+21. SESSION RESTORATION
+==================================================
+
+If a valid session already exists and the user opens:
+
+/login
+
+do not show the login form unnecessarily.
+
+Redirect to the authenticated destination.
+
+Avoid redirect loops.
+
+==================================================
+22. AUTHENTICATION MIDDLEWARE / GUARD
+==================================================
+
+Use the existing architecture.
+
+Do not create a second authentication guard.
+
+Integrate the existing AuthGuard or middleware according to the established Prompt 001 architecture.
+
+==================================================
+23. API INTEGRATION
+==================================================
+
+Use the centralized API client.
+
+Do NOT:
+
+fetch()
+axios()
+direct HTTP calls
+
+inside the login component.
+
+Required conceptual flow:
+
+LoginForm
+ ↓
+useLogin / auth hook
+ ↓
+auth API function
+ ↓
+shared API client
+ ↓
+backend authentication endpoint
+
+Use the actual endpoint discovered from the repository.
+
+Do not invent endpoints.
+
+==================================================
+24. CACHE / SERVER STATE
+==================================================
+
+After successful authentication:
+
+- initialize authenticated state
+- invalidate or initialize appropriate queries
+- ensure previous-user cached data cannot leak into the new session
+
+On logout:
+
+- clear relevant user-specific cache
+- clear sensitive state
+
+Use TanStack Query architecture where appropriate.
+
+==================================================
+25. SECURITY UX
+==================================================
+
+Do not:
+
+- log passwords
+- log tokens
+- display tokens
+- store credentials unnecessarily
+- expose authentication response internals
+- put secrets in client source
+- commit credentials
+- expose backend stack traces
+
+Review browser-visible configuration.
+
+==================================================
+26. LOGIN PAGE METADATA
+==================================================
+
+Configure appropriate:
+
+- page title
+- metadata
+- accessibility title
+- noindex behaviour if appropriate for the application
+
+Do not expose sensitive application information in metadata.
+
+==================================================
+27. AUTHENTICATION TESTS
+==================================================
+
+Create meaningful tests for:
+
+### Login
+
+- successful login
+- invalid credentials
+- validation failure
+- network failure
+- server error
+- loading state
+- duplicate submission prevention
+
+### Password
+
+- show password
+- hide password
+- keyboard accessibility
+
+### Session
+
+- existing session redirects
+- expired session redirects
+- logout clears session
+- protected route redirects
+
+### Accessibility
+
+- form labels
+- keyboard navigation
+- error announcement
+- focus handling
+
+==================================================
+28. E2E TESTS
+==================================================
+
+Create Playwright tests where the existing backend environment supports them.
+
+At minimum:
+
+- login page loads
+- invalid login displays safe error
+- successful login flow when a valid test environment is available
+- protected route redirects when unauthenticated
+- logout returns to login
+
+Do not invent production credentials.
+
+Use test environment credentials only if they already exist in the repository's approved test setup.
+
+Never commit credentials.
+
+==================================================
+29. USER GUIDE
+==================================================
+
+Create/update:
+
+docs/frontend/user-guide/authentication.md
+
+Document:
+
+- signing in
+- session behaviour
+- signing out
+- session expiration
+- common authentication errors
+- accessibility guidance
+- troubleshooting
+
+Do not document unsupported features.
+
+==================================================
+30. DEVELOPER GUIDE
+==================================================
+
+Create/update:
+
+docs/frontend/developer-guide/authentication.md
+
+Document:
+
+- login architecture
+- AuthGuard
+- session state
+- API integration
+- redirect handling
+- permission initialization
+- logout
+- cache clearing
+- security rules
+- testing
+
+==================================================
+31. RFI / RFP DOCUMENTATION
+==================================================
+
+Create/update:
+
+docs/frontend/rfi/authentication.md
+
+Document:
+
+- authentication UX
+- session management architecture
+- protected routes
+- permission-aware frontend
+- accessibility
+- security boundaries
+- backend/frontend separation
+
+Clearly identify Backend V1 limitations.
+
+==================================================
+32. BACKEND V1 FREEZE CHECK
+==================================================
+
+Before completion verify:
+
+- zero backend source modifications
+- zero backend API modifications
+- zero database modifications
+- zero migration modifications
+- zero backend configuration modifications
+
+If backend changes exist:
+
+STOP and report them.
+
+Do not intentionally commit them.
+
+==================================================
+33. DEPENDENCY SAFETY
+==================================================
+
+Use existing frontend dependencies.
+
+Do not install unnecessary packages.
+
+Do not run destructive package commands.
+
+Do not regenerate pnpm-lock.yaml unnecessarily.
+
+If dependency installation is required:
+
+- make the smallest change
+- inspect lockfile diff
+- validate
+- report exactly what changed
+
+==================================================
+34. VALIDATION
+==================================================
+
+Run:
+
+- typecheck
+- lint
+- unit tests
+- production build
+- applicable E2E tests
+
+Do not claim success without executing commands.
+
+If E2E requires backend availability and backend is not running:
+
+report it as an environment limitation.
+
+Do NOT modify the backend to make E2E pass.
+
+==================================================
+35. GIT SAFETY
+==================================================
+
+Before committing:
+
+- inspect git status
+- inspect changed files
+- verify no secrets
+- verify no .env files
+- verify no credentials
+- verify no backend changes
+- verify no unintended lockfile changes
+- verify no generated junk
+
+==================================================
+36. COMMIT
+==================================================
+
+If all applicable validation passes:
+
+feat(frontend): implement enterprise authentication experience
+
+Push according to the repository workflow.
+
+==================================================
+37. DEFINITION OF DONE
+==================================================
+
+Prompt 004 is complete only when:
+
+[ ] Login page exists.
+[ ] Login uses actual V1 authentication API.
+[ ] Central API client is used.
+[ ] Form validation exists.
+[ ] Loading state exists.
+[ ] Safe authentication errors exist.
+[ ] Password visibility toggle exists.
+[ ] AuthGuard is integrated.
+[ ] Protected routes behave correctly.
+[ ] Existing-session redirect works.
+[ ] Logout works with existing V1 contract.
+[ ] Session expiration UX works.
+[ ] Return URL handling is safe.
+[ ] Accessibility requirements are met.
+[ ] Responsive login works.
+[ ] Unit tests pass.
+[ ] E2E tests pass where environment permits.
+[ ] User guide exists.
+[ ] Developer guide exists.
+[ ] RFI documentation exists.
+[ ] Backend V1 remains completely untouched.
+[ ] No backend API changes.
+[ ] No database changes.
+[ ] No unnecessary dependency changes.
+[ ] Typecheck passes.
+[ ] Lint passes.
+[ ] Production build passes.
+[ ] Git state is clean except explicitly pre-existing files.
+
+==================================================
+38. FINAL REPORT
+==================================================
+
+Provide:
+
+1. Authentication implementation summary
+2. Login route
+3. Authentication API used
+4. Session architecture used
+5. AuthGuard integration
+6. Logout implementation
+7. Error handling
+8. Accessibility results
+9. Responsive results
+10. Tests executed
+11. E2E results
+12. Typecheck result
+13. Lint result
+14. Build result
+15. Documentation created
+16. Backend V1 limitations
+17. Backend files changed — MUST BE ZERO
+18. Dependency changes
+19. Lockfile changes
+20. Git commit
+21. Known limitations
+22. Recommended next frontend prompt
+
+Do not modify the backend.
+
+Proceed with implementation.

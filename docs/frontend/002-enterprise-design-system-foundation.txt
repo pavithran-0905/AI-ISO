@@ -1,0 +1,891 @@
+# FRONTEND PROMPT 002
+# Enterprise Design System Foundation & Premium UI Language
+
+## ROLE
+
+Act as a Principal Design Systems Architect, Enterprise UX Architect, Senior Product Designer, Senior React/TypeScript Engineer, Accessibility Engineer, and Frontend Architecture Lead.
+
+Prompt 001 is COMPLETE and pushed.
+
+Existing frontend foundation:
+- apps/frontend
+- Next.js 16
+- React 19
+- TypeScript
+- existing API foundation
+- authentication foundation
+- permission foundation
+- routing foundation
+- layout foundation
+- design-token foundation
+- loading/empty/error primitives
+- documentation foundation
+- backend-feature matrix
+
+Commit:
+fbd37a6
+
+Prompt 002 must build on the existing foundation.
+
+Do NOT recreate Prompt 001 architecture.
+
+Do NOT replace Next.js.
+
+Do NOT create another frontend application.
+
+Do NOT create a new Vite app.
+
+Do NOT modify backend services.
+
+Do NOT invent backend APIs.
+
+Do NOT build complete business-module pages yet.
+
+==================================================
+1. OBJECTIVE
+==================================================
+
+Create the production-grade Enterprise Design System foundation for AI-IOS.
+
+The design system must provide one consistent visual language for the entire platform.
+
+It must support:
+
+- premium enterprise appearance
+- high information density
+- excellent readability
+- accessibility
+- light theme
+- dark theme
+- responsive behaviour
+- reusable components
+- data-heavy enterprise workflows
+- future white-labeling
+- future localization
+- future feature expansion
+
+The design system must be usable by every future frontend feature.
+
+==================================================
+2. SOURCE OF TRUTH
+==================================================
+
+First inspect the actual implementation created by Prompt 001.
+
+Inspect:
+
+- existing Tailwind configuration
+- existing CSS
+- existing design tokens
+- existing theme implementation
+- existing components
+- existing layouts
+- existing typography
+- existing utility classes
+- existing shadcn/ui setup if present
+- existing icon setup
+- existing accessibility utilities
+
+Do not create duplicate systems.
+
+Extend the existing foundation.
+
+==================================================
+3. DESIGN DIRECTION
+==================================================
+
+AI-IOS is an enterprise infrastructure and operations platform.
+
+The visual language must communicate:
+
+- reliability
+- technical sophistication
+- operational clarity
+- trust
+- precision
+- enterprise maturity
+
+The UI must feel premium without looking decorative.
+
+Use the following design characteristics:
+
+- clean typography
+- strong hierarchy
+- controlled information density
+- restrained colour usage
+- clear semantic states
+- subtle depth
+- consistent spacing
+- purposeful borders
+- subtle elevation
+- minimal but meaningful motion
+
+Avoid:
+
+- excessive gradients
+- excessive glassmorphism
+- excessive shadows
+- excessive rounded cards
+- decorative animations
+- excessive colours
+- consumer-app visual patterns
+- inconsistent spacing
+- giant empty dashboard cards
+- unnecessary visual noise
+
+==================================================
+4. DESIGN SYSTEM LAYERS
+==================================================
+
+Implement the design system in these layers:
+
+Layer 1:
+Primitive Tokens
+
+Layer 2:
+Semantic Tokens
+
+Layer 3:
+Component Tokens
+
+Layer 4:
+Reusable Components
+
+Layer 5:
+Feature UI Patterns
+
+Do not mix these layers.
+
+==================================================
+5. TOKEN SYSTEM
+==================================================
+
+Define semantic tokens for:
+
+### Colour
+
+- background
+- foreground
+- surface
+- surface-muted
+- surface-elevated
+- border
+- border-muted
+- input
+- ring
+- primary
+- primary-foreground
+- secondary
+- secondary-foreground
+- accent
+- accent-foreground
+
+### Semantic Status
+
+- success
+- warning
+- danger
+- info
+- neutral
+- pending
+- running
+- stopped
+- degraded
+- unknown
+
+Status colours must not rely only on colour.
+
+Every status presentation must also support:
+
+- icon
+- label
+- text
+- accessible announcement where appropriate
+
+==================================================
+6. DARK AND LIGHT THEMES
+==================================================
+
+Implement both:
+
+Light
+Dark
+
+Use semantic tokens.
+
+Do NOT hardcode colours in components.
+
+Example concept:
+
+bg-background
+
+text-foreground
+
+border-border
+
+text-success
+
+bg-danger
+
+etc.
+
+Dark mode must be intentionally designed.
+
+Do not simply invert colours.
+
+Verify:
+
+- contrast
+- borders
+- muted text
+- disabled states
+- tables
+- forms
+- charts
+- status indicators
+- overlays
+- navigation
+
+==================================================
+7. TYPOGRAPHY
+==================================================
+
+Create a consistent typography scale.
+
+Define:
+
+- display
+- page title
+- section title
+- card title
+- body
+- body-small
+- label
+- caption
+- code
+- metric
+- table text
+
+Define:
+
+- font family
+- font weights
+- line heights
+- letter spacing
+- truncation
+- wrapping rules
+
+Enterprise data must remain highly readable.
+
+Avoid overly thin typography.
+
+==================================================
+8. SPACING SYSTEM
+==================================================
+
+Create a consistent spacing scale.
+
+Use tokens instead of arbitrary values.
+
+Define spacing for:
+
+- page padding
+- section spacing
+- card padding
+- table cells
+- form fields
+- navigation
+- dialogs
+- drawers
+- toolbars
+- filters
+- dashboards
+
+Document when each spacing level should be used.
+
+==================================================
+9. BORDER / RADIUS / ELEVATION
+==================================================
+
+Define:
+
+- border widths
+- radius scale
+- shadow scale
+- elevation levels
+
+Use restrained radius values.
+
+Do not make every element look like a floating card.
+
+Use elevation only when it communicates hierarchy.
+
+==================================================
+10. MOTION SYSTEM
+==================================================
+
+Create a subtle enterprise motion system.
+
+Define:
+
+- duration
+- easing
+- enter
+- exit
+- expand
+- collapse
+- hover
+- focus
+- loading
+
+Motion must communicate state.
+
+Do not use animation for decoration.
+
+Respect:
+
+prefers-reduced-motion
+
+==================================================
+11. ICON SYSTEM
+==================================================
+
+Use Lucide React or the existing repository icon system.
+
+Create rules for:
+
+- icon sizes
+- icon alignment
+- icon + label spacing
+- status icons
+- action icons
+- navigation icons
+- destructive action icons
+
+Do not mix random icon libraries.
+
+Do not use emojis as UI icons.
+
+==================================================
+12. COMPONENT FOUNDATION
+==================================================
+
+Create or standardize reusable primitives.
+
+At minimum establish:
+
+- Button
+- IconButton
+- Badge
+- StatusBadge
+- Card
+- Surface
+- Separator
+- Input
+- Textarea
+- Select
+- Checkbox
+- Radio
+- Switch
+- Label
+- FormField
+- Tooltip
+- Popover
+- Dropdown
+- Tabs
+- Accordion
+- Dialog
+- Drawer
+- Alert
+- Toast
+- Skeleton
+- Spinner
+- EmptyState
+- ErrorState
+- LoadingState
+
+Do not implement business-specific components.
+
+==================================================
+13. ENTERPRISE DATA COMPONENTS
+==================================================
+
+Establish visual standards for future:
+
+- DataTable
+- DataGrid
+- MetricCard
+- KPI
+- StatusIndicator
+- Timeline
+- ActivityFeed
+- LogViewer
+- CodeViewer
+- JSONViewer
+- TreeView
+- Pagination
+- FilterBar
+- SearchBar
+- CommandPalette
+- Breadcrumb
+- Stepper
+- Wizard
+- SplitPane
+
+Only implement components that are genuinely needed by the foundation.
+
+Do not create 100 speculative components.
+
+If a component is not yet required, document its design contract instead of creating unnecessary code.
+
+==================================================
+14. FORM DESIGN
+==================================================
+
+Define consistent rules for:
+
+- labels
+- required fields
+- optional fields
+- descriptions
+- validation
+- errors
+- disabled fields
+- loading submission
+- success
+- server errors
+- keyboard navigation
+
+Forms must be accessible.
+
+Do not use placeholder text as the only field label.
+
+==================================================
+15. TABLE DESIGN
+==================================================
+
+AI-IOS will contain significant infrastructure data.
+
+Define table standards for:
+
+- header
+- rows
+- selected rows
+- hover
+- sorting
+- filtering
+- pagination
+- column visibility
+- density
+- status cells
+- actions
+- empty state
+- loading
+- error
+- long text
+- responsive fallback
+
+Tables must support information density without becoming visually confusing.
+
+==================================================
+16. DASHBOARD VISUAL LANGUAGE
+==================================================
+
+Do NOT build the Dashboard page.
+
+Define the visual rules future Dashboard components must follow:
+
+- KPI cards
+- system health
+- service status
+- alerts
+- charts
+- recent activity
+- quick actions
+- operational summaries
+
+Dashboard should prioritize actionable information.
+
+Do not create a generic collection of decorative cards.
+
+==================================================
+17. CHART VISUAL LANGUAGE
+==================================================
+
+Define chart rules for future implementation.
+
+Cover:
+
+- line
+- area
+- bar
+- stacked bar
+- donut
+- gauge
+- heatmap
+- time series
+
+Define:
+
+- semantic colour usage
+- gridlines
+- labels
+- tooltips
+- legends
+- empty state
+- loading
+- error
+- accessibility
+
+Do not hardcode chart colours inside individual feature modules.
+
+==================================================
+18. STATUS SYSTEM
+==================================================
+
+Create one status taxonomy.
+
+Support concepts such as:
+
+Healthy
+Warning
+Critical
+Failed
+Running
+Stopped
+Pending
+Queued
+Completed
+Cancelled
+Unknown
+Degraded
+Maintenance
+
+Do not allow individual modules to invent competing status colours.
+
+Document the canonical status mapping.
+
+==================================================
+19. NAVIGATION VISUAL RULES
+==================================================
+
+Define visual standards for:
+
+- sidebar
+- navigation item
+- active item
+- collapsed sidebar
+- nested navigation
+- breadcrumbs
+- top bar
+- user menu
+- notification area
+
+Do not implement the final navigation structure yet.
+
+Only establish its design language.
+
+==================================================
+20. RESPONSIVE DESIGN
+==================================================
+
+Define responsive behaviour for:
+
+- desktop
+- laptop
+- tablet
+- narrow viewport
+
+Enterprise desktop is the primary target.
+
+Do not simply scale everything down.
+
+Define:
+
+- breakpoints
+- container widths
+- grid behaviour
+- table fallback
+- drawer behaviour
+- sidebar collapse
+- form layout
+
+==================================================
+21. ACCESSIBILITY
+==================================================
+
+Target WCAG 2.2 AA.
+
+Verify the design system for:
+
+- colour contrast
+- keyboard focus
+- focus visibility
+- disabled states
+- error states
+- reduced motion
+- semantic elements
+- ARIA where required
+- screen readers
+
+Every interactive component must have an accessible name.
+
+==================================================
+22. COMPONENT STATES
+==================================================
+
+Every interactive component must define:
+
+- default
+- hover
+- focus
+- active
+- disabled
+- loading
+- error
+- selected
+- readonly where applicable
+
+Do not allow inconsistent states between components.
+
+==================================================
+23. STORYBOOK DECISION
+==================================================
+
+Prompt 001 deferred Storybook because of the dependency/install environment.
+
+Now inspect the current environment.
+
+If Storybook can be introduced safely without destabilizing the existing repository:
+
+- configure Storybook
+- add stories for foundational components
+- add accessibility checks where practical
+
+If it cannot be introduced safely:
+
+- DO NOT force installation
+- DO NOT modify the lockfile unnecessarily
+- document the blocker
+- continue design-system implementation without Storybook
+
+Never repeat the lockfile incident merely to add Storybook.
+
+==================================================
+24. DOCUMENTATION
+==================================================
+
+Create/update:
+
+docs/frontend/design-system/
+
+├── README.md
+├── design-principles.md
+├── colour-system.md
+├── typography.md
+├── spacing.md
+├── elevation.md
+├── motion.md
+├── iconography.md
+├── accessibility.md
+├── responsive-design.md
+├── status-system.md
+├── component-guidelines.md
+├── forms.md
+├── tables.md
+└── charts.md
+
+Documentation must describe actual implementation.
+
+==================================================
+25. DESIGN SYSTEM SHOWCASE
+==================================================
+
+Create a foundation-only internal showcase route/page for validating the design system.
+
+This is NOT the product Dashboard.
+
+It should allow developers/designers to inspect:
+
+- typography
+- colours
+- themes
+- buttons
+- inputs
+- badges
+- status states
+- cards
+- dialogs
+- drawers
+- tables
+- loading states
+- empty states
+- error states
+
+This showcase becomes the visual contract for future prompts.
+
+Protect it appropriately so it is not accidentally exposed as a production business feature unless the existing application intentionally supports an internal component showcase.
+
+==================================================
+26. TESTING
+==================================================
+
+Add tests for foundational components.
+
+Prioritize:
+
+- rendering
+- keyboard interaction
+- accessibility
+- state transitions
+- theme behaviour
+- disabled behaviour
+- error behaviour
+
+Do not write meaningless snapshot tests for everything.
+
+==================================================
+27. VISUAL CONSISTENCY AUDIT
+==================================================
+
+Inspect existing Prompt 001 components and layouts.
+
+Where appropriate:
+
+- migrate arbitrary styles to design tokens
+- remove duplicated styling
+- normalize spacing
+- normalize typography
+- normalize status colours
+
+Do NOT redesign business features that belong to later prompts.
+
+Do NOT destroy the existing Dashboard bootstrap module.
+
+==================================================
+28. CODE QUALITY
+==================================================
+
+Maintain:
+
+- strict TypeScript
+- reusable components
+- readable code
+- no duplicated styling
+- no arbitrary colour values where tokens exist
+- no unnecessary dependencies
+- no dead code
+- no unused imports
+- no business logic inside generic components
+
+==================================================
+29. VALIDATION
+==================================================
+
+Run the actual repository validation commands.
+
+At minimum:
+
+- typecheck
+- lint
+- unit tests
+- production build
+
+If Storybook is successfully configured:
+
+- Storybook build
+
+If component accessibility tooling exists:
+
+- accessibility validation
+
+Do not claim success without executing the commands.
+
+==================================================
+30. GIT SAFETY
+==================================================
+
+Before committing:
+
+- inspect git status
+- inspect changed files
+- ensure no secrets
+- ensure no .env files
+- ensure no generated junk
+- ensure no unrelated backend changes
+- ensure no accidental lockfile changes
+- inspect package changes carefully
+
+Do not modify pnpm-lock.yaml unless a dependency change genuinely requires it.
+
+If dependency installation becomes unstable, stop and report it instead of forcing installation.
+
+==================================================
+31. COMMIT
+==================================================
+
+If all validation passes, commit:
+
+feat(frontend): establish enterprise design system foundation
+
+Push according to the repository workflow.
+
+==================================================
+32. DEFINITION OF DONE
+==================================================
+
+Prompt 002 is complete only when:
+
+[ ] Design token system is implemented.
+[ ] Light theme works.
+[ ] Dark theme works.
+[ ] Typography system exists.
+[ ] Spacing system exists.
+[ ] Semantic status system exists.
+[ ] Motion system exists.
+[ ] Icon rules exist.
+[ ] Foundational reusable components are standardized.
+[ ] Component states are consistent.
+[ ] Accessibility requirements are implemented.
+[ ] Responsive rules are implemented.
+[ ] Form standards exist.
+[ ] Table standards exist.
+[ ] Chart standards exist.
+[ ] Design system documentation exists.
+[ ] Internal design-system showcase exists.
+[ ] Existing foundation remains functional.
+[ ] No business module was prematurely implemented.
+[ ] Typecheck passes.
+[ ] Lint passes.
+[ ] Tests pass.
+[ ] Production build passes.
+[ ] No unintended lockfile changes exist.
+[ ] Git working tree is clean except explicitly pre-existing files.
+
+==================================================
+33. FINAL REPORT
+==================================================
+
+Report:
+
+1. Design system architecture
+2. Tokens created
+3. Components created/updated
+4. Theme implementation
+5. Accessibility implementation
+6. Responsive implementation
+7. Showcase implementation
+8. Documentation created
+9. Storybook status
+10. Dependencies changed
+11. Tests
+12. Typecheck
+13. Lint
+14. Production build
+15. Known limitations
+16. Git commit
+17. Recommended next prompt
+
+Do not implement business feature pages in this prompt.
+
+Proceed with implementation.

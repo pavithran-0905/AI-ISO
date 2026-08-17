@@ -1,5 +1,7 @@
 # components/overlays/
 
-Generic overlay primitives (Modal, Drawer, Popover, Tooltip, Dropdown).
-Nothing lives here yet — the first feature that needs one should add it
-here, not a local one-off.
+`Dialog`, `Drawer` (both built on the native `<dialog>` element —
+real focus trapping and Escape-to-close for free), `Tooltip`,
+`Popover`, `Dropdown` (docs/frontend Prompt 002 §12). `Popover` and
+`Dropdown` share `use-dismissable-layer.ts` for click-outside/Escape
+handling, since they aren't built on `<dialog>`.

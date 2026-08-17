@@ -1,0 +1,1214 @@
+# FRONTEND PROMPT 010
+# Enterprise AI Assistant & Intelligence Experience
+
+## ROLE
+
+Act as a Principal AI Product Designer, Enterprise UX Architect, AI Assistant UX Specialist, Frontend Architect, Senior Next.js/React Engineer, AI Interaction Designer, Accessibility Engineer, and Enterprise Platform Engineer.
+
+Frontend Prompts 001–009 are COMPLETE.
+
+Use all existing frontend foundations:
+
+- application shell
+- design system
+- authentication
+- permissions
+- API client
+- routing
+- Dashboard
+- Monitoring
+- Alerting
+- Reporting
+- Automation
+- query/state architecture
+- documentation architecture
+
+Do not create competing architecture.
+
+==================================================
+CRITICAL BACKEND V1 FREEZE
+==================================================
+
+AI-IOS Backend V1 is COMPLETE and FROZEN.
+
+THIS IS A FRONTEND-ONLY PROMPT.
+
+DO NOT:
+
+- modify backend source code
+- modify ai-assistant service
+- modify backend APIs
+- add backend endpoints
+- modify database schemas
+- modify migrations
+- modify authentication
+- modify RBAC
+- modify AI providers
+- modify RAG infrastructure
+- modify pgvector
+- modify Redis
+- modify RabbitMQ
+- modify backend guardrails
+- modify backend agents
+- modify backend tools
+- modify backend prompts
+- modify backend configuration
+
+If a required AI capability is unavailable:
+
+1. Document it.
+2. Do not fabricate it.
+3. Do not modify backend.
+4. Build only against confirmed V1 capabilities.
+5. Record the limitation in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Backend modifications MUST remain ZERO.
+
+==================================================
+1. OBJECTIVE
+==================================================
+
+Build the production-grade AI-IOS Enterprise AI Assistant experience.
+
+The AI Assistant must provide a trustworthy enterprise interface for capabilities already implemented in Backend V1.
+
+Prompt 046 established the AI Assistant backend foundation including:
+
+- multi-provider chat
+- RAG over pgvector
+- guardrails
+- permission-aware tool calling
+- multi-agent orchestration
+- prompt versioning
+- scoped memory
+- recommendations
+- reports
+- analytics
+
+VERIFY every capability against the current backend implementation before exposing it.
+
+The frontend must prioritize:
+
+- trust
+- clarity
+- context
+- transparency
+- safety
+- enterprise usability
+- explainability
+- accessibility
+
+Do NOT create a generic consumer chatbot.
+
+==================================================
+2. INSPECT BACKEND V1 FIRST
+==================================================
+
+Inspect the actual AI Assistant V1 implementation.
+
+Verify:
+
+- chat endpoints
+- session endpoints
+- message structure
+- streaming/SSE behaviour
+- provider information
+- RAG/search endpoints
+- source/citation data
+- tool-call data
+- agent routing
+- prompt versioning
+- memory
+- recommendations
+- reports
+- analytics
+- permissions
+- guardrail responses
+- error contracts
+
+Do not infer capabilities from model names or documentation alone.
+
+Use actual V1 contracts.
+
+==================================================
+3. AI ASSISTANT INFORMATION ARCHITECTURE
+==================================================
+
+Create a user-centric structure.
+
+Recommended:
+
+Intelligence
+├── AI Assistant
+├── Conversations
+├── Knowledge
+├── Recommendations
+├── AI Reports
+└── Analytics
+
+Only create sections actually supported by V1.
+
+Do not expose backend implementation details as navigation.
+
+==================================================
+4. AI ASSISTANT ROUTE
+==================================================
+
+Create the primary AI Assistant experience.
+
+Recommended route:
+
+/intelligence/assistant
+
+Use the existing authenticated application shell.
+
+The experience should feel like an enterprise operations assistant, not a consumer messaging application.
+
+==================================================
+5. ASSISTANT LAYOUT
+==================================================
+
+Use a professional workspace:
+
+┌──────────────────────────────────────────────┐
+│ AI Assistant        Context / Actions        │
+├──────────────────┬───────────────────────────┤
+│ Conversations    │                           │
+│                  │ Conversation              │
+│ Recent chats     │ Messages                  │
+│                  │                           │
+│                  ├───────────────────────────┤
+│                  │ Composer                  │
+└──────────────────┴───────────────────────────┘
+
+On smaller screens:
+
+Conversation list
+↓
+Conversation
+↓
+Composer
+
+Do not create unnecessary visual clutter.
+
+==================================================
+6. CONVERSATION LIST
+==================================================
+
+If V1 supports session/conversation history:
+
+show:
+
+- conversation title
+- last activity
+- status where applicable
+- active conversation
+- search if supported
+- new conversation
+- delete/archive where supported
+
+Do not invent conversation operations.
+
+==================================================
+7. NEW CONVERSATION
+==================================================
+
+Provide a clear:
+
+New Conversation
+
+action.
+
+When creating a conversation:
+
+- initialize through the actual V1 API
+- show loading
+- handle failure
+- do not create duplicate sessions
+
+==================================================
+8. MESSAGE EXPERIENCE
+==================================================
+
+Messages must clearly distinguish:
+
+User
+AI Assistant
+Tool/Action
+System/Status where appropriate
+
+Do not make tool execution appear to be ordinary assistant text.
+
+==================================================
+9. AI RESPONSE RENDERING
+==================================================
+
+Render supported response content safely.
+
+Support where V1 provides it:
+
+- plain text
+- structured content
+- code
+- lists
+- tables
+- citations
+- source references
+- tool results
+
+Sanitize untrusted content.
+
+Do not blindly inject HTML.
+
+==================================================
+10. STREAMING
+==================================================
+
+Inspect the actual V1 streaming implementation.
+
+If genuine token/event streaming is available:
+
+implement it.
+
+If the current backend only exposes a complete response or a wire-compatible but non-token-streaming endpoint:
+
+do NOT fake token-by-token streaming.
+
+Instead provide:
+
+- request state
+- progress state where appropriate
+- response loading state
+- final response rendering
+
+Document the limitation.
+
+==================================================
+11. MESSAGE STATES
+==================================================
+
+Support:
+
+- sending
+- generating
+- completed
+- failed
+- cancelled where supported
+- retry where supported
+
+Do not show a completed response before backend confirmation.
+
+==================================================
+12. COMPOSER
+==================================================
+
+Create an enterprise-grade assistant composer.
+
+Support actual V1 capabilities such as:
+
+- text input
+- submit
+- stop/cancel where supported
+- retry
+- context selection where supported
+- attachments only if V1 supports them
+
+Keyboard:
+
+Enter → send
+
+Shift+Enter → newline
+
+Do not override normal browser accessibility behaviour.
+
+==================================================
+13. PROMPT SUGGESTIONS
+==================================================
+
+If V1 provides recommendations:
+
+display contextual suggestions.
+
+Examples should come from actual V1 recommendations.
+
+Do not create fake AI capabilities.
+
+Suggested prompts should help users perform real platform tasks.
+
+==================================================
+14. CONTEXT
+==================================================
+
+If V1 supports contextual conversation:
+
+show the current context.
+
+Examples may include:
+
+- current asset
+- monitoring context
+- alert context
+- report context
+- automation context
+
+Only use context that the backend actually supports.
+
+Do not silently attach unrelated sensitive information.
+
+==================================================
+15. SOURCE / CITATION EXPERIENCE
+==================================================
+
+Because V1 uses RAG:
+
+if source information is returned, display it clearly.
+
+Example:
+
+Answer
+
+Sources
+1. Monitoring record
+2. Platform documentation
+3. Asset information
+
+Use the actual source metadata returned by V1.
+
+Do not invent citations.
+
+Do not claim the model consulted a source when the backend did not return it.
+
+==================================================
+16. RAG RESULT EXPERIENCE
+==================================================
+
+If V1 exposes RAG search/results:
+
+support:
+
+- source title
+- source type
+- relevance information where available
+- source metadata
+- open/view action where supported
+
+Do not expose internal vector/database implementation details unless explicitly intended for administrators.
+
+==================================================
+17. TOOL CALL EXPERIENCE
+==================================================
+
+Prompt 046 includes permission-aware tool calling.
+
+The frontend must distinguish:
+
+AI reasoning/request
+↓
+Tool invocation
+↓
+Tool result
+↓
+Final response
+
+If tool-call information is exposed by V1:
+
+show a compact, understandable action state.
+
+Example:
+
+"Checking monitoring data..."
+
+Then:
+
+"Monitoring data retrieved"
+
+Do not expose internal chain-of-thought.
+
+==================================================
+18. TOOL PERMISSION UX
+==================================================
+
+If a tool requires authorization:
+
+show a clear permission-aware state.
+
+Example:
+
+"This action isn't available with your current permissions."
+
+Do not expose internal authorization implementation.
+
+Do not imply that frontend permission checks provide security.
+
+Backend remains authoritative.
+
+==================================================
+19. ACTION CONFIRMATION
+==================================================
+
+For AI-triggered actions that can modify infrastructure:
+
+the frontend must require appropriate confirmation if the V1 contract requires user confirmation.
+
+Never silently execute a high-impact infrastructure action from a conversational UI.
+
+Show:
+
+Action
+Target
+Parameters
+Expected impact
+
+Then:
+
+Cancel
+Confirm
+
+Do not invent confirmation requirements if the backend already defines a different safe workflow; follow the actual V1 contract.
+
+==================================================
+20. GUARDRAIL RESPONSES
+==================================================
+
+Prompt 046 includes guardrails.
+
+When the backend rejects a request:
+
+render a safe, understandable response.
+
+Do not expose:
+
+- internal guardrail rules
+- system prompts
+- policy implementation
+- hidden moderation details
+- backend stack traces
+
+The UX should distinguish:
+
+Request rejected
+
+from
+
+System error.
+
+==================================================
+21. AGENT ROUTING
+==================================================
+
+Prompt 046 includes multi-agent orchestration.
+
+If V1 exposes the selected agent or routing information:
+
+show only useful user-facing context.
+
+Example:
+
+"Using Monitoring Assistant"
+
+Do NOT expose internal chain-of-thought.
+
+Do not expose internal routing algorithms unless explicitly intended for administrators.
+
+==================================================
+22. MULTI-PROVIDER
+==================================================
+
+Prompt 046 supports multiple providers.
+
+Do not expose provider selection unless V1 explicitly allows users/admins to select it.
+
+If provider metadata is returned for operational/admin purposes:
+
+display it only where appropriate.
+
+Never expose API keys or credentials.
+
+==================================================
+23. PROMPT VERSIONING
+==================================================
+
+If V1 provides prompt version information to authorized users:
+
+display it in an appropriate administrative/context area.
+
+Do not expose hidden system prompts.
+
+Do not create a prompt editor unless the V1 contract supports it.
+
+==================================================
+24. MEMORY
+==================================================
+
+If V1 provides scoped memory:
+
+create a transparent memory UX.
+
+Users should understand when persistent context is being used.
+
+Support actual V1 capabilities such as:
+
+- memory state
+- scope
+- clear/delete where supported
+
+Do not silently persist user information beyond backend semantics.
+
+==================================================
+25. CONVERSATION MANAGEMENT
+==================================================
+
+Where supported:
+
+- rename conversation
+- archive
+- delete
+- search
+- restore
+
+Use confirmation for destructive operations.
+
+Do not invent lifecycle states.
+
+==================================================
+26. AI REPORTS
+==================================================
+
+If V1 exposes AI-generated reports:
+
+integrate them with Reporting.
+
+Do not create a duplicate reporting architecture.
+
+AI Assistant
+→ Generate/View AI Report
+→ Reporting
+
+Only implement supported workflows.
+
+==================================================
+27. RECOMMENDATIONS
+==================================================
+
+If V1 provides recommendations:
+
+show them as actionable suggestions.
+
+Each recommendation should contain:
+
+- title
+- reason/context where available
+- priority where supported
+- action where supported
+
+Do not invent urgency.
+
+==================================================
+28. ANALYTICS
+==================================================
+
+If V1 provides AI analytics:
+
+create an appropriate analytics view.
+
+Potential data:
+
+- conversations
+- usage
+- response metrics
+- tool usage
+- provider usage
+
+Only display actual backend data.
+
+Do not expose individual-user sensitive analytics unless authorized.
+
+==================================================
+29. SEARCH
+==================================================
+
+If conversation or knowledge search exists:
+
+implement it using actual V1 APIs.
+
+Do not perform incomplete client-side search over paginated data.
+
+==================================================
+30. ERROR HANDLING
+==================================================
+
+Handle:
+
+- authentication failure
+- permission denied
+- rate limiting
+- provider failure
+- timeout
+- RAG unavailable
+- tool failure
+- guardrail rejection
+- invalid session
+- network failure
+- unknown error
+
+Differentiate:
+
+User request rejected
+
+from:
+
+AI service unavailable
+
+from:
+
+Network failure.
+
+==================================================
+31. PARTIAL FAILURE
+==================================================
+
+AI Assistant should degrade gracefully.
+
+Example:
+
+Chat available
+RAG unavailable
+
+Show:
+
+"Knowledge search is temporarily unavailable."
+
+The assistant should not falsely claim that RAG sources were consulted.
+
+==================================================
+32. RETRY
+==================================================
+
+Where safe:
+
+allow retry.
+
+Do not automatically retry infrastructure-modifying tool calls.
+
+For failed assistant generation:
+
+retry should create a controlled new request.
+
+Avoid duplicate tool execution.
+
+==================================================
+33. CHAT HISTORY CACHE
+==================================================
+
+Use TanStack Query for server state.
+
+Do not duplicate server state in Zustand.
+
+Invalidate/update:
+
+- conversations
+- messages
+- recommendations
+- analytics
+
+according to actual V1 behaviour.
+
+==================================================
+34. API ARCHITECTURE
+==================================================
+
+Use:
+
+AI Assistant UI
+↓
+Assistant Hooks
+↓
+AI Assistant API Module
+↓
+Shared API Client
+↓
+Backend V1
+
+Do not call HTTP directly from components.
+
+==================================================
+35. TYPES
+==================================================
+
+Use strict TypeScript.
+
+Separate:
+
+API types
+↓
+Adapters
+↓
+Assistant domain models
+↓
+UI components
+
+Do not use:
+
+any
+
+to bypass contracts.
+
+==================================================
+36. SECURITY
+==================================================
+
+Never:
+
+- expose API keys
+- expose provider credentials
+- expose JWTs
+- log conversation secrets
+- log tool credentials
+- expose hidden prompts
+- expose internal chain-of-thought
+- persist sensitive data unnecessarily
+
+Review browser-visible state.
+
+==================================================
+37. ACCESSIBILITY
+==================================================
+
+Target WCAG 2.2 AA.
+
+Support:
+
+- keyboard navigation
+- message semantics
+- composer accessibility
+- screen-reader announcements
+- focus management
+- accessible loading states
+- accessible tool status
+- accessible source/citation controls
+
+Do not rely on colour alone.
+
+==================================================
+38. RESPONSIVE DESIGN
+==================================================
+
+Desktop:
+
+Two-panel assistant workspace.
+
+Tablet:
+
+Collapsible conversation list.
+
+Mobile:
+
+Conversation list → conversation navigation.
+
+Composer must remain accessible.
+
+Do not allow keyboard input to be hidden behind mobile browser UI.
+
+==================================================
+39. PERFORMANCE
+==================================================
+
+Optimize:
+
+- long conversation rendering
+- message virtualization where genuinely necessary
+- lazy loading
+- query caching
+- streaming updates where supported
+
+Do not render thousands of messages unnecessarily.
+
+==================================================
+40. DESIGN
+==================================================
+
+The AI Assistant should feel:
+
+- intelligent
+- premium
+- trustworthy
+- operational
+- calm
+- enterprise
+
+Avoid:
+
+- consumer chatbot clichés
+- excessive gradients
+- giant chat bubbles
+- cartoon illustrations
+- unnecessary animations
+
+AI output should visually integrate with the rest of AI-IOS.
+
+==================================================
+41. CROSS-MODULE CONTEXT
+==================================================
+
+Where supported:
+
+Monitoring
+→ Ask AI about this asset
+
+Alerting
+→ Investigate with AI
+
+Automation
+→ Explain execution
+
+Reporting
+→ Generate insight
+
+Dashboard
+→ Ask AI about platform health
+
+Only implement actions backed by real V1 context APIs.
+
+Do not fabricate context payloads.
+
+==================================================
+42. USER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/user-guide/ai-assistant.md
+
+Document:
+
+- opening AI Assistant
+- conversations
+- asking questions
+- source/citations
+- tool actions
+- permissions
+- guardrail responses
+- memory where supported
+- recommendations
+- reports
+- troubleshooting
+
+Clearly explain that AI-generated responses may require verification where appropriate.
+
+==================================================
+43. DEVELOPER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/developer-guide/ai-assistant.md
+
+Document:
+
+- feature architecture
+- API layer
+- conversation lifecycle
+- message model
+- streaming behaviour
+- RAG integration
+- source rendering
+- tool-call rendering
+- permission handling
+- guardrails
+- memory
+- recommendations
+- error handling
+- security
+
+==================================================
+44. RFI / RFP DOCUMENTATION
+==================================================
+
+Create:
+
+docs/frontend/rfi/ai-assistant.md
+
+Document:
+
+- enterprise AI assistant
+- multi-provider architecture as exposed by V1
+- RAG experience
+- permission-aware tools
+- guardrails
+- multi-agent experience
+- contextual assistance
+- accessibility
+- security UX
+- extensibility
+
+Clearly distinguish:
+
+Implemented V1
+
+from
+
+Unavailable/planned.
+
+==================================================
+45. BACKEND V1 LIMITATIONS
+==================================================
+
+Record all unsupported AI frontend capabilities in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Especially document:
+
+- streaming limitations
+- unavailable context APIs
+- unavailable attachment support
+- unavailable memory controls
+- unavailable provider selection
+
+ONLY if those limitations actually exist after repository inspection.
+
+==================================================
+46. TESTING
+==================================================
+
+Create tests for:
+
+### Conversations
+
+- create
+- list
+- open
+- rename where supported
+- delete/archive where supported
+
+### Messages
+
+- send
+- loading
+- success
+- failure
+- retry
+
+### RAG
+
+- sources displayed
+- unavailable state
+- no-source response
+
+### Tools
+
+- tool status
+- permission denial
+- confirmation
+- result
+
+### Guardrails
+
+- safe rejection state
+- no internal details exposed
+
+### Permissions
+
+- allowed
+- denied
+
+### Accessibility
+
+- keyboard
+- focus
+- announcements
+- composer
+
+==================================================
+47. E2E
+==================================================
+
+Where environment permits:
+
+- open AI Assistant
+- create conversation
+- send safe query
+- receive response
+- inspect sources where available
+- test permission-safe tool flow
+- navigate from Monitoring/Alerting into AI context
+- return to source module
+
+Do not execute destructive infrastructure actions during E2E.
+
+Do not invent credentials.
+
+Do not modify backend.
+
+==================================================
+48. DESIGN SYSTEM
+==================================================
+
+Use Prompt 002.
+
+Reuse:
+
+- Prompt 003 shell
+- Prompt 005 Dashboard
+- Prompt 006 Monitoring
+- Prompt 007 Alerting
+- Prompt 008 Reporting
+- Prompt 009 Automation
+
+Do not create a separate AI visual language.
+
+==================================================
+49. DEPENDENCY SAFETY
+==================================================
+
+Use existing dependencies.
+
+Do not add AI SDKs to the frontend unless absolutely required by an existing V1 contract.
+
+The backend already owns AI provider integration.
+
+The frontend should consume the backend API.
+
+==================================================
+50. BACKEND FREEZE VERIFICATION
+==================================================
+
+Verify:
+
+[ ] Backend source changes = 0
+[ ] Backend API changes = 0
+[ ] Database changes = 0
+[ ] Migration changes = 0
+[ ] Backend config changes = 0
+[ ] Backend dependency changes = 0
+
+==================================================
+51. VALIDATION
+==================================================
+
+Run:
+
+- typecheck
+- lint
+- unit tests
+- production build
+- applicable E2E
+
+Do not claim success without execution.
+
+==================================================
+52. GIT SAFETY
+==================================================
+
+Before commit:
+
+- inspect git status
+- inspect changed files
+- verify no secrets
+- verify no API keys
+- verify no .env
+- verify no tokens
+- verify no backend modifications
+- inspect dependency changes
+- inspect lockfile changes
+
+==================================================
+53. COMMIT
+==================================================
+
+If validation passes:
+
+feat(frontend): implement enterprise AI assistant experience
+
+Push according to repository workflow.
+
+==================================================
+54. DEFINITION OF DONE
+==================================================
+
+[ ] AI Assistant route implemented.
+[ ] Conversation UI implemented.
+[ ] Conversation history implemented where supported.
+[ ] New conversation implemented.
+[ ] Message rendering implemented.
+[ ] Composer implemented.
+[ ] Actual V1 chat API integrated.
+[ ] Streaming implemented only if genuinely supported.
+[ ] RAG source/citation UI implemented where supported.
+[ ] Tool-call UX implemented where supported.
+[ ] Permission-aware tool UX implemented.
+[ ] Guardrail response UX implemented.
+[ ] Agent context implemented where supported.
+[ ] Memory UX implemented where supported.
+[ ] Recommendations implemented where supported.
+[ ] AI reports integrated where supported.
+[ ] Analytics integrated where supported.
+[ ] Error handling implemented.
+[ ] Partial failure handling implemented.
+[ ] Retry implemented where safe.
+[ ] Cross-module context implemented where supported.
+[ ] Accessibility requirements met.
+[ ] Responsive UX implemented.
+[ ] Security review completed.
+[ ] User guide created.
+[ ] Developer guide created.
+[ ] RFI documentation created.
+[ ] Backend V1 untouched.
+[ ] No backend API changes.
+[ ] No database changes.
+[ ] No unnecessary frontend AI dependencies.
+[ ] Typecheck passes.
+[ ] Lint passes.
+[ ] Tests pass.
+[ ] Production build passes.
+[ ] Applicable E2E passes.
+[ ] Git state clean except explicitly pre-existing files.
+
+==================================================
+55. FINAL REPORT
+==================================================
+
+Provide:
+
+1. AI Assistant implementation summary
+2. Actual V1 APIs consumed
+3. Routes created
+4. Components created
+5. Conversation architecture
+6. Message architecture
+7. Streaming status
+8. RAG/source experience
+9. Tool-call experience
+10. Guardrail UX
+11. Agent experience
+12. Memory experience
+13. Recommendations
+14. AI reports
+15. Analytics
+16. Cross-module integrations
+17. Permissions
+18. Security review
+19. Accessibility
+20. Responsive behaviour
+21. Tests
+22. E2E
+23. Typecheck
+24. Lint
+25. Production build
+26. Dependency changes
+27. Lockfile changes
+28. Backend files changed — MUST BE ZERO
+29. Backend V1 integration limitations
+30. Git commit
+31. Known limitations
+32. Recommended next frontend prompt
+
+Do not modify the backend.
+
+Do not fabricate AI capabilities.
+
+Do not expose chain-of-thought or hidden prompts.
+
+Proceed with implementation.

@@ -2,59 +2,149 @@
 
 /*
  * Design tokens per docs/010_UI_UX_Design_System_Master.md.txt and
- * docs/frontend Prompt 001 §17. Components must reference these tokens
- * (via Tailwind utility classes mapped below) — never hardcode colors,
- * durations, or z-index values.
+ * docs/frontend Prompt 002 §4-10. Components must reference these
+ * tokens (via Tailwind utility classes mapped below) — never hardcode
+ * colors, durations, or z-index values. See
+ * docs/frontend/design-system/ for the full rationale behind every
+ * value here.
  *
- * Categories not defined here (spacing, radius, borders, shadows,
- * breakpoints) are deliberately left as Tailwind CSS v4's own default
- * scale rather than re-invented: that scale is already semantic (a
- * fixed rem-based progression, not arbitrary values), and docs/010
- * names no enterprise-specific overrides for them. Elevation, motion,
- * z-index, and status/focus states below ARE enterprise-specific and
- * have no Tailwind default, so they're defined explicitly.
+ * Four layers, never mixed (§4):
+ *   1. Primitive  — raw palette values (--gray-*, --blue-*, ...). Never
+ *      referenced directly from a component.
+ *   2. Semantic   — what a primitive MEANS (--background, --primary,
+ *      --danger, ...). Components reference these, via the Tailwind
+ *      utilities `@theme inline` maps them to below.
+ *   3. Component  — a handful of tokens too component-specific to be
+ *      semantic on their own (e.g. --focus-ring-width). Kept to a
+ *      minimum; most components compose semantic tokens directly.
+ *   4. Reusable components — components/ui, data-display, feedback,
+ *      forms, overlays. Not CSS — see docs/frontend/design-system/component-guidelines.md.
+ *
+ * Categories with no enterprise-specific override (radius, breakpoints)
+ * are deliberately left as Tailwind CSS v4's own default scale — see
+ * docs/frontend/design-system/spacing.md.
  */
+
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --border: oklch(0.9 0 0);
-  --ring: oklch(0.55 0.02 260);
-  --muted: oklch(0.96 0 0);
-  --muted-foreground: oklch(0.45 0 0);
+  /* ---- Layer 1: Primitives -------------------------------------------- */
+  /* A restrained neutral scale (enterprise chrome, text, borders) plus
+   * one accent hue per semantic color family. Never used directly by a
+   * component — only Layer 2 below references these. */
+  --gray-0: oklch(1 0 0);
+  --gray-50: oklch(0.985 0 0);
+  --gray-100: oklch(0.96 0 0);
+  --gray-200: oklch(0.9 0 0);
+  --gray-300: oklch(0.82 0 0);
+  --gray-400: oklch(0.65 0 0);
+  --gray-500: oklch(0.55 0.005 260);
+  --gray-600: oklch(0.45 0.005 260);
+  --gray-700: oklch(0.32 0.005 260);
+  --gray-800: oklch(0.24 0.005 260);
+  --gray-900: oklch(0.19 0.005 260);
+  --gray-950: oklch(0.145 0.005 260);
 
-  --primary: oklch(0.5 0.18 260);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.94 0 0);
-  --secondary-foreground: oklch(0.2 0 0);
+  --blue-400: oklch(0.7 0.16 260);
+  --blue-500: oklch(0.6 0.18 260);
+  --blue-600: oklch(0.5 0.18 260);
+  --blue-700: oklch(0.42 0.17 260);
 
-  /* Status states (§17) — every semantic outcome a feature can report. */
-  --success: oklch(0.55 0.14 150);
-  --success-foreground: oklch(0.985 0 0);
-  --warning: oklch(0.75 0.16 80);
-  --warning-foreground: oklch(0.145 0 0);
-  --danger: oklch(0.55 0.2 25);
-  --danger-foreground: oklch(0.985 0 0);
-  --info: oklch(0.55 0.18 250);
-  --info-foreground: oklch(0.985 0 0);
+  --cyan-400: oklch(0.72 0.13 220);
+  --cyan-500: oklch(0.6 0.13 220);
+  --cyan-600: oklch(0.5 0.13 220);
 
-  /* Elevation (§17) — named shadow tiers instead of ad hoc `shadow-*`
-   * picks, so "how far off the page" stays consistent across features. */
+  --green-400: oklch(0.7 0.15 150);
+  --green-500: oklch(0.6 0.15 150);
+  --green-600: oklch(0.55 0.14 150);
+
+  --amber-400: oklch(0.8 0.16 85);
+  --amber-500: oklch(0.75 0.16 80);
+  --amber-600: oklch(0.65 0.15 75);
+
+  --red-400: oklch(0.68 0.2 25);
+  --red-500: oklch(0.6 0.21 25);
+  --red-600: oklch(0.55 0.2 25);
+
+  /* ---- Layer 2: Semantic — color ---------------------------------------- */
+  --background: var(--gray-0);
+  --foreground: var(--gray-950);
+  --surface: var(--gray-0);
+  --surface-muted: var(--gray-50);
+  --surface-elevated: var(--gray-0);
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --border: var(--gray-200);
+  --border-muted: var(--gray-100);
+  --input: var(--gray-0);
+  --ring: var(--blue-500);
+
+  --muted: var(--gray-100);
+  --muted-foreground: var(--gray-600);
+
+  --primary: var(--blue-600);
+  --primary-foreground: var(--gray-50);
+  --secondary: var(--gray-100);
+  --secondary-foreground: var(--gray-800);
+  --accent: var(--cyan-600);
+  --accent-foreground: var(--gray-50);
+
+  /* Status states (§5) — every semantic outcome a feature can report.
+   * `neutral`/`pending`/`running`/`stopped`/`degraded`/`unknown` are
+   * distinct tones from `success`/`warning`/`danger`/`info` because an
+   * infrastructure resource's *lifecycle* state (running, stopped,
+   * pending) is a different axis from an *evaluation outcome*
+   * (success, warning, danger) — conflating them is exactly what
+   * produces "every module invents its own status colour." See
+   * docs/frontend/design-system/status-system.md for the full
+   * named-state → tone mapping (13 named states onto these 10 tones). */
+  --success: var(--green-600);
+  --success-foreground: var(--gray-50);
+  --warning: var(--amber-500);
+  --warning-foreground: var(--gray-950);
+  --danger: var(--red-600);
+  --danger-foreground: var(--gray-50);
+  --info: var(--blue-600);
+  --info-foreground: var(--gray-50);
+  --neutral: var(--gray-400);
+  --neutral-foreground: var(--gray-50);
+  --pending: var(--amber-400);
+  --pending-foreground: var(--gray-950);
+  --running: var(--cyan-500);
+  --running-foreground: var(--gray-50);
+  --stopped: var(--gray-500);
+  --stopped-foreground: var(--gray-50);
+  --degraded: var(--amber-600);
+  --degraded-foreground: var(--gray-50);
+  --unknown: var(--gray-300);
+  --unknown-foreground: var(--gray-800);
+
+  /* ---- Elevation (§9) — named shadow tiers instead of ad hoc `shadow-*`
+   * picks, so "how far off the page" stays consistent across features.
+   * Used sparingly — see docs/frontend/design-system/elevation.md on why
+   * most surfaces should use a border, not elevation, for separation. */
   --elevation-1: 0 1px 2px 0 oklch(0 0 0 / 0.04);
   --elevation-2: 0 2px 8px -2px oklch(0 0 0 / 0.08);
   --elevation-3: 0 8px 24px -4px oklch(0 0 0 / 0.12);
 
-  /* Motion (§17) — durations/easing kept short and few per §18's "avoid
-   * excessive animation." `prefers-reduced-motion` is honored at the
-   * component level (`motion-reduce:` utilities), not by zeroing these. */
+  /* ---- Motion (§10) — durations/easing kept short and few per §3's
+   * "minimal but meaningful motion." `prefers-reduced-motion` is
+   * honored at the component level (`motion-reduce:` utilities), not by
+   * zeroing these globally — see docs/frontend/design-system/motion.md. */
   --motion-duration-fast: 120ms;
   --motion-duration-base: 200ms;
   --motion-duration-slow: 320ms;
   --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --motion-ease-decelerate: cubic-bezier(0, 0, 0, 1);
+  --motion-ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
 
-  /* Z-index (§17) — a named scale so a future dropdown/modal/toast never
-   * has to guess a number relative to another feature it can't see. */
+  /* ---- Layer 3: Component tokens — kept to the few genuinely
+   * component-specific values that don't belong on the semantic layer. */
+  --focus-ring-width: 2px;
+  --border-width-hairline: 1px;
+  --border-width-emphasis: 2px;
+
+  /* Z-index (§4/§17) — a named scale so a future dropdown/modal/toast
+   * never has to guess a number relative to another feature it can't
+   * see. */
   --z-sticky: 10;
   --z-dropdown: 20;
   --z-overlay: 30;
@@ -64,28 +154,55 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.19 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --border: oklch(0.3 0 0);
-  --ring: oklch(0.6 0.02 260);
-  --muted: oklch(0.24 0 0);
-  --muted-foreground: oklch(0.65 0 0);
+  /* Dark mode is intentionally re-composed from the primitives, not a
+   * blanket invert (§6) — surfaces step *up* in lightness with depth
+   * (background darkest, elevated surfaces slightly lighter) as they do
+   * in light mode, borders are lightened rather than darkened so they
+   * stay visible against dark surfaces, and every status tone is
+   * re-picked for contrast against a dark background rather than reused
+   * as-is. */
+  --background: var(--gray-950);
+  --foreground: var(--gray-50);
+  --surface: var(--gray-900);
+  --surface-muted: var(--gray-800);
+  --surface-elevated: oklch(0.22 0.005 260);
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --border: var(--gray-700);
+  --border-muted: var(--gray-800);
+  --input: var(--gray-900);
+  --ring: var(--blue-400);
 
-  --primary: oklch(0.7 0.16 260);
-  --primary-foreground: oklch(0.145 0 0);
-  --secondary: oklch(0.27 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
+  --muted: var(--gray-800);
+  --muted-foreground: var(--gray-400);
 
-  --success: oklch(0.7 0.15 150);
-  --success-foreground: oklch(0.145 0 0);
-  --warning: oklch(0.8 0.16 85);
-  --warning-foreground: oklch(0.145 0 0);
-  --danger: oklch(0.65 0.2 25);
-  --danger-foreground: oklch(0.145 0 0);
-  --info: oklch(0.7 0.16 250);
-  --info-foreground: oklch(0.145 0 0);
+  --primary: var(--blue-400);
+  --primary-foreground: var(--gray-950);
+  --secondary: var(--gray-800);
+  --secondary-foreground: var(--gray-50);
+  --accent: var(--cyan-400);
+  --accent-foreground: var(--gray-950);
+
+  --success: var(--green-500);
+  --success-foreground: var(--gray-950);
+  --warning: var(--amber-400);
+  --warning-foreground: var(--gray-950);
+  --danger: var(--red-500);
+  --danger-foreground: var(--gray-950);
+  --info: var(--blue-400);
+  --info-foreground: var(--gray-950);
+  --neutral: var(--gray-500);
+  --neutral-foreground: var(--gray-50);
+  --pending: var(--amber-400);
+  --pending-foreground: var(--gray-950);
+  --running: var(--cyan-400);
+  --running-foreground: var(--gray-950);
+  --stopped: var(--gray-500);
+  --stopped-foreground: var(--gray-50);
+  --degraded: var(--amber-500);
+  --degraded-foreground: var(--gray-950);
+  --unknown: var(--gray-600);
+  --unknown-foreground: var(--gray-50);
 
   --elevation-1: 0 1px 2px 0 oklch(0 0 0 / 0.24);
   --elevation-2: 0 2px 8px -2px oklch(0 0 0 / 0.36);
@@ -95,9 +212,14 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-elevated: var(--surface-elevated);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-border: var(--border);
+  --color-border-muted: var(--border-muted);
+  --color-input: var(--input);
   --color-ring: var(--ring);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
@@ -105,6 +227,9 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
@@ -113,6 +238,18 @@
   --color-danger-foreground: var(--danger-foreground);
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
+  --color-neutral: var(--neutral);
+  --color-neutral-foreground: var(--neutral-foreground);
+  --color-pending: var(--pending);
+  --color-pending-foreground: var(--pending-foreground);
+  --color-running: var(--running);
+  --color-running-foreground: var(--running-foreground);
+  --color-stopped: var(--stopped);
+  --color-stopped-foreground: var(--stopped-foreground);
+  --color-degraded: var(--degraded);
+  --color-degraded-foreground: var(--degraded-foreground);
+  --color-unknown: var(--unknown);
+  --color-unknown-foreground: var(--unknown-foreground);
 
   --shadow-elevation-1: var(--elevation-1);
   --shadow-elevation-2: var(--elevation-2);
@@ -120,6 +257,56 @@
 
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
+
+  /* Named enter/exit/expand/collapse motion (§10) — every overlay
+   * component (Dialog, Drawer, Popover, Dropdown, Tooltip) references
+   * one of these by name rather than an inline keyframe, so "how a
+   * layer appears" stays consistent across all of them. Durations come
+   * from the tokens above, not restated here. */
+  --animate-dialog-in: dialog-in var(--motion-duration-base) var(--motion-ease-decelerate);
+  --animate-drawer-in: drawer-in var(--motion-duration-base) var(--motion-ease-decelerate);
+  --animate-overlay-in: overlay-in var(--motion-duration-fast) var(--motion-ease-decelerate);
+  --animate-collapse-expand: collapse-expand var(--motion-duration-base) var(--motion-ease-standard);
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes collapse-expand {
+  from {
+    grid-template-rows: 0fr;
+  }
+  to {
+    grid-template-rows: 1fr;
+  }
 }
 
 body {
@@ -129,9 +316,9 @@ body {
 
 /* Focus states (§17, §20) — one consistent visible-focus treatment,
  * matching the `focus-visible:ring-2 focus-visible:ring-ring` pattern
- * already used by interactive components (e.g. `Button`). Applying it
- * at the `:focus-visible` level (not `:focus`) avoids a visible ring on
- * mouse click while keeping it on keyboard navigation. */
+ * used by every interactive component. Applying it at the
+ * `:focus-visible` level (not `:focus`) avoids a visible ring on mouse
+ * click while keeping it on keyboard navigation. */
 :focus-visible {
   outline: 2px solid transparent;
   outline-offset: 2px;

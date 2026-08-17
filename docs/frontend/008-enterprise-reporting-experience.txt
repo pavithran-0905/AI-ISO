@@ -1,0 +1,1162 @@
+# FRONTEND PROMPT 008
+# Enterprise Reporting, Report Designer, Scheduling & Distribution Experience
+
+## ROLE
+
+Act as a Principal Product Designer, Enterprise Reporting UX Architect, Frontend Architect, Senior Next.js/React Engineer, Data Visualization Specialist, Accessibility Engineer, and Enterprise Document Management UX Specialist.
+
+Frontend Prompts 001–007 are complete.
+
+Use the existing:
+
+- frontend architecture
+- design system
+- application shell
+- authentication
+- permissions
+- Dashboard
+- Monitoring
+- Alerting
+- API client
+- routing
+- state/query architecture
+- documentation structure
+
+as the foundation.
+
+==================================================
+CRITICAL BACKEND V1 FREEZE
+==================================================
+
+AI-IOS Backend V1 is COMPLETE and FROZEN.
+
+THIS IS A FRONTEND-ONLY PROMPT.
+
+DO NOT:
+
+- modify backend source code
+- modify reporting-service
+- modify backend APIs
+- add backend endpoints
+- modify database schemas
+- modify migrations
+- modify authentication
+- modify RBAC
+- modify backend business logic
+- modify backend configuration
+- modify backend dependencies
+- change backend contracts
+
+If a required Reporting capability does not exist in V1:
+
+1. Document it.
+2. Do not fabricate it.
+3. Do not modify backend.
+4. Continue with supported V1 functionality.
+5. Record the limitation in:
+   docs/frontend/backend-v1-integration-limitations.md
+
+Backend modifications MUST remain ZERO.
+
+==================================================
+1. OBJECTIVE
+==================================================
+
+Build the production-grade AI-IOS Reporting experience.
+
+The Reporting module must allow authorized users to:
+
+- browse reports
+- view report details
+- create reports where V1 supports it
+- design/configure reports where V1 supports it
+- generate reports
+- preview reports
+- download reports
+- export reports
+- schedule reports
+- manage report distributions
+- inspect report history
+- access archived reports
+- use AI-generated narratives where V1 provides them
+
+The UX must be:
+
+- premium
+- enterprise-grade
+- highly usable
+- data-dense
+- document-oriented
+- accessible
+- responsive
+- reliable
+- predictable
+
+Do not create a generic document-management UI.
+
+==================================================
+2. INSPECT BACKEND V1
+==================================================
+
+Before implementation inspect the actual Reporting V1 service.
+
+Prompt 047 established the Reporting Service with:
+
+- report designer
+- rendering engine
+- scheduling
+- seven export formats
+- six distribution channels
+- immutable archive
+- AI narratives
+- analytics
+
+These capabilities must be verified against the current repository before implementation.
+
+Inspect:
+
+- actual API routes
+- request schemas
+- response schemas
+- report lifecycle
+- template lifecycle
+- generation lifecycle
+- export formats
+- scheduling
+- distribution
+- archive
+- sharing
+- retention
+- permissions
+- AI narrative support
+
+Do not rely only on this prompt.
+
+Use the actual Backend V1 implementation as source of truth.
+
+==================================================
+3. REPORTING INFORMATION ARCHITECTURE
+==================================================
+
+Create a user-centric structure.
+
+Recommended:
+
+Reporting
+├── Overview
+├── Reports
+├── Templates
+├── Designer
+├── Scheduled Reports
+├── Generated Reports
+└── Archive
+
+Only implement routes backed by V1 capabilities.
+
+==================================================
+4. REPORTING OVERVIEW
+==================================================
+
+Create the main Reporting page.
+
+Show real V1 information where available:
+
+- report count
+- recent reports
+- scheduled reports
+- recent generations
+- failed generations
+- archive status
+- favourite/recent reports if supported
+
+Do not fabricate metrics.
+
+==================================================
+5. REPORT LIST
+==================================================
+
+Create an enterprise report table.
+
+Potential fields:
+
+- Report name
+- Type
+- Status
+- Owner
+- Updated
+- Last generated
+- Schedule
+- Actions
+
+Only use fields actually available from V1.
+
+Support:
+
+- search
+- filtering
+- sorting
+- pagination
+- column visibility where useful
+- row actions
+- loading
+- empty
+- error
+
+==================================================
+6. REPORT DETAIL
+==================================================
+
+Create a report detail experience.
+
+Show where supported:
+
+- report metadata
+- status
+- owner
+- template
+- generation history
+- schedule
+- distribution
+- archive information
+- available exports
+- AI narrative
+- actions
+
+Use tabs only when they improve information organization.
+
+Avoid unnecessary tab proliferation.
+
+==================================================
+7. REPORT DESIGNER
+==================================================
+
+If Backend V1 supports report design/configuration:
+
+build the frontend designer.
+
+The designer must prioritize usability.
+
+Recommended structure:
+
+┌─────────────────────────────────────────────┐
+│ Report Name       Save      Preview  Export │
+├──────────────┬──────────────────────────────┤
+│ Configuration│ Report Canvas                │
+│ /Sections    │                              │
+│              │                              │
+├──────────────┴──────────────────────────────┤
+│ Validation / Status / Save State             │
+└─────────────────────────────────────────────┘
+
+Do not implement a fake drag-and-drop designer if the backend contract does not support it.
+
+Use actual report schema capabilities.
+
+==================================================
+8. REPORT CONFIGURATION
+==================================================
+
+Support actual V1 configuration:
+
+- report title
+- sections
+- data sources
+- filters
+- date range
+- grouping
+- sorting
+- formatting
+- narrative options
+- output settings
+
+Only expose supported fields.
+
+Do not invent configuration options.
+
+==================================================
+9. REPORT VALIDATION
+==================================================
+
+Before generation:
+
+show validation errors where supported by the frontend contract.
+
+Distinguish:
+
+- required configuration missing
+- invalid configuration
+- backend validation error
+- generation error
+
+Errors must be actionable.
+
+==================================================
+10. REPORT PREVIEW
+==================================================
+
+If V1 provides preview/generation capability:
+
+create a preview experience.
+
+Support:
+
+- loading
+- rendering
+- errors
+- page navigation where appropriate
+- zoom where appropriate
+- download/export actions
+
+Do not attempt to recreate server-side document rendering in the browser if the backend already provides it.
+
+==================================================
+11. EXPORT FORMATS
+==================================================
+
+Prompt 047 verified seven export formats.
+
+Verify the exact current V1 supported formats.
+
+Present them consistently.
+
+Examples may include:
+
+- PDF
+- CSV
+- XLSX
+- JSON
+- HTML
+- XML
+- other V1-supported formats
+
+Do not assume the exact list without checking the backend.
+
+Each export action must:
+
+- show loading
+- handle failure
+- confirm successful download
+- use the actual backend response
+
+==================================================
+12. DOWNLOAD UX
+==================================================
+
+Downloads must:
+
+- use the existing API client
+- handle binary responses correctly
+- show progress where possible
+- handle errors
+- avoid exposing internal URLs unnecessarily
+- use safe filenames
+
+Do not create fake download links.
+
+==================================================
+13. REPORT GENERATION
+==================================================
+
+Create generation workflow where V1 supports it.
+
+Flow:
+
+Configure
+↓
+Validate
+↓
+Generate
+↓
+Track status
+↓
+Preview/download/archive
+
+Generation states should use actual V1 statuses.
+
+Do not invent statuses.
+
+==================================================
+14. GENERATION HISTORY
+==================================================
+
+If V1 provides generation history:
+
+show:
+
+- generation ID
+- status
+- started
+- completed
+- duration where available
+- format
+- creator
+- failure reason where safe
+
+Do not expose internal stack traces.
+
+==================================================
+15. SCHEDULING
+==================================================
+
+If V1 supports report scheduling:
+
+create a scheduling UI.
+
+Support actual capabilities such as:
+
+- schedule
+- timezone
+- recurrence
+- start/end
+- enabled/disabled
+- distribution
+- destination
+
+Prompt 047 specifically verified timezone validation.
+
+Use actual supported timezone values.
+
+Do not invent timezone validation rules.
+
+==================================================
+16. SCHEDULE UX
+==================================================
+
+Provide:
+
+- schedule form
+- validation
+- next-run preview where backend supports it
+- enable/disable
+- edit
+- delete
+- confirmation
+
+Do not silently alter recurrence semantics.
+
+==================================================
+17. DISTRIBUTION
+==================================================
+
+If V1 supports multiple distribution channels:
+
+represent the actual supported channels.
+
+Prompt 047 established six distribution channels, but verify the current implementation.
+
+Provide:
+
+- channel selection
+- configuration
+- validation
+- test/preview if supported
+- failure feedback
+
+Do not expose credentials/secrets in the UI.
+
+==================================================
+18. SHARING
+==================================================
+
+If V1 supports share links:
+
+create the appropriate UI.
+
+Support:
+
+- create share link
+- expiration where supported
+- copy action
+- revoke where supported
+- status
+
+Do not expose private report data through client-generated fake URLs.
+
+==================================================
+19. ARCHIVE
+==================================================
+
+If V1 supports immutable report archive:
+
+create an archive experience.
+
+Show:
+
+- report
+- generation
+- archive timestamp
+- version
+- retention information where supported
+- download/export
+- immutable status
+
+Do not imply that an archive can be edited if the backend treats it as immutable.
+
+==================================================
+20. RETENTION UX
+==================================================
+
+If V1 enforces retention:
+
+represent retention state clearly.
+
+If a destructive purge is prevented by backend retention policy:
+
+show the backend-confirmed reason.
+
+Do not attempt to bypass retention from frontend.
+
+==================================================
+21. AI NARRATIVES
+==================================================
+
+If Reporting V1 exposes AI-generated narratives:
+
+show them as a distinct section.
+
+Clearly label:
+
+AI-generated narrative
+
+Do not present AI-generated text as human-authored fact.
+
+Support:
+
+- loading
+- generation state
+- unavailable
+- error
+
+Do not invent narrative content.
+
+==================================================
+22. AI NARRATIVE SAFETY
+==================================================
+
+Do not automatically treat AI narrative as authoritative.
+
+If appropriate, show:
+
+"AI-generated summary"
+
+and provide access to the underlying report data.
+
+Do not expose hidden model/system prompts.
+
+==================================================
+23. REPORT SEARCH
+==================================================
+
+Implement search only using actual V1-supported fields.
+
+Potential:
+
+- report name
+- owner
+- type
+- status
+
+Do not perform incomplete client-side search over paginated server data.
+
+==================================================
+24. REPORT FILTERS
+==================================================
+
+Use actual V1 fields.
+
+Possible:
+
+- status
+- type
+- owner
+- created date
+- updated date
+- schedule status
+
+Only implement supported filters.
+
+==================================================
+25. PERMISSION-AWARE REPORTING
+==================================================
+
+Use existing frontend permission architecture.
+
+Possible permissions:
+
+- view
+- create
+- edit
+- generate
+- export
+- schedule
+- distribute
+- archive
+- delete
+
+Only use permissions actually defined by V1.
+
+Frontend permissions control UX.
+
+Backend authorization remains authoritative.
+
+==================================================
+26. API ARCHITECTURE
+==================================================
+
+Use:
+
+Reporting Page
+↓
+Reporting Hooks
+↓
+Reporting API Module
+↓
+Shared API Client
+↓
+Backend V1
+
+Do NOT call HTTP directly from components.
+
+Separate:
+
+API models
+from
+UI models.
+
+==================================================
+27. QUERY ARCHITECTURE
+==================================================
+
+Use TanStack Query.
+
+Create query keys for:
+
+- report list
+- report detail
+- templates
+- generations
+- schedules
+- archive
+- analytics
+
+Use mutations for:
+
+- create
+- update
+- generate
+- schedule
+- distribute
+- archive
+- delete
+
+Only implement mutations supported by V1.
+
+==================================================
+28. CACHE INVALIDATION
+==================================================
+
+After mutations:
+
+- invalidate relevant list/detail queries
+- update UI only after backend confirmation
+- prevent stale generation state
+- handle concurrent edits where V1 supports versioning
+
+Do not invent optimistic updates for critical report operations.
+
+==================================================
+29. REPORT DESIGNER AUTOSAVE
+==================================================
+
+If autosave is implemented:
+
+- clearly show save state
+- prevent race conditions
+- use debouncing where appropriate
+- do not silently overwrite newer versions
+- handle save errors
+
+If V1 does not support autosave safely:
+
+use explicit Save.
+
+Do not invent collaborative editing.
+
+==================================================
+30. CONCURRENCY / VERSIONING
+==================================================
+
+Reporting V1 uses optimistic locking concepts.
+
+The frontend must respect the actual version/concurrency contract.
+
+If the backend reports a version conflict:
+
+show:
+
+"Your report changed elsewhere. Reload the latest version before continuing."
+
+Do not silently overwrite.
+
+==================================================
+31. LOADING STATES
+==================================================
+
+Use Prompt 002 loading primitives.
+
+Support:
+
+- report list
+- report detail
+- designer
+- preview
+- generation
+- schedule
+- distribution
+- archive
+
+Avoid full-screen loading when only one panel is loading.
+
+==================================================
+32. EMPTY STATES
+==================================================
+
+Examples:
+
+"No reports yet."
+
+"No scheduled reports."
+
+"No report templates available."
+
+"No archived reports match your filters."
+
+Make the next action clear where appropriate.
+
+==================================================
+33. ERROR STATES
+==================================================
+
+Support:
+
+- API failure
+- permission denied
+- invalid report
+- validation error
+- generation failure
+- export failure
+- schedule failure
+- distribution failure
+- archive failure
+- timeout
+
+Never expose backend stack traces.
+
+==================================================
+34. RESPONSIVE DESIGN
+==================================================
+
+Desktop:
+
+Full reporting workspace.
+
+Tablet:
+
+Reduced columns and responsive designer.
+
+Narrow viewport:
+
+Prioritize report information and actions.
+
+Designer should gracefully switch to an appropriate layout.
+
+Do not create unusable horizontal overflow.
+
+==================================================
+35. ACCESSIBILITY
+==================================================
+
+Target WCAG 2.2 AA.
+
+Ensure:
+
+- report tables keyboard accessible
+- designer controls labelled
+- form errors accessible
+- preview accessible
+- export controls labelled
+- dialogs manage focus
+- schedule controls accessible
+- status is not colour-only
+- generated content has appropriate semantics
+
+==================================================
+36. DASHBOARD INTEGRATION
+==================================================
+
+Where Dashboard contains report metrics:
+
+Dashboard
+→ Reporting
+
+Do not duplicate Reporting API logic in Dashboard.
+
+==================================================
+37. CROSS-MODULE INTEGRATION
+==================================================
+
+Where supported by V1:
+
+Monitoring
+→ Generate/View Report
+
+Alerting
+→ Generate/View Report
+
+Reporting
+→ underlying asset/monitoring/alert data
+
+Only create links backed by real identifiers/contracts.
+
+Do not fabricate relationships.
+
+==================================================
+38. USER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/user-guide/reporting.md
+
+Document:
+
+- reports
+- report detail
+- designer
+- preview
+- generation
+- exports
+- scheduling
+- distribution
+- archive
+- sharing
+- AI narratives
+- troubleshooting
+
+Only document implemented capabilities.
+
+==================================================
+39. DEVELOPER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/developer-guide/reporting.md
+
+Document:
+
+- feature architecture
+- API layer
+- query architecture
+- designer architecture
+- generation flow
+- download handling
+- scheduling
+- distribution
+- archive
+- concurrency
+- permission handling
+- error handling
+
+==================================================
+40. RFI / RFP
+==================================================
+
+Create:
+
+docs/frontend/rfi/reporting.md
+
+Document:
+
+- enterprise reporting
+- document generation
+- export capability
+- scheduling
+- distribution
+- archive
+- accessibility
+- responsive design
+- maintainability
+- permission model
+
+Clearly separate:
+
+Implemented V1
+
+from
+
+Unavailable/planned.
+
+==================================================
+41. BACKEND V1 LIMITATIONS
+==================================================
+
+Record any unsupported reporting capability in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Include:
+
+- capability
+- backend service
+- V1 availability
+- frontend impact
+- current handling
+
+DO NOT modify backend.
+
+==================================================
+42. TESTING
+==================================================
+
+Create meaningful tests for:
+
+### Reports
+
+- list
+- search
+- filters
+- pagination
+- detail
+
+### Designer
+
+- render
+- configuration
+- validation
+- save
+- error
+
+### Generation
+
+- start
+- loading
+- success
+- failure
+
+### Export
+
+- formats
+- download
+- failure
+
+### Scheduling
+
+- create
+- update
+- enable/disable
+- validation
+
+### Archive
+
+- rendering
+- retention state
+- download
+
+### Permissions
+
+- view
+- edit
+- generate
+- export
+- schedule
+
+### Accessibility
+
+- keyboard
+- focus
+- form labels
+- status
+
+==================================================
+43. E2E
+==================================================
+
+Where environment permits:
+
+- open Reporting
+- create/configure report where supported
+- preview
+- generate
+- export
+- schedule
+- open archive
+- navigate from Dashboard
+
+Use existing approved test setup.
+
+Do not invent credentials.
+
+Do not modify backend.
+
+==================================================
+44. DESIGN SYSTEM COMPLIANCE
+==================================================
+
+Use Prompt 002.
+
+Use existing Monitoring and Alerting patterns.
+
+Do not create a separate visual language.
+
+==================================================
+45. DEPENDENCY SAFETY
+==================================================
+
+Use existing dependencies.
+
+Do not add unnecessary document/viewer libraries.
+
+If a PDF/document preview library is genuinely required:
+
+- explain why
+- make the smallest change
+- inspect bundle impact
+- inspect lockfile
+- validate
+
+==================================================
+46. BACKEND FREEZE VERIFICATION
+==================================================
+
+Before completion:
+
+[ ] Backend source changes = 0
+[ ] Backend API changes = 0
+[ ] Database changes = 0
+[ ] Migration changes = 0
+[ ] Backend config changes = 0
+[ ] Backend dependency changes = 0
+
+==================================================
+47. VALIDATION
+==================================================
+
+Run:
+
+- typecheck
+- lint
+- unit tests
+- production build
+- applicable E2E tests
+
+Do not claim success without execution.
+
+==================================================
+48. GIT SAFETY
+==================================================
+
+Before commit:
+
+- inspect git status
+- inspect changed files
+- verify no secrets
+- verify no .env files
+- verify no credentials
+- verify no backend changes
+- inspect dependency changes
+- inspect lockfile changes
+
+==================================================
+49. COMMIT
+==================================================
+
+If validation passes:
+
+feat(frontend): implement enterprise reporting experience
+
+Push according to repository workflow.
+
+==================================================
+50. DEFINITION OF DONE
+==================================================
+
+[ ] Reporting Overview implemented.
+[ ] Report list implemented.
+[ ] Report detail implemented.
+[ ] Designer implemented where V1 supports it.
+[ ] Preview implemented where V1 supports it.
+[ ] Generation workflow implemented.
+[ ] Export workflow implemented.
+[ ] Scheduling implemented where V1 supports it.
+[ ] Distribution implemented where V1 supports it.
+[ ] Archive implemented where V1 supports it.
+[ ] Sharing implemented where V1 supports it.
+[ ] AI narrative presentation implemented where V1 supports it.
+[ ] Search/filter implemented where supported.
+[ ] Permissions implemented.
+[ ] Loading states implemented.
+[ ] Empty states implemented.
+[ ] Error states implemented.
+[ ] Concurrency/version handling implemented where applicable.
+[ ] Responsive design works.
+[ ] Accessibility requirements met.
+[ ] Dashboard integration works.
+[ ] User guide created.
+[ ] Developer guide created.
+[ ] RFI documentation created.
+[ ] Backend V1 remains untouched.
+[ ] No backend API changes.
+[ ] No database changes.
+[ ] No unnecessary dependencies.
+[ ] Typecheck passes.
+[ ] Lint passes.
+[ ] Tests pass.
+[ ] Production build passes.
+[ ] Applicable E2E tests pass.
+[ ] Git working tree is clean except explicitly pre-existing files.
+
+==================================================
+51. FINAL REPORT
+==================================================
+
+Provide:
+
+1. Reporting implementation summary
+2. Actual V1 APIs consumed
+3. Routes created
+4. Components created
+5. Designer capabilities
+6. Generation flow
+7. Export formats actually supported
+8. Scheduling implementation
+9. Distribution implementation
+10. Archive implementation
+11. AI narrative implementation
+12. Permission handling
+13. Concurrency handling
+14. Loading/empty/error handling
+15. Accessibility
+16. Responsive behaviour
+17. Dashboard integration
+18. User guide
+19. Developer guide
+20. RFI documentation
+21. Tests
+22. E2E tests
+23. Typecheck
+24. Lint
+25. Production build
+26. Dependency changes
+27. Lockfile changes
+28. Backend files changed — MUST BE ZERO
+29. Backend V1 integration limitations
+30. Git commit
+31. Known limitations
+32. Recommended next frontend prompt
+
+Do not modify the backend.
+
+Do not fabricate reporting capabilities.
+
+Proceed with implementation.

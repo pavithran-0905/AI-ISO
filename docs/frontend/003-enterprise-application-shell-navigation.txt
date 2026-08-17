@@ -1,0 +1,1064 @@
+# FRONTEND PROMPT 003
+# Enterprise Application Shell, Navigation & UX Framework
+
+## ROLE
+
+Act as a Principal Frontend Architect, Enterprise UX Architect, Product Designer, Information Architect, Senior React/Next.js Engineer, Accessibility Engineer, and Enterprise Application Shell Specialist.
+
+Frontend Prompt 001 and Prompt 002 are COMPLETE and must be treated as the existing frontend foundation.
+
+The AI-IOS Backend V1 is COMPLETE and FROZEN.
+
+==================================================
+CRITICAL BACKEND V1 FREEZE RULE
+==================================================
+
+This is a FRONTEND-ONLY prompt.
+
+DO NOT modify backend code.
+
+DO NOT refactor backend code.
+
+DO NOT add backend APIs.
+
+DO NOT change backend APIs.
+
+DO NOT change database schemas.
+
+DO NOT change database migrations.
+
+DO NOT change backend authentication.
+
+DO NOT change backend RBAC.
+
+DO NOT change backend business logic.
+
+DO NOT change backend configuration.
+
+DO NOT change backend service contracts.
+
+If a backend limitation is discovered:
+
+1. Document it as a Backend V1 Integration Limitation.
+2. Do not modify the backend.
+3. Continue frontend work using the existing backend contract.
+
+Backend changes require explicit authorization in a separate request.
+
+==================================================
+1. OBJECTIVE
+==================================================
+
+Build the enterprise application shell and navigation framework for AI-IOS.
+
+This prompt establishes the actual user experience framework in which all future AI-IOS modules will operate.
+
+The result must provide:
+
+- Consistent navigation
+- Clear information architecture
+- Premium enterprise UX
+- Fast operator workflows
+- Predictable page structure
+- Role-aware navigation
+- Permission-aware navigation
+- Responsive navigation
+- Global search foundation
+- Command palette foundation
+- Breadcrumb system
+- Page header system
+- Contextual action system
+- Notification area foundation
+- User/account area
+- Workspace-aware layout
+- Keyboard accessibility
+- Deep-link support
+- Error and loading boundaries
+
+Do NOT implement complete business feature pages in this prompt.
+
+==================================================
+2. EXISTING FRONTEND FOUNDATION
+==================================================
+
+Inspect and reuse:
+
+- apps/frontend
+- Prompt 001 routing foundation
+- route registry
+- route metadata
+- permission system
+- auth architecture
+- existing layouts
+- Prompt 002 design system
+- design tokens
+- reusable components
+- loading/error/empty primitives
+
+Do NOT recreate existing systems.
+
+Extend the existing implementation.
+
+==================================================
+3. APPLICATION INFORMATION ARCHITECTURE
+==================================================
+
+Create a canonical information architecture for the AI-IOS platform based on the actual backend feature matrix created in Prompt 001.
+
+Do not invent backend capabilities.
+
+Use the backend-feature matrix as the source for module names and capability mapping.
+
+Group frontend navigation into logical enterprise domains rather than exposing every backend service as a separate top-level navigation item.
+
+The navigation architecture should support categories such as:
+
+- Overview
+- Operations
+- Automation
+- Intelligence
+- Governance
+- Administration
+- Platform
+
+Only expose categories and modules supported by the actual backend capability matrix.
+
+If a capability is not implemented in V1:
+
+- do not present it as an active feature
+- mark it as planned internally where appropriate
+- do not create fake pages
+
+==================================================
+4. NAVIGATION PRINCIPLE
+==================================================
+
+The backend is service-oriented.
+
+The frontend must NOT mirror backend services one-to-one.
+
+Example:
+
+Backend:
+
+service A
+service B
+service C
+
+Frontend may present:
+
+Operations
+ ├── Monitoring
+ ├── Alerting
+ └── Reporting
+
+The frontend is organized around user workflows, not backend microservice boundaries.
+
+==================================================
+5. MAIN APPLICATION SHELL
+==================================================
+
+Implement the main authenticated application shell.
+
+Structure:
+
+┌──────────────────────────────────────────────┐
+│ Global Header                                 │
+├──────────────┬───────────────────────────────┤
+│ Primary      │ Breadcrumb                     │
+│ Navigation   ├───────────────────────────────┤
+│              │ Page Header                    │
+│              ├───────────────────────────────┤
+│              │ Contextual Actions             │
+│              │                               │
+│              │ Main Content                   │
+│              │                               │
+│              │                               │
+└──────────────┴───────────────────────────────┘
+
+The exact visual design must use Prompt 002 design tokens.
+
+Do not introduce a competing visual language.
+
+==================================================
+6. GLOBAL HEADER
+==================================================
+
+Create a reusable global header foundation supporting:
+
+- AI-IOS product identity
+- environment indicator where appropriate
+- global search
+- command palette trigger
+- notification trigger
+- help/documentation access
+- user/account menu
+
+Do not overload the header.
+
+Keep high-frequency actions immediately accessible.
+
+==================================================
+7. PRIMARY NAVIGATION
+==================================================
+
+Implement a collapsible enterprise sidebar.
+
+Support:
+
+Expanded:
+
+[Icon] Dashboard
+[Icon] Operations
+       Monitoring
+       Alerting
+       Reporting
+[Icon] Automation
+[Icon] Intelligence
+[Icon] Governance
+[Icon] Administration
+[Icon] Platform
+
+Collapsed:
+
+Icons only.
+
+The actual available modules must be derived from the backend-feature matrix.
+
+Do not invent unavailable features.
+
+==================================================
+8. NAVIGATION STATES
+==================================================
+
+Support:
+
+- default
+- hover
+- active
+- focus
+- disabled
+- expanded
+- collapsed
+- nested expanded
+- nested collapsed
+- permission-hidden
+
+Active navigation must be visually obvious without relying on colour alone.
+
+==================================================
+9. NAVIGATION DENSITY
+==================================================
+
+Enterprise operators may use the platform for long sessions.
+
+The navigation must:
+
+- remain compact
+- remain readable
+- avoid unnecessary vertical spacing
+- support nested groups
+- preserve hierarchy
+- avoid visual clutter
+
+Do not create oversized consumer-style navigation.
+
+==================================================
+10. COLLAPSED SIDEBAR
+==================================================
+
+When collapsed:
+
+- show icons
+- preserve accessible labels
+- provide tooltips
+- preserve active state
+- preserve keyboard navigation
+
+Do not hide essential information without an accessible alternative.
+
+Persist sidebar preference using the existing frontend client-state architecture.
+
+==================================================
+11. RESPONSIVE NAVIGATION
+==================================================
+
+Desktop:
+
+Persistent sidebar.
+
+Tablet:
+
+Collapsible/sidebar drawer behaviour.
+
+Narrow viewport:
+
+Navigation becomes an accessible drawer/sheet.
+
+Do not simply shrink the desktop sidebar.
+
+The main content must remain usable.
+
+==================================================
+12. BREADCRUMBS
+==================================================
+
+Create a reusable breadcrumb system.
+
+Example:
+
+Dashboard
+/
+Operations
+/
+Monitoring
+/
+Machine Details
+
+Breadcrumbs must derive from route metadata where practical.
+
+Do not duplicate breadcrumb definitions in every page.
+
+Support:
+
+- clickable parent segments
+- current page
+- truncation
+- accessible navigation semantics
+
+==================================================
+13. PAGE HEADER
+==================================================
+
+Create a reusable PageHeader pattern supporting:
+
+- eyebrow/context
+- title
+- description
+- breadcrumbs
+- status
+- primary action
+- secondary actions
+- overflow actions
+
+Example:
+
+Monitoring
+
+System health and infrastructure status
+
+[Filter] [Refresh] [Actions]
+
+Do not implement feature-specific content.
+
+Create the reusable framework only.
+
+==================================================
+14. CONTEXTUAL ACTIONS
+==================================================
+
+Create a standard action hierarchy:
+
+Primary
+Secondary
+Tertiary
+Destructive
+
+Rules:
+
+- one clear primary action where appropriate
+- secondary actions grouped logically
+- destructive actions require confirmation
+- actions must respect permissions
+- unavailable actions should not create confusing dead ends
+
+==================================================
+15. COMMAND PALETTE
+==================================================
+
+Build the foundation for a global command palette.
+
+It should eventually support:
+
+- navigation
+- search
+- common actions
+- recent pages
+- shortcuts
+- context-aware commands
+
+Prompt 003 only needs the framework and initial navigation commands.
+
+Do not invent backend actions.
+
+Keyboard shortcut:
+
+Ctrl/Cmd + K
+
+Use accessible dialog/command semantics.
+
+==================================================
+16. GLOBAL SEARCH
+==================================================
+
+Create the frontend search framework.
+
+Support:
+
+- search trigger
+- search input
+- recent searches
+- keyboard navigation
+- loading
+- empty
+- error
+- result grouping
+
+Do not invent a backend global-search API.
+
+If no V1 global-search API exists:
+
+implement the UI foundation only and document:
+
+Backend V1 Integration Limitation:
+Global backend search endpoint not available.
+
+Do not modify the backend.
+
+==================================================
+17. NOTIFICATION AREA
+==================================================
+
+Create the UI foundation for:
+
+- notification trigger
+- unread count
+- notification panel
+- read/unread state
+- empty state
+- loading state
+- error state
+
+Use existing backend contracts only.
+
+Do not create backend notification endpoints.
+
+If notification API details are unavailable, build the reusable UI contract and document the integration limitation.
+
+==================================================
+18. USER / ACCOUNT MENU
+==================================================
+
+Create the account menu foundation supporting:
+
+- current user identity
+- role information where available
+- organization/tenant information where available
+- preferences
+- theme
+- documentation/help
+- logout
+
+Do not invent user attributes that the backend does not expose.
+
+If role/organization claims remain unavailable from the existing V1 authentication contract, display only confirmed information.
+
+Do not modify authentication backend.
+
+==================================================
+19. PERMISSION-AWARE NAVIGATION
+==================================================
+
+Use the existing frontend permission architecture.
+
+Navigation visibility must support:
+
+- allowed
+- denied
+- hidden
+- disabled where appropriate
+
+Important:
+
+Frontend permission checks are UX controls.
+
+Backend authorization remains authoritative.
+
+Never describe frontend-hidden navigation as backend security.
+
+==================================================
+20. ROLE-AWARE UX
+==================================================
+
+Different users may have different permissions.
+
+Navigation must adapt accordingly.
+
+Do not create hardcoded role-specific navigation such as:
+
+if admin show X
+
+unless the existing permission architecture requires it.
+
+Prefer capability-based permission evaluation.
+
+==================================================
+21. TENANT / ORGANIZATION CONTEXT
+==================================================
+
+If the existing V1 contract exposes organization/tenant context:
+
+support it in the shell.
+
+If it does not:
+
+do not invent it.
+
+Document the limitation.
+
+Do not modify backend authentication to add missing claims.
+
+==================================================
+22. ROUTE METADATA
+==================================================
+
+Extend the existing route registry to support:
+
+- route ID
+- path
+- title
+- description
+- breadcrumb
+- navigation group
+- navigation label
+- icon
+- required permissions
+- feature identifier
+- visibility
+- layout
+- analytics identifier if already supported
+- external/internal status
+
+Keep route metadata centralized.
+
+Do not duplicate route definitions.
+
+==================================================
+23. PAGE TRANSITION
+==================================================
+
+Use subtle transitions only where they improve comprehension.
+
+Examples:
+
+- navigation transition
+- drawer
+- dialog
+- expandable sections
+- route loading
+
+Do not animate every page.
+
+Respect reduced-motion settings.
+
+==================================================
+24. LOADING BOUNDARIES
+==================================================
+
+Integrate Prompt 001 loading primitives.
+
+Support:
+
+- application loading
+- route loading
+- page loading
+- section loading
+- navigation loading
+- permission evaluation loading
+
+Use skeletons for known layout structures.
+
+Avoid indefinite blank screens.
+
+==================================================
+25. ERROR BOUNDARIES
+==================================================
+
+Integrate the existing error architecture.
+
+Support:
+
+- application error
+- route error
+- feature error
+- component error
+- unauthorized
+- forbidden
+- not found
+
+Each must have:
+
+- understandable message
+- recovery action
+- accessible presentation
+- developer diagnostics where appropriate
+
+Do not expose sensitive backend details.
+
+==================================================
+26. 404 PAGE
+==================================================
+
+Create a premium enterprise 404 experience.
+
+Must include:
+
+- clear message
+- current context where possible
+- return action
+- dashboard action
+- accessible structure
+
+Avoid decorative error pages.
+
+==================================================
+27. 401 / UNAUTHORIZED
+==================================================
+
+Create a reusable unauthorized state.
+
+Support:
+
+- session expired
+- authentication required
+- login action where appropriate
+- return-to destination
+
+Do not implement complete authentication UI unless required by existing architecture.
+
+==================================================
+28. 403 / FORBIDDEN
+==================================================
+
+Create a reusable forbidden state.
+
+Explain:
+
+- user does not have permission
+- what action can be taken
+- return navigation
+
+Do not expose security-sensitive permission details.
+
+==================================================
+29. FULLSCREEN WORKSPACE
+==================================================
+
+Use the existing fullscreen layout.
+
+Standard use cases may include:
+
+- topology
+- workflow canvas
+- log viewer
+- code editor
+- large data visualization
+
+Do not implement these feature pages yet.
+
+Ensure the layout contract is ready.
+
+==================================================
+30. SPLIT-PANE WORKSPACE
+==================================================
+
+Standardize split-pane layout behaviour.
+
+Support:
+
+- master/detail
+- list/detail
+- resizable divider
+- keyboard accessibility
+- responsive collapse
+- mobile fallback
+
+Use the existing Prompt 001 split-pane implementation.
+
+Fix only frontend issues found.
+
+==================================================
+31. WIZARD LAYOUT
+==================================================
+
+Standardize:
+
+- step indicator
+- current step
+- completed steps
+- validation state
+- previous/next
+- save/cancel
+- confirmation
+
+Do not implement business-specific wizard flows.
+
+==================================================
+32. SETTINGS LAYOUT
+==================================================
+
+Create the settings navigation framework.
+
+Support:
+
+- settings sidebar
+- section navigation
+- page title
+- save/cancel action area
+- unsaved-change handling
+
+Do not implement actual settings modules yet.
+
+==================================================
+33. KEYBOARD ACCESSIBILITY
+==================================================
+
+Implement keyboard behaviour for:
+
+- sidebar
+- nested navigation
+- command palette
+- global search
+- dialogs
+- drawers
+- breadcrumbs
+- account menu
+
+At minimum verify:
+
+Tab
+Shift+Tab
+Enter
+Space
+Escape
+Arrow keys where appropriate
+Ctrl/Cmd+K
+
+==================================================
+34. FOCUS MANAGEMENT
+==================================================
+
+Ensure:
+
+- focus moves into dialogs
+- focus returns after closing dialogs
+- drawer focus is managed
+- navigation remains keyboard accessible
+- route transitions do not leave focus lost
+
+Use accessible primitives rather than custom fragile focus code.
+
+==================================================
+35. MOBILE / TABLET BEHAVIOUR
+==================================================
+
+Test shell behaviour at:
+
+- desktop
+- laptop
+- tablet
+- narrow viewport
+
+Verify:
+
+- no horizontal overflow
+- navigation remains accessible
+- page headers do not break
+- actions remain reachable
+- tables can later use responsive patterns
+- dialogs remain usable
+
+==================================================
+36. DESIGN SYSTEM COMPLIANCE
+==================================================
+
+Every shell element must consume Prompt 002 tokens.
+
+Do not introduce:
+
+- arbitrary colours
+- arbitrary typography
+- arbitrary spacing
+- competing radius
+- competing shadows
+- competing icon libraries
+
+==================================================
+37. PERFORMANCE
+==================================================
+
+Navigation should remain fast.
+
+Use:
+
+- route lazy loading
+- dynamic imports where justified
+- lightweight shell rendering
+- memoization only where needed
+
+Do not load every future feature module into the initial bundle.
+
+==================================================
+38. TESTING
+==================================================
+
+Create tests for:
+
+- shell rendering
+- navigation
+- active route
+- nested navigation
+- collapsed sidebar
+- responsive navigation
+- permission filtering
+- breadcrumbs
+- command palette
+- keyboard shortcuts
+- 404
+- 401
+- 403
+- focus management
+- theme integration
+
+Use meaningful behaviour-based tests.
+
+==================================================
+39. USER GUIDE
+==================================================
+
+Create/update:
+
+docs/frontend/user-guide/navigation.md
+
+Document:
+
+- application shell
+- sidebar
+- navigation groups
+- collapsed navigation
+- breadcrumbs
+- page headers
+- global search
+- command palette
+- notifications
+- user menu
+- keyboard shortcuts
+- theme selection
+
+Document only functionality actually implemented.
+
+==================================================
+40. DEVELOPER GUIDE
+==================================================
+
+Create/update:
+
+docs/frontend/developer-guide/application-shell.md
+
+Document:
+
+- shell architecture
+- route metadata
+- navigation registry
+- permission filtering
+- layouts
+- breadcrumbs
+- command palette
+- global search
+- error boundaries
+- responsive behaviour
+- extension rules
+
+==================================================
+41. RFI / RFP DOCUMENTATION
+==================================================
+
+Create/update:
+
+docs/frontend/rfi/application-shell.md
+
+Document:
+
+- enterprise navigation
+- accessibility
+- responsive design
+- role-aware UX
+- permission-aware UX
+- modular architecture
+- maintainability
+- extensibility
+
+Clearly distinguish implemented and planned capabilities.
+
+==================================================
+42. BACKEND V1 FREEZE VERIFICATION
+==================================================
+
+Before completion:
+
+Verify:
+
+- no backend source files changed
+- no backend API files changed
+- no database files changed
+- no migrations changed
+- no backend configuration changed
+- no backend dependency changes
+
+If any backend file was changed accidentally:
+
+STOP.
+
+Revert only the accidental frontend-unrelated backend change.
+
+Do not modify backend intentionally.
+
+==================================================
+43. DEPENDENCY SAFETY
+==================================================
+
+Use existing dependencies wherever possible.
+
+Do not add a dependency just because a UI library could make implementation easier.
+
+Do not run destructive package installation commands.
+
+Do not regenerate pnpm-lock.yaml unnecessarily.
+
+If a dependency is genuinely required:
+
+- explain why
+- make the smallest change
+- inspect lockfile diff
+- validate
+
+==================================================
+44. VALIDATION
+==================================================
+
+Run:
+
+- typecheck
+- lint
+- unit tests
+- production build
+
+Run E2E smoke tests where the existing environment permits.
+
+Do not start modifying backend services simply because a backend is not running.
+
+If E2E requires backend availability and the backend is not running:
+
+document it as validation environment limitation.
+
+Do not modify backend.
+
+==================================================
+45. GIT SAFETY
+==================================================
+
+Before commit:
+
+- inspect git status
+- inspect changed files
+- ensure no secrets
+- ensure no .env files
+- ensure no generated junk
+- ensure no backend modifications
+- inspect dependency changes
+- inspect lockfile changes
+
+==================================================
+46. COMMIT
+==================================================
+
+If all applicable validation passes:
+
+feat(frontend): establish enterprise application shell and navigation
+
+Push according to repository workflow.
+
+==================================================
+47. DEFINITION OF DONE
+==================================================
+
+Prompt 003 is complete only when:
+
+[ ] Main application shell is implemented.
+[ ] Global header foundation exists.
+[ ] Primary navigation exists.
+[ ] Collapsed sidebar works.
+[ ] Responsive navigation works.
+[ ] Navigation is permission-aware.
+[ ] Route metadata is centralized.
+[ ] Breadcrumb system exists.
+[ ] Page header system exists.
+[ ] Contextual action framework exists.
+[ ] Command palette foundation exists.
+[ ] Global search foundation exists.
+[ ] Notification UI foundation exists.
+[ ] Account menu foundation exists.
+[ ] 404 exists.
+[ ] 401 state exists.
+[ ] 403 state exists.
+[ ] Existing layouts are integrated.
+[ ] Keyboard navigation works.
+[ ] Focus management works.
+[ ] Loading/error boundaries work.
+[ ] Prompt 002 design system is used.
+[ ] User guide updated.
+[ ] Developer guide updated.
+[ ] RFI documentation updated.
+[ ] Backend V1 remains completely untouched.
+[ ] No backend API changes.
+[ ] No database changes.
+[ ] No unnecessary dependency changes.
+[ ] Typecheck passes.
+[ ] Lint passes.
+[ ] Tests pass.
+[ ] Production build passes.
+
+==================================================
+48. FINAL REPORT
+==================================================
+
+Provide:
+
+1. Implementation summary
+2. Application shell structure
+3. Navigation architecture
+4. Route metadata changes
+5. Layouts integrated
+6. Command palette status
+7. Global search status
+8. Notification status
+9. Permission-aware navigation status
+10. Accessibility results
+11. Responsive results
+12. Documentation created
+13. Tests executed
+14. Typecheck result
+15. Lint result
+16. Build result
+17. E2E result
+18. Backend files changed — MUST be zero
+19. Backend V1 integration limitations
+20. Git commit
+21. Known limitations
+22. Recommended next frontend prompt
+
+Do not implement business feature pages.
+
+Do not modify the backend.
+
+Proceed with implementation.
