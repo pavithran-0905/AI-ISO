@@ -9116,3 +9116,79 @@ latency regression, recorded a `CRITICAL`-severity
 generated a matching `infrastructure`-category optimization
 recommendation -- all read directly from the container's own
 structured logs, with no manual trigger of any kind at any point.
+
+## Prompt 079 — Enterprise Production Hardening Framework
+
+`services/production-hardening-framework`, port 8050, Redis db 52,
+PostgreSQL `aiios_production_hardening_framework`. 16 tables across
+hardening profiles/runs/results, security findings, vulnerability
+scans, the SBOM catalog, signed artifacts, runtime protection events,
+compliance results, production certifications, operational readiness
+checks, disaster recovery checks, the certificate inventory, and
+statistics/reports/audit; 11 spec REST endpoints (all
+administrator-gated, only 2 of the 11 mutate anything); 8 domain
+events; 10 pure engines (a shared, event-free hardening-run job
+engine, risk-score-to-severity classification, severity-scaled
+vulnerability remediation SLA, compliance rate, certification risk
+scoring/grant-decision/expiration, operational readiness rate, RTO/RPO
+validation, certificate expiry window detection, runtime-protection
+critical-event classification, and equal-weighted four-way production
+readiness scoring); ~16 service classes across 13 files; 5
+leader-elected workers; 131 tests at 97.00% coverage against real
+PostgreSQL and Redis. Ruff, Black, MyPy all clean.
+
+**`GET /production-readiness` computes live from four signal sources
+and persists nothing**, since docs/079's own DATABASE TABLES section
+has no dedicated table for it -- the same "nothing to persist, compute
+at request time" shape `services/upgrade-framework-service`'s own
+dry-run simulate endpoint established (Prompt 076).
+`ProductionReadinessSweepWorker` reuses the identical computation
+(`app.services.production_readiness.ProductionReadinessService`) to
+decide when to publish `ProductionReady`, so the live API response and
+the autonomously-published event can never disagree about what
+"ready" means.
+
+**A new edge-trigger shape for a worker with no dedicated
+state-table to track a transition against**: `ProductionReadinessSweepWorker`
+cannot compare "was ready" vs "is ready" the way
+`CertificateExpirySweepWorker`'s persisted `is_expiring` flag does,
+because docs/079 names no readiness-state table at all. Instead it
+only re-evaluates (and only notifies) an organization when at least
+one of its four underlying signal sources (hardening result,
+compliance evaluation, operational readiness check, disaster recovery
+check) has a record newer than the lookback window -- "nothing new
+happened, nothing to re-announce," the same discipline 077's
+`FlakyTestDetectionWorker` and 078's `RegressionSweepWorker` already
+established, applied here to a worker whose own "state" is a
+computed aggregate rather than a column on one row. Worth reaching for
+this "re-evaluate only on fresh underlying signal" shape whenever a
+future service needs edge-triggering over a *computed* value with no
+natural place to persist its own previous state.
+
+**Certificate expiry and certification expiry needed two genuinely
+different edge-trigger mechanisms for what looks like the same
+problem.** `CertificateExpirySweepWorker` needed a new persisted
+`is_expiring` boolean column (following
+`services/installation-deployment-service`'s own certificate-status
+precedent from Prompt 075) because certificate rows are never
+re-created and their expiry approaches gradually with no natural
+"changed" signal to key off. `CertificationExpirySweepWorker` needed
+no new column at all: because the worker's own query only looks at
+`GRANTED`-status rows, the act of transitioning a row to `EXPIRED`
+*is* the edge-trigger -- it simply stops being visible to the next
+tick's query. Same class of problem, two different solutions, decided
+by whether the underlying entity already carries a status field whose
+transition can double as the trigger.
+
+**Live e2e confirmed three independent workers firing autonomously on
+the same tick boundary**: a hardening run was backdated, a certificate
+and an overdue certification were seeded via `psql`, all between two
+consecutive scheduled ticks (both logged `0`/`0`/`0` on the tick just
+before seeding). On the very next scheduled tick, sixty seconds later,
+the hardening run timeout sweep worker failed the backdated stuck run
+(`failed: 1`), the certificate expiry sweep worker flagged the
+newly-in-window certificate and persisted its `is_expiring` flag
+(`notified: 1`), and the certification expiry sweep worker expired the
+overdue certification (`expired: 1`) -- confirmed via the container's
+own structured logs and independent `psql` status checks, with no
+manual trigger of any kind.
