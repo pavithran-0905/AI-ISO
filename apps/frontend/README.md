@@ -37,7 +37,8 @@ auth/authorization/routing/error architecture). Summary:
 - `providers/` — React context providers composed once in `app/layout.tsx`.
 - `config/` — centralized environment access. See the note in
   `config/env.ts` about `NEXT_PUBLIC_*` variables requiring static
-  access for Next.js to inline them into the browser bundle.
+  access for Next.js to inline them into the browser bundle, and the
+  note below about how the repo-root `.env` actually reaches this app.
 
 ## Running Locally
 
@@ -52,6 +53,25 @@ Requires **`services/api-gateway-service`** running — not
 `docs/frontend/architecture/authentication.md`). Point
 `NEXT_PUBLIC_API_BASE_URL` at it (defaults to `http://localhost:8027`,
 see `.env.example` at the repository root).
+
+**How the repo-root `.env` reaches this app**: `apps/frontend` has no
+`.env` of its own — `dev`/`build`/`start` (see `package.json`) all run
+through `dotenv -e ../../.env --` (the `dotenv-cli` package). This
+isn't optional plumbing: Next.js's own env loading only looks in the
+directory it's run in, and — confirmed empirically — neither a
+`next.config.ts`-level `loadEnvConfig()` call nor the `env` config key
+reliably propagates a value into whatever process actually renders a
+page in `next dev`/`next build` (both were tried and both failed a
+live test: setting `NEXT_PUBLIC_APP_ENV=production` in the root `.env`
+had no effect on the `/design-system` gate under either approach, while
+the same value set directly as a shell env var worked immediately).
+`dotenv-cli` sidesteps this by making the root `.env`'s values *real*
+process environment variables before `next` even starts, which is the
+one thing every code path — dev server workers, the build compiler,
+`next start` — reliably inherits. If `../../.env` doesn't exist (e.g. a
+production container with real platform-injected env vars and no
+checked-in file), `dotenv-cli` passes through harmlessly rather than
+failing.
 
 ## Testing
 

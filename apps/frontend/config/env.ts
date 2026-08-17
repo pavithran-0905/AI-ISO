@@ -6,6 +6,12 @@
  * expression (not a dynamic/bracket lookup) — Next.js inlines them into the
  * browser bundle at build time via static analysis, so a dynamic lookup like
  * `process.env[name]` silently resolves to `undefined` on the client.
+ *
+ * These values come from the repo-root `.env`, loaded via `dotenv-cli`
+ * in this package's own `dev`/`build`/`start` scripts (`package.json`)
+ * — not from a `.env` in this directory, which doesn't exist. See the
+ * README's "How the repo-root `.env` reaches this app" section for why
+ * that's a real `dotenv-cli` wrapper and not a `next.config.ts` hook.
  */
 
 function withFallback(value: string | undefined, fallback: string): string {
