@@ -8969,3 +8969,79 @@ existing explicit rollback path take over.
   lifecycle in `upgrade_history`, with no manual trigger of any kind.
   All 5 workers were confirmed registered and leader-elected on the
   same run.
+
+## Prompt 077 — Enterprise Testing & Quality Assurance Framework
+
+`services/testing-quality-framework`, port 8048, Redis db 50,
+PostgreSQL `aiios_testing_quality_framework`. 19 tables across test
+suites/cases, environments/data sets/mock services, test runs/results,
+quality gates, coverage reports, performance/benchmark results,
+security/chaos results, synthetic checks/contract tests, pipeline
+results (a declared CI/CD seam), and statistics/reports/audit; 11 spec
+REST endpoints (all administrator-gated); 8 domain events; 10 pure
+engines (a shared, event-free pipeline-status engine reused by both
+test runs and pipeline results, quality gate evaluation, coverage
+drop/sufficiency, performance and benchmark regression detection,
+security/chaos classification, synthetic availability, a
+self-contained `SemanticVersion`-based contract compatibility
+classifier, and pass/failure/flaky-rate + equal-weighted quality-score
+analytics); ~17 service classes across 11 files; 5 leader-elected
+workers; 147 tests at 96.99% coverage against real PostgreSQL and
+Redis. Ruff, Black, MyPy all clean.
+
+**A pytest collection-glob collision, new to this build and specific
+to any service whose own domain vocabulary starts with "Test."**
+pytest's default `python_classes = Test*` glob matches this service's
+own `TestSuite`, `TestCase`, `TestRun`, `TestResult`,
+`TestEnvironmentType`, `TestType`, `TestRunStatus`, and even worker
+classes like `TestRunTimeoutSweepWorker` -- importing any of these
+under their real name into a test module makes pytest try to collect
+them as test classes, and since they all define `__init__`/`__new__`,
+that raises `PytestCollectionWarning: cannot collect test class...` --
+which this repo's `filterwarnings = ["error", ...]` turns into a hard
+collection-time error that aborts the *entire test file*, not just one
+test. First hit in `test_engines.py` (2 colliding enum imports), then
+far more extensively in `test_repositories.py` (7 colliding
+model/enum imports triggered `7 errors during collection,
+Interrupted`). Fix, applied consistently from the first draft in every
+subsequent test file (`test_services.py`, `test_workers.py`,
+`test_api.py`, `test_deps_and_notifications.py`): alias every
+`Test*`-prefixed name **at the import statement itself** (`from
+app.models.test_definitions import TestSuite as SuiteModel`, `from
+app.models.enums import TestRunStatus as RunStatusEnum`, `from
+app.workers.test_run_timeout_sweep import TestRunTimeoutSweepWorker as
+RunTimeoutSweepWorker`), never letting the bare original name bind
+into the module's namespace at all. A costly follow-up mistake while
+fixing the first occurrence: a blanket `replace_all` find/replace
+across a file that *also* contains the name's own import statement
+corrupts that import too (`from app.models.enums import TestRunStatus
+as RunStatus` became the nonsensical `... import RunStatus as
+RunStatus`, which fails at import time) -- caught by re-reading the
+file immediately after the replace. Aliasing at the import line from
+the start avoids ever needing a body-wide find/replace in the first
+place. **This is now persisted to cross-session memory** as a durable
+gotcha for any future AI-IOS service whose own domain vocabulary might
+collide with pytest's default collection glob (testing frameworks,
+QA tooling, anything with "Test" or "Spec" in its own nouns).
+
+**Caller-reported-outcome services, because this process cannot
+genuinely run a security scan, a chaos experiment, or a load test
+itself.** `SecurityService`, `ChaosService`, `SyntheticCheckService`,
+`ContractTestService`, `PerformanceService`, and `BenchmarkService` all
+record and classify a caller-supplied outcome through a pure engine
+rather than probing anything live -- the same shape 075's
+`PreflightService`/`VerificationService` and 076's health-gate
+`VerificationService` established for capabilities beyond a
+database/cache connection this process actually holds.
+
+**Live e2e confirmed the test run timeout sweep worker fires
+autonomously**: a test run was started through the real API, then its
+`started_at` was backdated 6 hours via `psql` directly against the
+running container's own database. The worker's very next scheduled
+tick -- watched in the container's own structured logs (`failed: 1`)
+-- flipped the run to `failed`, confirmed both in the logs and via a
+follow-up `psql` status check, with the *following* tick correctly
+logging `failed: 0` since the run was already handled. No manual
+trigger of any kind. All 5 workers were confirmed registered on the
+same run; RBAC confirmed (401 no token, 403 non-admin role, 200
+admin).

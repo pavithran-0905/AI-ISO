@@ -54,6 +54,7 @@ members = [
     "sdk-cli-service",
     "secrets-management-service",
     "shared-core",
+    "testing-quality-framework",
     "upgrade-framework-service",
     "user-management-service",
     "validation-service",
@@ -5895,6 +5896,57 @@ wheels = [
 fastapi = [
     { name = "fastapi" },
     { name = "python-multipart" },
+]
+
+[[package]]
+name = "testing-quality-framework"
+version = "0.1.0"
+source = { virtual = "services/testing-quality-framework" }
+dependencies = [
+    { name = "alembic" },
+    { name = "asyncpg" },
+    { name = "cryptography" },
+    { name = "fastapi" },
+    { name = "httpx" },
+    { name = "prometheus-fastapi-instrumentator" },
+    { name = "psycopg", extra = ["binary"] },
+    { name = "pydantic", extra = ["email"] },
+    { name = "pydantic-settings" },
+    { name = "shared-core" },
+    { name = "sqlalchemy", extra = ["asyncio"] },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "pytest-httpx" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "alembic", specifier = ">=1.13.0" },
+    { name = "asyncpg", specifier = ">=0.30.0" },
+    { name = "cryptography", specifier = ">=43.0.0" },
+    { name = "fastapi", specifier = ">=0.115.0" },
+    { name = "httpx", specifier = ">=0.27.0" },
+    { name = "prometheus-fastapi-instrumentator", specifier = ">=7.0.0" },
+    { name = "psycopg", extras = ["binary"], specifier = ">=3.2.0" },
+    { name = "pydantic", extras = ["email"], specifier = ">=2.9.0" },
+    { name = "pydantic-settings", specifier = ">=2.6.0" },
+    { name = "shared-core", editable = "packages/shared-core" },
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.36" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.32.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pytest", specifier = ">=8.3.0" },
+    { name = "pytest-asyncio", specifier = ">=0.24.0" },
+    { name = "pytest-cov", specifier = ">=6.0.0" },
+    { name = "pytest-httpx", specifier = ">=0.35.0" },
 ]
 
 [[package]]
