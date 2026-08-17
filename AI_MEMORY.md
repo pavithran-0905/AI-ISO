@@ -8693,3 +8693,102 @@ from the start.
   trigger of any kind. The statistics rollup worker was also confirmed
   firing every tick in the same run, idempotently updating (not
   duplicating) the same window's row each time.
+
+## Prompt 074 — Enterprise Developer Portal Service
+
+`services/developer-portal-service`, port 8045, Redis db 47, PostgreSQL
+`aiios_developer_portal`. 24 tables across developer profiles/sessions/
+bookmarks/favorites, documentation pages/versions/feedback, tutorials/
+learning paths, sample projects/code snippets, playground sessions/
+GraphQL queries/webhook tests, SDK downloads, plugin submissions/
+reviews, community posts/comments, knowledge articles/search index, and
+portal statistics/reports/audit; 12 spec REST endpoints; 9 domain
+events; 10 pure engines (a shared `ContentStatus` DRAFT/PUBLISHED/
+ARCHIVED transition table reused by 4 services rather than copied,
+session/playground staleness checks, constant-time webhook signatures
+plus response classification plus a minimal GraphQL well-formedness
+check, plugin submission lifecycle with an explicit `REJECTED ->
+SUBMITTED` resubmission path, checksum round-trip, community post
+lifecycle plus reputation scoring, weighted keyword-overlap search
+ranking, confidence-gated AI-assistant answer selection built directly
+on top of the search engine, tutorial duration summation plus
+difficulty-progression sanity checking, engagement/growth analytics
+math); 13 service classes; 5 leader-elected workers; 145 tests at
+97.56% coverage against real PostgreSQL and Redis. Ruff, Black, MyPy
+all clean.
+
+**No AI-IOS service in this codebase calls another over live HTTP --
+reconfirmed for a fourth time.** docs/074 names the AI Documentation
+Assistant as integrating Prompt 060 (AI Agent Platform) and Prompt 062
+(RAG Service); it is implemented instead as a self-contained heuristic
+keyword-overlap matcher (`app/assistant/engine.py`, reusing
+`app/search/engine.py`'s own scoring) rather than a live cross-service
+call. Every cross-service "integration" claimed by a docs/0xx spec in
+this build has turned out to be either an event/notification wiring or
+a reused conceptual pattern, never a runtime HTTP dependency -- worth
+treating as a settled fact about this codebase's actual architecture
+rather than re-verifying per prompt going forward.
+
+**Tutorial/AI-assistant completion tracking has no persisted table at
+all**, and this was decided by reading docs/074's own DATABASE TABLES
+section rather than assumed: "Progress Tracking" is named under LEARNING
+CENTER, but none of the 24 authoritative tables backs it.
+`TutorialCompletedEvent` and `AIAssistantUsedEvent` are published on a
+caller's own report/action with no row ever written -- documented
+directly in `app/tutorials/engine.py`'s own module docstring so a
+future reader hits the explanation at the point of the gap, not just in
+the README.
+
+**A new bug class was found and self-corrected three times in this
+build alone, before any test was written**: misusing an existing
+narrowly-scoped repository method (typically `list_for_user`) with
+degenerate arguments (`user_id=""`, `limit=0`) as if it meant "list
+everything for this organization." Every occurrence silently returned
+an empty result rather than raising, which is what makes it dangerous --
+no exception, no test failure from a naive test, just quietly wrong
+behavior (a notification firing on every event instead of only the
+first; a worker permanently blind to an entire organization's content;
+a statistics counter permanently stuck at zero regardless of real
+activity). Caught each time by reading the repository method's own
+signature against what the calling code actually needed, not by a test
+catching it after the fact. Fixed each time the same way: add a
+properly-scoped repository method (`exists_for_version`, `list_since`,
+`list_organization_ids`) rather than contorting an existing
+per-user-scoped method with empty/zero arguments. Worth checking for
+explicitly in any future service: when a call site passes an empty
+string or a zero limit to satisfy a required keyword argument it
+doesn't actually have a value for, that is very often a sign the
+repository is missing the method the call site actually needs.
+
+### Things worth remembering
+
+- Redis db assignment continues sequentially: ..., 46 (Prompt 073),
+  **47 (this prompt)**. Port assignment: ..., 8044 (Prompt 073), **8045
+  (this prompt)**.
+- **Live e2e confirmed the plugin submission staleness sweep worker
+  fires autonomously**: a plugin submission was moved to `VALIDATING`
+  and its `updated_at` backdated directly via `psql` against the
+  running container's own database (no route exists to backdate a
+  submission), and the very next scheduled tick -- watched in the
+  container's own structured logs and confirmed via `psql` against
+  `plugin_submissions`/`plugin_reviews` -- auto-rejected it with
+  `reviewer_id: "system:plugin-submission-staleness-sweep"` and no
+  manual trigger of any kind. All 5 workers (session expiry sweep,
+  playground session expiry sweep, search index rebuild, statistics
+  rollup, plugin submission staleness sweep) were confirmed registered
+  and leader-elected on the same run.
+- **Staleness is judged by `updated_at`, not by the original event
+  timestamp** (`PluginSubmissionRepository.list_stale_validating`
+  filters on `updated_at < before`, not `submitted_at`) -- a test that
+  backdates only the domain-meaningful timestamp (e.g. `submitted_at`)
+  without also backdating `updated_at` will not trigger a staleness
+  sweep worker, because the row was still just written and looks fresh
+  by the column the worker actually reads. Worth checking for on any
+  future "stuck too long in state X" sweep worker.
+- **Statistics rollup window semantics reconfirmed a fourth time**:
+  `[window_start, window_end)` is always the *last completed* hour
+  (`window_end` is always `now()` truncated down to the top of the
+  hour), never the current in-progress one -- a test or hand-check that
+  seeds activity with a bare `utcnow()` timestamp will land inside the
+  excluded in-progress hour and see a `0` count that looks like a bug
+  but is the worker behaving exactly as designed.
