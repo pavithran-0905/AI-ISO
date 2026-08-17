@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 describe("Button", () => {
   it("renders its children", () => {
@@ -31,5 +31,18 @@ describe("Button", () => {
     render(<Button disabled>Save</Button>);
 
     expect(screen.getByRole("button")).toBeDisabled();
+  });
+});
+
+describe("buttonVariants", () => {
+  it("produces the same classes a primary Button root would have", () => {
+    render(<Button>Save</Button>);
+    const rendered = screen.getByRole("button").className;
+
+    expect(buttonVariants("primary")).toBe(rendered);
+  });
+
+  it("merges a custom className", () => {
+    expect(buttonVariants("outline", "custom-class")).toContain("custom-class");
   });
 });

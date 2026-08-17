@@ -18,6 +18,23 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   danger: "bg-danger text-danger-foreground hover:bg-danger/90",
 };
 
+/**
+ * The shared visual style for `Button` — exported so a non-`<button>`
+ * element that must look like a button (typically Next's `<Link>`, for
+ * navigation that must be a real anchor for accessibility/middle-click)
+ * can reuse it without an `asChild`/Slot composition dependency the
+ * project doesn't otherwise need.
+ */
+export function buttonVariants(variant: ButtonVariant = "primary", className?: string): string {
+  return cn(
+    "inline-flex h-9 items-center justify-center gap-2 rounded-md px-4 text-sm font-medium transition-colors",
+    "disabled:pointer-events-none disabled:opacity-50",
+    "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+    VARIANT_CLASSES[variant],
+    className,
+  );
+}
+
 /** Standard button per docs/010_UI_UX_Design_System_Master.md.txt. */
 export function Button({
   variant = "primary",
@@ -29,13 +46,7 @@ export function Button({
 }: ButtonProps) {
   return (
     <button
-      className={cn(
-        "inline-flex h-9 items-center justify-center gap-2 rounded-md px-4 text-sm font-medium transition-colors",
-        "disabled:pointer-events-none disabled:opacity-50",
-        "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
-        VARIANT_CLASSES[variant],
-        className,
-      )}
+      className={buttonVariants(variant, className)}
       disabled={disabled || loading}
       aria-busy={loading}
       {...props}

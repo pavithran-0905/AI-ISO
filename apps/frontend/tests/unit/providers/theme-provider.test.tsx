@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ThemeProvider } from "@/providers/theme-provider";
-import { useThemeStore } from "@/stores/theme-store";
+import { useThemeStore } from "@/state/theme-store";
 
 describe("ThemeProvider", () => {
   afterEach(() => {

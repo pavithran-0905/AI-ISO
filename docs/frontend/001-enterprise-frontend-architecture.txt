@@ -1,0 +1,1127 @@
+# FRONTEND PROMPT 001
+# Enterprise Frontend Architecture, Project Foundation & Engineering Standards
+
+## ROLE
+
+Act as a Principal Frontend Architect, Enterprise UX Architect, Senior React/TypeScript Engineer, Design-System Architect, Accessibility Engineer, QA Architect, and Technical Documentation Lead.
+
+You are implementing the AI-IOS Enterprise Frontend.
+
+The AI-IOS backend Phase-1 prompt sequence 000–080 has been implemented and is running. The existing repository and its actual implementation are the source of truth.
+
+Your job in this prompt is to create the foundational frontend architecture.
+
+Do NOT invent backend capabilities.
+
+Do NOT invent API endpoints.
+
+Do NOT modify backend services unless a frontend-blocking issue is discovered and explicitly documented.
+
+Do NOT ask me to make architectural choices that are already specified in this prompt.
+
+Do NOT build business-module screens yet.
+
+Do NOT build Dashboard, Monitoring, Alerting, Reporting, AI Assistant, Automation, RBAC, Secrets, or other feature-specific pages in this prompt.
+
+This prompt establishes the foundation that all subsequent frontend prompts will use.
+
+==================================================
+1. PRIMARY OBJECTIVE
+==================================================
+
+Create a production-ready Enterprise Frontend application for AI-IOS.
+
+The frontend must be:
+
+- Enterprise-grade
+- Premium
+- User-friendly
+- Accessible
+- Responsive
+- Performant
+- Reusable
+- Maintainable
+- Type-safe
+- Testable
+- Scalable
+- Readable
+- Cleanly structured
+- Suitable for customer demonstrations
+- Suitable for RFI/RFP submissions
+- Suitable for enterprise architecture review
+- Ready for future backend phases
+
+The frontend must be an independent application inside the existing AI-IOS repository.
+
+==================================================
+2. MANDATORY REPOSITORY ARCHITECTURE
+==================================================
+
+The frontend MUST be created as a separate top-level application:
+
+AI-IOS/
+├── services/
+│   └── existing backend services
+│
+├── frontend/
+│   └── complete enterprise frontend application
+│
+├── packages/
+│   └── reusable frontend packages
+│
+├── docs/
+│   ├── existing backend documentation
+│   └── frontend documentation
+│
+└── existing infrastructure/configuration
+
+DO NOT put frontend code inside individual backend services.
+
+DO NOT create:
+
+services/monitoring/frontend/
+services/reporting/frontend/
+services/ai-assistant/frontend/
+
+etc.
+
+There must be ONE unified Enterprise Frontend application.
+
+==================================================
+3. FRONTEND APPLICATION LOCATION
+==================================================
+
+Create/use:
+
+frontend/
+
+The frontend must have its own:
+
+- package.json
+- TypeScript configuration
+- Vite configuration
+- source tree
+- tests
+- E2E tests
+- Storybook configuration
+- build configuration
+- environment configuration
+- README
+
+The frontend must remain independently buildable and independently testable.
+
+==================================================
+4. TECHNOLOGY BASELINE
+==================================================
+
+Use the following baseline unless the repository already contains an equivalent established implementation:
+
+- React 19
+- TypeScript
+- Vite
+- Tailwind CSS
+- shadcn/ui
+- Lucide React
+- React Router
+- TanStack Query
+- Zustand
+- React Hook Form
+- Zod
+- Vitest
+- React Testing Library
+- Playwright
+- Storybook
+
+Use the repository's existing package manager.
+
+Do NOT introduce another frontend framework.
+
+Do NOT introduce unnecessary dependencies.
+
+Before installing a package, inspect the existing repository and determine whether the capability already exists.
+
+==================================================
+5. MONOREPO / PACKAGE STRUCTURE
+==================================================
+
+Use the following conceptual structure:
+
+AI-IOS/
+│
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   ├── tests/
+│   ├── e2e/
+│   ├── .storybook/
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── tsconfig.json
+│   └── README.md
+│
+├── packages/
+│   ├── ui/
+│   ├── design-tokens/
+│   ├── icons/
+│   ├── charts/
+│   └── config/
+│
+└── docs/
+    └── frontend/
+
+Only create packages that are actually justified by the architecture.
+
+Do not create empty speculative packages just to fill directories.
+
+==================================================
+6. FRONTEND SOURCE STRUCTURE
+==================================================
+
+Create a clean feature-oriented structure:
+
+frontend/src/
+
+├── app/
+│   ├── providers/
+│   ├── router/
+│   ├── layouts/
+│   ├── guards/
+│   └── App.tsx
+│
+├── components/
+│   ├── ui/
+│   ├── data-display/
+│   ├── feedback/
+│   ├── forms/
+│   ├── navigation/
+│   └── overlays/
+│
+├── features/
+│   └── <feature>/
+│       ├── api/
+│       ├── components/
+│       ├── hooks/
+│       ├── pages/
+│       ├── schemas/
+│       ├── stores/
+│       ├── types/
+│       ├── utils/
+│       ├── tests/
+│       └── index.ts
+│
+├── api/
+├── auth/
+├── permissions/
+├── hooks/
+├── state/
+├── layouts/
+├── types/
+├── constants/
+├── config/
+├── utils/
+├── lib/
+├── styles/
+└── assets/
+
+Do not create duplicate structures.
+
+Do not create both:
+
+src/modules/
+and
+src/features/
+
+Choose the architecture specified here.
+
+==================================================
+7. ARCHITECTURAL LAYERING
+==================================================
+
+Enforce this dependency direction:
+
+Application
+    ↓
+Pages
+    ↓
+Features
+    ↓
+Shared Components
+    ↓
+Foundation / Utilities
+
+API access must follow:
+
+Page
+    ↓
+Feature Hook
+    ↓
+Feature API
+    ↓
+Shared API Client
+    ↓
+Backend
+
+Components MUST NOT directly call fetch(), axios, or another HTTP client.
+
+Generic components MUST NOT know about backend services.
+
+==================================================
+8. COMPONENT RULES
+==================================================
+
+Generic components must remain generic.
+
+Examples:
+
+Button
+Modal
+Drawer
+Table
+Tabs
+Badge
+Card
+FormField
+DatePicker
+CommandPalette
+Toast
+Tooltip
+Dropdown
+DataGrid
+
+These components must NOT contain business-specific logic.
+
+Business-specific UI belongs inside feature modules.
+
+==================================================
+9. FEATURE ARCHITECTURE
+==================================================
+
+Every business module must eventually follow the same pattern:
+
+features/
+└── monitoring/
+    ├── api/
+    ├── components/
+    ├── hooks/
+    ├── pages/
+    ├── schemas/
+    ├── stores/
+    ├── types/
+    ├── utils/
+    ├── tests/
+    └── index.ts
+
+Future modules must use the same architecture.
+
+Examples include:
+
+- dashboard
+- monitoring
+- alerting
+- reporting
+- ai-assistant
+- automation
+- users
+- rbac
+- secrets
+- projects
+- observability
+- analytics
+- audit
+- notifications
+- release-distribution
+
+Do not implement those feature pages in Prompt 001.
+
+==================================================
+10. API ARCHITECTURE
+==================================================
+
+Create a centralized API foundation.
+
+Required flow:
+
+UI
+ ↓
+Feature Hook
+ ↓
+Feature API Function
+ ↓
+Shared API Client
+ ↓
+HTTP
+ ↓
+Backend Service
+
+The shared API client must provide architecture for:
+
+- base URL configuration
+- authentication
+- request headers
+- correlation/request IDs
+- timeout
+- cancellation
+- response parsing
+- error normalization
+- retry policy
+- HTTP status handling
+
+Do NOT hardcode backend URLs throughout the codebase.
+
+Use environment-based configuration.
+
+==================================================
+11. SERVER STATE
+==================================================
+
+Use TanStack Query for server state.
+
+Examples:
+
+- backend records
+- lists
+- detail data
+- API responses
+- pagination
+- filters
+- mutations
+- cache
+- refetching
+
+Do NOT duplicate server state into Zustand unless there is a documented reason.
+
+==================================================
+12. CLIENT STATE
+==================================================
+
+Use Zustand only for actual client/application state.
+
+Examples:
+
+- sidebar state
+- command palette
+- UI preferences
+- temporary selections
+- workspace state
+- persisted UI preferences
+
+Every Zustand store must have a clear responsibility.
+
+Do not create one giant global store.
+
+==================================================
+13. AUTHENTICATION ARCHITECTURE
+==================================================
+
+Establish the foundation for:
+
+- login
+- logout
+- session restoration
+- token lifecycle
+- token expiration
+- unauthorized state
+- protected routes
+- public routes
+
+Do NOT build the complete login UI yet.
+
+The backend remains authoritative for authentication.
+
+Do not store sensitive credentials unnecessarily in browser storage.
+
+Document the chosen session/token architecture based on the actual backend implementation.
+
+==================================================
+14. AUTHORIZATION / RBAC
+==================================================
+
+Create a centralized frontend permission architecture.
+
+Support:
+
+- route-level permission
+- page-level permission
+- component-level permission
+- action-level permission
+
+Example conceptual model:
+
+User
+ ↓
+Organization/Tenant
+ ↓
+Role
+ ↓
+Permissions
+ ↓
+Feature Access
+ ↓
+Action Access
+
+Frontend authorization is for UX and access control presentation.
+
+The backend remains the final security authority.
+
+Never claim that hiding a button provides backend security.
+
+==================================================
+15. ROUTING
+==================================================
+
+Create a centralized route architecture.
+
+Support:
+
+- public routes
+- protected routes
+- permission-protected routes
+- lazy-loaded feature routes
+- 404
+- unauthorized
+- forbidden
+- loading boundaries
+
+Route metadata should support:
+
+- title
+- breadcrumb
+- permissions
+- feature
+- navigation visibility
+
+Navigation must derive from the same route/permission model wherever practical.
+
+Do not duplicate route definitions unnecessarily.
+
+==================================================
+16. LAYOUTS
+==================================================
+
+Establish reusable layouts:
+
+1. Authentication Layout
+2. Main Enterprise Application Layout
+3. Fullscreen Workspace Layout
+4. Split-Pane Workspace Layout
+5. Wizard Layout
+6. Settings Layout
+
+The Main Enterprise Layout must support:
+
+- primary navigation
+- secondary navigation where required
+- breadcrumbs
+- page header
+- page actions
+- global search
+- command palette
+- notification area
+- user menu
+- content area
+- responsive navigation
+
+Do not implement the final visual design yet.
+
+==================================================
+17. DESIGN SYSTEM FOUNDATION
+==================================================
+
+Create the architecture for a premium enterprise design system.
+
+Token categories:
+
+- colors
+- semantic colors
+- typography
+- spacing
+- radius
+- borders
+- shadows
+- elevation
+- motion
+- breakpoints
+- z-index
+- focus states
+- status states
+
+Support:
+
+- Light Theme
+- Dark Theme
+
+The system must be based on semantic tokens rather than arbitrary values.
+
+Do not scatter raw color values throughout feature code.
+
+Do not create the final complete design system in this prompt.
+
+That will be handled by later frontend prompts.
+
+==================================================
+18. ENTERPRISE UX PRINCIPLES
+==================================================
+
+The product must feel:
+
+- premium
+- professional
+- calm
+- technically sophisticated
+- highly readable
+- information-dense
+- uncluttered
+- predictable
+- efficient for operators
+
+Prioritize:
+
+- visual hierarchy
+- scanability
+- clear primary actions
+- clear secondary actions
+- contextual information
+- progressive disclosure
+- consistent terminology
+- predictable navigation
+- clear system status
+
+Avoid:
+
+- excessive gradients
+- excessive animation
+- decorative UI
+- unnecessary card nesting
+- dashboard clutter
+- inconsistent spacing
+- inconsistent terminology
+- excessive rounded containers
+- consumer-style visual noise
+
+==================================================
+19. LOADING / EMPTY / ERROR STATES
+==================================================
+
+Every future feature must support:
+
+Loading
+Skeleton
+Empty
+Success
+Error
+Unauthorized
+Forbidden
+Offline/Network Failure
+Partial Data
+Retry
+
+Establish reusable primitives for these states.
+
+Do not allow every module to invent its own loading/error UI.
+
+==================================================
+20. ACCESSIBILITY
+==================================================
+
+Target WCAG 2.2 AA.
+
+Establish standards for:
+
+- keyboard navigation
+- focus management
+- focus visibility
+- semantic HTML
+- ARIA
+- colour contrast
+- screen readers
+- reduced motion
+- form errors
+- dialogs
+- tables
+- charts
+- status announcements
+
+Accessibility is a foundation requirement.
+
+Do not postpone accessibility until final QA.
+
+==================================================
+21. RESPONSIVE DESIGN
+==================================================
+
+Primary target:
+
+Enterprise desktop/laptop.
+
+Also support:
+
+- tablet
+- smaller viewport fallback
+
+Do not simply shrink desktop layouts.
+
+Define architecture for:
+
+- navigation collapse
+- responsive tables
+- filter drawers
+- responsive forms
+- modal behaviour
+- responsive grids
+- chart behaviour
+- split-pane fallback
+
+==================================================
+22. PERFORMANCE
+==================================================
+
+Establish architecture for:
+
+- route-level lazy loading
+- code splitting
+- component lazy loading where justified
+- virtualization for large datasets
+- efficient TanStack Query caching
+- memoization only where justified
+- avoiding unnecessary renders
+- bundle analysis
+- image optimization
+- error boundaries
+
+Do not introduce premature optimization.
+
+Measure before adding complex optimization.
+
+==================================================
+23. CODE QUALITY
+==================================================
+
+Use:
+
+- strict TypeScript
+- linting
+- formatting
+- import ordering
+- unused import detection
+- naming conventions
+- clear file naming
+- component naming
+- hook naming
+- test naming
+
+Rules:
+
+- avoid any
+- no unnecessary @ts-ignore
+- no dead code
+- no unused dependencies
+- no duplicated business logic
+- no magic constants without explanation
+
+==================================================
+24. TESTING FOUNDATION
+==================================================
+
+Establish:
+
+Unit Tests
+Component Tests
+Integration Tests
+E2E Tests
+Accessibility Tests
+Visual Regression strategy
+
+Use:
+
+- Vitest
+- React Testing Library
+- Playwright
+- Storybook testing where appropriate
+
+Tests must prioritize behaviour rather than implementation details.
+
+==================================================
+25. STORYBOOK
+==================================================
+
+Establish Storybook architecture for reusable UI components.
+
+Every reusable component created in later prompts should have:
+
+- component implementation
+- types
+- tests
+- Storybook story where appropriate
+- accessibility validation
+
+Do not create unnecessary stories for purely internal implementation details.
+
+==================================================
+26. BACKEND FEATURE INVENTORY
+==================================================
+
+Before implementing the frontend architecture, inspect the actual backend repository and documentation.
+
+Create:
+
+docs/frontend/backend-feature-matrix.md
+
+For every backend Prompt 000–080, identify where evidence exists for:
+
+- prompt number
+- service name
+- service location
+- port
+- major capability
+- API base path
+- frontend feature/module
+- expected pages
+- expected reusable UI
+- permission requirements
+- backend dependencies
+- current implementation status
+
+Use:
+
+IMPLEMENTED
+PARTIALLY IMPLEMENTED
+PLANNED
+UNKNOWN — VERIFY
+
+Never invent an endpoint.
+
+Never infer a feature simply because its name suggests it exists.
+
+==================================================
+27. DOCUMENTATION
+==================================================
+
+Create:
+
+docs/frontend/
+
+├── README.md
+│
+├── architecture/
+│   ├── frontend-architecture.md
+│   ├── folder-structure.md
+│   ├── dependency-boundaries.md
+│   ├── api-architecture.md
+│   ├── state-management.md
+│   ├── authentication.md
+│   ├── authorization.md
+│   ├── routing.md
+│   └── error-handling.md
+│
+├── standards/
+│   ├── coding-standards.md
+│   ├── naming-conventions.md
+│   ├── component-guidelines.md
+│   ├── accessibility.md
+│   ├── responsive-design.md
+│   ├── performance.md
+│   └── testing.md
+│
+├── user-guide/
+│   └── README.md
+│
+├── developer-guide/
+│   └── README.md
+│
+└── rfi/
+    └── README.md
+
+Do not write fake feature documentation.
+
+Only document capabilities confirmed by the repository.
+
+==================================================
+28. USER GUIDE FOUNDATION
+==================================================
+
+Create the structure for future user documentation.
+
+It should eventually support:
+
+- Getting Started
+- Navigation
+- Dashboard
+- Monitoring
+- Alerting
+- Reporting
+- AI Assistant
+- Automation
+- Projects
+- Users
+- RBAC
+- Secrets
+- Observability
+- Analytics
+- Audit
+- Notifications
+- Settings
+- Release & Distribution
+- Troubleshooting
+- FAQ
+
+Prompt 001 only establishes the structure.
+
+Feature-specific user instructions will be written when those features are implemented.
+
+==================================================
+29. RFI / RFP DOCUMENTATION FOUNDATION
+==================================================
+
+Create the structure for:
+
+docs/frontend/rfi/
+
+Include documentation areas for:
+
+- frontend architecture
+- technology stack
+- UX principles
+- design system
+- accessibility
+- security
+- scalability
+- maintainability
+- testing
+- performance
+- responsive design
+- future extensibility
+
+Clearly separate:
+
+IMPLEMENTED
+from
+PLANNED
+
+Never claim future functionality as currently available.
+
+==================================================
+30. BACKEND INTEGRATION RULE
+==================================================
+
+The frontend must consume backend APIs.
+
+Do not duplicate backend business logic inside the frontend.
+
+Do not implement:
+
+- database access
+- database models
+- backend authentication logic
+- backend authorization logic
+- backend business engines
+
+Frontend may contain:
+
+- presentation logic
+- client-side validation
+- UX state
+- API adapters
+- permission presentation
+- data formatting
+
+Backend remains the source of truth for business operations.
+
+==================================================
+31. DOCKER / DEPLOYMENT
+==================================================
+
+If the existing AI-IOS repository has a Docker deployment pattern, inspect it and establish the frontend deployment architecture consistently.
+
+The frontend must eventually support:
+
+- development
+- test
+- production build
+- containerized deployment where required
+
+Do not break existing backend Docker configuration.
+
+Do not modify unrelated backend deployment files.
+
+==================================================
+32. ENVIRONMENT CONFIGURATION
+==================================================
+
+Create a typed environment configuration strategy.
+
+Support at minimum:
+
+- application environment
+- frontend API base configuration
+- feature flags where required
+- build metadata
+
+Never hardcode production URLs.
+
+Never commit secrets.
+
+Never place backend credentials in frontend code.
+
+==================================================
+33. IMPLEMENTATION ORDER
+==================================================
+
+Implement in this exact order:
+
+1. Inspect repository.
+2. Inspect existing frontend, if any.
+3. Inspect backend architecture.
+4. Inspect package manager/workspace configuration.
+5. Decide exact integration with existing repository.
+6. Create /frontend application foundation.
+7. Create shared package structure only where justified.
+8. Configure TypeScript.
+9. Configure Vite.
+10. Configure styling foundation.
+11. Configure routing.
+12. Configure providers.
+13. Configure API foundation.
+14. Configure query/server-state foundation.
+15. Configure client-state foundation.
+16. Configure auth architecture.
+17. Configure permissions architecture.
+18. Configure error handling.
+19. Configure testing.
+20. Configure Storybook if compatible.
+21. Create documentation.
+22. Create backend-feature matrix.
+23. Validate build and tests.
+24. Review the resulting architecture for duplication and unnecessary complexity.
+
+==================================================
+34. DO NOT IMPLEMENT BUSINESS UI
+==================================================
+
+This prompt must NOT implement:
+
+- Dashboard screen
+- Monitoring screen
+- Alerting screen
+- Reporting screen
+- AI Assistant screen
+- Automation screen
+- RBAC screen
+- Secrets screen
+- User management screen
+- Project management screen
+- Release management screen
+- Analytics screen
+- Audit screen
+
+Only foundation architecture is required.
+
+==================================================
+35. VALIDATION COMMANDS
+==================================================
+
+Use the actual package manager from the repository.
+
+Run the equivalent of:
+
+- dependency installation
+- typecheck
+- lint
+- unit tests
+- production build
+
+If Storybook is configured:
+
+- Storybook build
+
+If Playwright infrastructure is created:
+
+- run the available smoke E2E test
+
+Do not claim a command passed unless it was actually executed.
+
+==================================================
+36. FINAL ARCHITECTURE AUDIT
+==================================================
+
+Before declaring Prompt 001 complete, verify:
+
+[ ] /frontend exists as an independent application.
+[ ] Frontend is not embedded inside backend services.
+[ ] Shared packages are separated appropriately.
+[ ] Feature architecture is defined.
+[ ] Routing foundation exists.
+[ ] API foundation exists.
+[ ] Server state architecture exists.
+[ ] Client state architecture exists.
+[ ] Authentication architecture exists.
+[ ] Authorization architecture exists.
+[ ] Error architecture exists.
+[ ] Design token foundation exists.
+[ ] Accessibility foundation exists.
+[ ] Responsive architecture exists.
+[ ] Testing foundation exists.
+[ ] Storybook foundation exists if compatible.
+[ ] Documentation exists.
+[ ] Backend feature matrix exists.
+[ ] User guide foundation exists.
+[ ] RFI/RFP foundation exists.
+[ ] No fake APIs were invented.
+[ ] No fake backend capabilities were documented.
+[ ] TypeScript passes.
+[ ] Lint passes.
+[ ] Tests pass.
+[ ] Production build passes.
+[ ] No critical known issues remain.
+
+==================================================
+37. GIT / DELIVERY
+==================================================
+
+Before committing:
+
+- inspect git status
+- inspect changed files
+- ensure no secrets
+- ensure no .env files are committed
+- ensure no generated junk is committed
+- ensure no backend files were accidentally modified
+- ensure only intended frontend foundation changes are staged
+
+Create a clear commit message:
+
+feat(frontend): establish enterprise frontend foundation
+
+Push only if the repository workflow and existing project convention require it.
+
+==================================================
+38. FINAL REPORT
+==================================================
+
+At the end provide:
+
+1. Implementation summary
+2. Exact frontend structure created
+3. Files created
+4. Files modified
+5. Dependencies added
+6. Backend services inspected
+7. Backend-feature matrix status
+8. Architecture decisions implemented
+9. Documentation created
+10. Tests executed
+11. Test results
+12. Typecheck result
+13. Lint result
+14. Production build result
+15. Storybook result, if applicable
+16. Known limitations
+17. Any backend integration blockers
+18. Recommended next prompt
+
+Do not ask me to make decisions that are already specified here.
+
+Do not stop at documentation if implementation is required.
+
+Do not implement future feature screens.
+
+Proceed with the implementation now.

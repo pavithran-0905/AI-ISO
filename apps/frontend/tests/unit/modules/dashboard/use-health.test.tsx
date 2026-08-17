@@ -19,6 +19,7 @@ describe("useGatewayHealth", () => {
       "fetch",
       vi.fn().mockResolvedValue({
         status: 200,
+        ok: true,
         json: () =>
           Promise.resolve({
             success: true,

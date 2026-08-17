@@ -12,7 +12,10 @@ function withFallback(value: string | undefined, fallback: string): string {
   return value && value.length > 0 ? value : fallback;
 }
 
+/** Falls back to `services/api-gateway-service`'s own default port — the
+ * real API entry point, not `services/gateway` (a separate, unrelated
+ * health-only stub on 8000). See docs/frontend/architecture/authentication.md. */
 export const env = {
-  apiBaseUrl: withFallback(process.env.NEXT_PUBLIC_API_BASE_URL, "http://localhost:8000"),
+  apiBaseUrl: withFallback(process.env.NEXT_PUBLIC_API_BASE_URL, "http://localhost:8027"),
   appEnv: withFallback(process.env.NEXT_PUBLIC_APP_ENV, "development"),
 } as const;

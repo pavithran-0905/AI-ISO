@@ -1,9 +1,18 @@
 @import "tailwindcss";
 
 /*
- * Design tokens per docs/010_UI_UX_Design_System_Master.md.txt.
- * Components must reference these tokens (via Tailwind utility classes
- * mapped below) — never hardcode colors.
+ * Design tokens per docs/010_UI_UX_Design_System_Master.md.txt and
+ * docs/frontend Prompt 001 §17. Components must reference these tokens
+ * (via Tailwind utility classes mapped below) — never hardcode colors,
+ * durations, or z-index values.
+ *
+ * Categories not defined here (spacing, radius, borders, shadows,
+ * breakpoints) are deliberately left as Tailwind CSS v4's own default
+ * scale rather than re-invented: that scale is already semantic (a
+ * fixed rem-based progression, not arbitrary values), and docs/010
+ * names no enterprise-specific overrides for them. Elevation, motion,
+ * z-index, and status/focus states below ARE enterprise-specific and
+ * have no Tailwind default, so they're defined explicitly.
  */
 :root {
   --background: oklch(1 0 0);
@@ -20,10 +29,38 @@
   --secondary: oklch(0.94 0 0);
   --secondary-foreground: oklch(0.2 0 0);
 
+  /* Status states (§17) — every semantic outcome a feature can report. */
   --success: oklch(0.55 0.14 150);
+  --success-foreground: oklch(0.985 0 0);
   --warning: oklch(0.75 0.16 80);
+  --warning-foreground: oklch(0.145 0 0);
   --danger: oklch(0.55 0.2 25);
   --danger-foreground: oklch(0.985 0 0);
+  --info: oklch(0.55 0.18 250);
+  --info-foreground: oklch(0.985 0 0);
+
+  /* Elevation (§17) — named shadow tiers instead of ad hoc `shadow-*`
+   * picks, so "how far off the page" stays consistent across features. */
+  --elevation-1: 0 1px 2px 0 oklch(0 0 0 / 0.04);
+  --elevation-2: 0 2px 8px -2px oklch(0 0 0 / 0.08);
+  --elevation-3: 0 8px 24px -4px oklch(0 0 0 / 0.12);
+
+  /* Motion (§17) — durations/easing kept short and few per §18's "avoid
+   * excessive animation." `prefers-reduced-motion` is honored at the
+   * component level (`motion-reduce:` utilities), not by zeroing these. */
+  --motion-duration-fast: 120ms;
+  --motion-duration-base: 200ms;
+  --motion-duration-slow: 320ms;
+  --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Z-index (§17) — a named scale so a future dropdown/modal/toast never
+   * has to guess a number relative to another feature it can't see. */
+  --z-sticky: 10;
+  --z-dropdown: 20;
+  --z-overlay: 30;
+  --z-modal: 40;
+  --z-toast: 50;
+  --z-tooltip: 60;
 }
 
 .dark {
@@ -42,9 +79,17 @@
   --secondary-foreground: oklch(0.985 0 0);
 
   --success: oklch(0.7 0.15 150);
+  --success-foreground: oklch(0.145 0 0);
   --warning: oklch(0.8 0.16 85);
+  --warning-foreground: oklch(0.145 0 0);
   --danger: oklch(0.65 0.2 25);
   --danger-foreground: oklch(0.145 0 0);
+  --info: oklch(0.7 0.16 250);
+  --info-foreground: oklch(0.145 0 0);
+
+  --elevation-1: 0 1px 2px 0 oklch(0 0 0 / 0.24);
+  --elevation-2: 0 2px 8px -2px oklch(0 0 0 / 0.36);
+  --elevation-3: 0 8px 24px -4px oklch(0 0 0 / 0.48);
 }
 
 @theme inline {
@@ -61,9 +106,17 @@
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  --shadow-elevation-1: var(--elevation-1);
+  --shadow-elevation-2: var(--elevation-2);
+  --shadow-elevation-3: var(--elevation-3);
 
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
@@ -72,4 +125,14 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
+}
+
+/* Focus states (§17, §20) — one consistent visible-focus treatment,
+ * matching the `focus-visible:ring-2 focus-visible:ring-ring` pattern
+ * already used by interactive components (e.g. `Button`). Applying it
+ * at the `:focus-visible` level (not `:focus`) avoids a visible ring on
+ * mouse click while keeping it on keyboard navigation. */
+:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
 }

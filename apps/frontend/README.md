@@ -1,23 +1,43 @@
 # Frontend
 
-The AI-IOS web client. In this foundation phase (Prompt 011) it contains a
-single placeholder dashboard that proves the platform's presentation layer
-works end-to-end against the gateway — no business modules yet.
+The AI-IOS web client. Foundation phase (Frontend Prompt 001,
+`docs/frontend/001-enterprise-frontend-architecture.txt`) — API/auth/
+permissions/routing/layout/design-token/error-state architecture is in
+place; the dashboard placeholder from the earlier bootstrap phase
+(Prompt 011) is still the only business-facing page. See
+[`docs/frontend/README.md`](../../docs/frontend/README.md) for the full
+picture, including why this app stayed on Next.js rather than moving to
+Prompt 001's literal Vite + React Router baseline.
 
 ## Architecture
 
-Structure per
-[`docs/009_Frontend_Master_Architecture.md.txt`](../../docs/009_Frontend_Master_Architecture.md.txt)
-and design tokens per
-[`docs/010_UI_UX_Design_System_Master.md.txt`](../../docs/010_UI_UX_Design_System_Master.md.txt).
+See [`docs/frontend/architecture/`](../../docs/frontend/architecture/)
+for the full set (folder structure, dependency boundaries, API/state/
+auth/authorization/routing/error architecture). Summary:
 
-- `app/` — Next.js App Router routes only; no business logic.
-- `components/` — reusable, presentation-only UI primitives (`ui`, `layout`, `cards`, `feedback`, ...).
-- `modules/` — feature modules (e.g. `dashboard`), each owning its own `components/hooks/services/types`.
-- `services/` — the only place allowed to call `fetch()`. See `services/api-client.ts`.
-- `stores/` — Zustand global state (e.g. theme).
+- `app/` — Next.js App Router routes only; no business logic. `(app)/`
+  is a route group wrapping every page in `MainLayout`.
+- `api/` — `client.ts`, the only place allowed to call `fetch()`.
+- `auth/` — session/token architecture, built against the real
+  `services/authentication-service` contract (see
+  `docs/frontend/architecture/authentication.md` for a documented
+  backend gap: `role`/`organization_id` claims aren't populated at
+  login today).
+- `permissions/` — a deliberately coarse, presentation-only RBAC model
+  (no live permission-resolution endpoint exists on the backend today).
+- `components/` — reusable, presentation-only UI primitives (`ui`,
+  `data-display`, `feedback`, `forms`, `navigation`, `overlays`).
+- `layouts/` — the six reusable page shells (main, auth, fullscreen,
+  split-pane, wizard, settings).
+- `features/` — the pattern every future business module follows (see
+  its own README) — empty today, per Prompt 001 §34.
+- `modules/dashboard/` — the pre-existing placeholder, left untouched.
+- `lib/` — `route-registry.ts`, centralized route metadata.
+- `state/` — Zustand stores (`theme-store.ts` today).
 - `providers/` — React context providers composed once in `app/layout.tsx`.
-- `config/` — centralized environment access. See the note in `config/env.ts` about `NEXT_PUBLIC_*` variables requiring static access for Next.js to inline them into the browser bundle.
+- `config/` — centralized environment access. See the note in
+  `config/env.ts` about `NEXT_PUBLIC_*` variables requiring static
+  access for Next.js to inline them into the browser bundle.
 
 ## Running Locally
 
@@ -26,8 +46,11 @@ pnpm install
 pnpm dev
 ```
 
-Requires the gateway service running (see `services/gateway/README.md`) and
-`NEXT_PUBLIC_API_BASE_URL` pointing at it (defaults to `http://localhost:8000`,
+Requires **`services/api-gateway-service`** running — not
+`services/gateway/`, which is a separate, unrelated health-only stub
+(confirmed by reading both services' own READMEs; see
+`docs/frontend/architecture/authentication.md`). Point
+`NEXT_PUBLIC_API_BASE_URL` at it (defaults to `http://localhost:8027`,
 see `.env.example` at the repository root).
 
 ## Testing
@@ -40,10 +63,14 @@ pnpm test:coverage
 pnpm test:e2e           # Playwright, requires `pnpm exec playwright install`
 ```
 
+`pnpm test:e2e`'s third spec ("fetches live health data from the
+gateway") requires the real `api-gateway-service` running — it's an
+intentional integration test, not something to mock away.
+
 ## Docker
 
-Build from the **repository root** (this app is a pnpm workspace member and
-its lockfile resolves against the whole workspace):
+Build from the **repository root** (this app is a pnpm workspace member
+and its lockfile resolves against the whole workspace):
 
 ```bash
 docker build -f apps/frontend/Dockerfile -t aiios/frontend .

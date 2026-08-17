@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { useThemeStore } from "@/stores/theme-store";
+import { useThemeStore } from "@/state/theme-store";
 
 function mockMatchMedia(matches: boolean) {
   window.matchMedia = vi.fn().mockReturnValue({

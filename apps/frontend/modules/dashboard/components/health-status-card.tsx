@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/cards/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/data-display/card";
 import { StatusBadge } from "@/components/feedback/status-badge";
 
 import { useGatewayHealth } from "../hooks/use-health";

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Inter } from "next/font/google";
 
-import { AppShell } from "@/components/layout/app-shell";
 import { AppProviders } from "@/providers/app-providers";
 
 import "./globals.css";
@@ -14,6 +13,14 @@ export const metadata: Metadata = {
   description: "AI Infrastructure Operating System",
 };
 
+/**
+ * The root Next.js layout: HTML shell and app-wide providers only. The
+ * visible chrome (nav/header/footer) is applied per route group — see
+ * `app/(app)/layout.tsx` (`MainLayout`) — so route groups that need a
+ * different shell (e.g. a future `(auth)` group with `AuthLayout`) don't
+ * inherit navigation they shouldn't render. See
+ * docs/frontend/architecture/routing.md.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -22,9 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
-        <AppProviders>
-          <AppShell>{children}</AppShell>
-        </AppProviders>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

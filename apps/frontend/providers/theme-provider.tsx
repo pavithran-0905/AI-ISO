@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { resolveTheme, useThemeStore } from "@/stores/theme-store";
+import { resolveTheme, useThemeStore } from "@/state/theme-store";
 
 /**
  * Applies the resolved theme (light/dark, respecting "system") to the root
