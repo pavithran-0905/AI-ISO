@@ -54,6 +54,7 @@ members = [
     "sdk-cli-service",
     "secrets-management-service",
     "shared-core",
+    "upgrade-framework-service",
     "user-management-service",
     "validation-service",
     "webhook-service",
@@ -6113,6 +6114,57 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/92/ff/5a28bdfd8c3ebec42564ac7d0e54ca3db65044a9314a97f9564fa7a1e926/tzdata-2026.3.tar.gz", hash = "sha256:4a1518b8993086a7982523e071643f3c0e5f213e75b21318e78bcabfff9d1415", size = 198674, upload-time = "2026-07-10T08:50:37.887Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e5/6d/b53b99a9f2766d095985947a5782f1702cabb129a34f7a802d7197af832f/tzdata-2026.3-py2.py3-none-any.whl", hash = "sha256:dc096730c87af6cab1b171c9d532be840741ff5d459015e7f6947bd7d7e54931", size = 348168, upload-time = "2026-07-10T08:50:36.46Z" },
+]
+
+[[package]]
+name = "upgrade-framework-service"
+version = "0.1.0"
+source = { virtual = "services/upgrade-framework-service" }
+dependencies = [
+    { name = "alembic" },
+    { name = "asyncpg" },
+    { name = "cryptography" },
+    { name = "fastapi" },
+    { name = "httpx" },
+    { name = "prometheus-fastapi-instrumentator" },
+    { name = "psycopg", extra = ["binary"] },
+    { name = "pydantic", extra = ["email"] },
+    { name = "pydantic-settings" },
+    { name = "shared-core" },
+    { name = "sqlalchemy", extra = ["asyncio"] },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "pytest-httpx" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "alembic", specifier = ">=1.13.0" },
+    { name = "asyncpg", specifier = ">=0.30.0" },
+    { name = "cryptography", specifier = ">=43.0.0" },
+    { name = "fastapi", specifier = ">=0.115.0" },
+    { name = "httpx", specifier = ">=0.27.0" },
+    { name = "prometheus-fastapi-instrumentator", specifier = ">=7.0.0" },
+    { name = "psycopg", extras = ["binary"], specifier = ">=3.2.0" },
+    { name = "pydantic", extras = ["email"], specifier = ">=2.9.0" },
+    { name = "pydantic-settings", specifier = ">=2.6.0" },
+    { name = "shared-core", editable = "packages/shared-core" },
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.36" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.32.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pytest", specifier = ">=8.3.0" },
+    { name = "pytest-asyncio", specifier = ">=0.24.0" },
+    { name = "pytest-cov", specifier = ">=6.0.0" },
+    { name = "pytest-httpx", specifier = ">=0.35.0" },
 ]
 
 [[package]]

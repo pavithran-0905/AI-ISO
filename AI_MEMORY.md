@@ -8888,3 +8888,84 @@ Both were verified with a two-tick test (`first_tick` notifies,
   worth checking for on any future "revert to a prior state" feature,
   since numeric-only validation would happily "roll back" to a version
   that was never actually deployed.
+
+## Prompt 076 — Enterprise Upgrade Framework Service
+
+`services/upgrade-framework-service`, port 8047, Redis db 49,
+PostgreSQL `aiios_upgrade_framework`. 17 tables across release
+channels/versions, upgrade plans/jobs/history/targets/results/
+dependencies, the compatibility matrix, migration history/
+configuration migrations/plugin migrations, rollback history,
+verification results, and statistics/reports/audit; 10 spec REST
+endpoints (all administrator-gated); 9 domain events; 10 pure engines
+(a shared, event-free job-status engine reused by every job-shaped
+table -- upgrade jobs, migrations, plugin migrations, rollback
+attempts -- a self-contained `SemanticVersion` numeric comparator
+reused by compatibility, dependency, and rollback validation, risk
+assessment and duration estimation for dry-run simulation, weighted
+health-gate scoring, worst-of-N verification aggregation, reverse-order
+migration rollback planning, wave-based fleet chunking, and channel
+adoption/success-rate/rollback-rate analytics); 18 service classes
+across 12 files; 5 leader-elected workers; 125 tests at 97.31%
+coverage against real PostgreSQL and Redis. Ruff, Black, MyPy all
+clean.
+
+**Two distinct event vocabularies over one shared job engine.** Unlike
+Prompt 075's `DeploymentJobService` (one generic `Deployment*` event
+pair reused by every job type), this service's own spec names
+`UpgradeStarted`/`UpgradeCompleted`/`UpgradeFailed` and
+`RollbackStarted`/`RollbackCompleted` as two entirely separate event
+pairs. Rather than force both into one generic shape (or duplicate the
+underlying state machine), `UpgradeJobService` was built with **no
+event publishing of its own at all** -- pure status transitions plus
+append-only history -- and two calling services
+(`UpgradeExecutionService`, `RollbackService`) each layer their own
+event vocabulary and notifications on top of the identical shared
+engine. Worth reaching for this "event-free shared core, vocabulary at
+the call site" shape whenever a future service's own spec names
+multiple distinct event pairs over what would otherwise be one
+generic job lifecycle.
+
+**"Automatic Pause" (from docs/076's own HEALTH-GATED UPGRADES
+section) was implemented as a real autonomous worker, not left as a
+declared seam**: `HealthGateEnforcementWorker` finds every `RUNNING`
+upgrade job with at least one `FAILED` verification result and fails
+it immediately, confirmed live in Docker firing on its own schedule
+with zero manual triggering. It deliberately stops at detection +
+pause -- an actual rollback stays a separate, explicit
+`POST /rollback` call, the same separation
+`services/installation-deployment-service`'s own rollback framework
+established (Prompt 075): a worker that both detects *and* acts
+destructively without a human or pipeline in the loop is a much larger
+blast radius than one that only halts further damage and lets the
+existing explicit rollback path take over.
+
+### Things worth remembering
+
+- Redis db assignment continues sequentially: ..., 48 (Prompt 075),
+  **49 (this prompt)**. Port assignment: ..., 8046 (Prompt 075), **8047
+  (this prompt)**.
+- **The Prompt 074 repository-misuse lesson and the Prompt 073/075
+  edge-trigger lesson were both applied proactively from the start in
+  this build**, not discovered and fixed after the fact: every
+  worker's own organization discovery unions multiple genuinely
+  relevant activity sources (e.g. `StatisticsRollupWorker` unions
+  upgrade jobs, migration history, and release versions), and both
+  edge-triggered notifications (`ReleaseAdoptionSweepWorker`,
+  `HealthGateEnforcementWorker`'s own one-shot-per-tick detection) were
+  designed correctly on the first attempt and verified with a
+  two-tick test (first tick notifies/acts, second tick on the same
+  data does not) rather than needing a regression test added after a
+  bug was found. Confirms these two lesson classes are now durable
+  defaults for this codebase, not one-off fixes.
+- **Live e2e confirmed the health gate enforcement worker fires
+  autonomously**: a `FAILED` verification result was inserted directly
+  via `psql` against the running container's own database (no route
+  exists to record one for an arbitrary job outside the normal
+  request flow), and the worker's very next scheduled tick -- watched
+  in the container's own structured logs (`paused: 1`) -- flipped the
+  job to `FAILED` with `error_message: "Health gate failed: automatic
+  pause triggered."` and recorded the full `started -> failed`
+  lifecycle in `upgrade_history`, with no manual trigger of any kind.
+  All 5 workers were confirmed registered and leader-elected on the
+  same run.
