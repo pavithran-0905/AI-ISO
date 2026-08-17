@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { useSession } from "@/auth/session";
@@ -25,11 +25,17 @@ const DEFAULT_AUTHENTICATED_PATH = "/";
  */
 export function AuthGuard({ children }: { children: React.ReactNode }): React.ReactNode {
   const router = useRouter();
+  const pathname = usePathname();
   const { status, isAuthenticated } = useSession();
 
   useEffect(() => {
-    if (status === "unauthenticated") router.replace(UNAUTHENTICATED_REDIRECT_PATH);
-  }, [status, router]);
+    if (status !== "unauthenticated") return;
+    // §27 "return-to destination": once a real login flow exists, it
+    // reads this to send the user back where they were headed rather
+    // than always landing on the dashboard.
+    const from = pathname && pathname !== "/" ? `?from=${encodeURIComponent(pathname)}` : "";
+    router.replace(`${UNAUTHENTICATED_REDIRECT_PATH}${from}`);
+  }, [status, pathname, router]);
 
   if (!isAuthenticated) return null;
   return children;

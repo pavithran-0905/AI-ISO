@@ -1,59 +1,720 @@
 /**
- * Centralized route metadata (docs/frontend Prompt 001 §15). Next.js App
- * Router's routes are file-system-defined (`app/**\/page.tsx`), so this
- * registry doesn't declare routing itself — it's the single source of
- * truth for the metadata *about* each route (title, breadcrumb,
- * permission, nav visibility) that a future primary-navigation component
- * and breadcrumb trail will both read, so they can never disagree about
- * what a route is called or who can see it.
+ * Centralized route metadata (docs/frontend Prompt 001 §15, extended by
+ * Prompt 003 §22). Next.js App Router's routes are file-system-defined
+ * (`app/**\/page.tsx`), so this registry doesn't declare routing itself
+ * — it's the single source of truth for the metadata *about* each
+ * route (title, breadcrumb, nav group, permissions, visibility) that
+ * `PrimaryNavigation`, `Breadcrumbs`, and the command palette all read,
+ * so they can never disagree about what a route is called, where it
+ * lives, or who can see it.
  *
- * Only routes that exist are registered — do not pre-register a future
- * feature's route before its `page.tsx` exists (docs/frontend Prompt 001
- * §9 forbids building those pages in this prompt).
+ * **`visibility: "planned"` entries have no real page.** Prompt 003 §3
+ * requires a canonical information architecture derived from the real
+ * backend-feature-matrix (`docs/frontend/backend-feature-matrix.md`),
+ * covering all 51 business services — but Prompt 003 also forbids
+ * building business feature pages, and explicitly forbids "fake
+ * pages." Both are satisfied the same way every "documented-contract,
+ * not built" decision in this codebase has been made: the metadata
+ * exists (so the taxonomy is real and consistent from day one), but a
+ * `"planned"` entry's `path` is never rendered as a clickable link —
+ * `PrimaryNavigation` renders it disabled with a "Planned" indicator
+ * instead. Only `"implemented"` entries are real, navigable pages.
  */
+
+import type { LucideIcon } from "lucide-react";
+import { Activity, LayoutDashboard, Server, ShieldCheck, Sparkles, Users, Workflow } from "lucide-react";
 
 import type { Role } from "@/auth/types";
 
+export const NAV_GROUPS = [
+  "overview",
+  "operations",
+  "automation",
+  "intelligence",
+  "governance",
+  "administration",
+  "platform",
+] as const;
+
+export type NavGroup = (typeof NAV_GROUPS)[number];
+
+export const NAV_GROUP_META: Record<NavGroup, { label: string; icon: LucideIcon }> = {
+  overview: { label: "Overview", icon: LayoutDashboard },
+  operations: { label: "Operations", icon: Activity },
+  automation: { label: "Automation", icon: Workflow },
+  intelligence: { label: "Intelligence", icon: Sparkles },
+  governance: { label: "Governance", icon: ShieldCheck },
+  administration: { label: "Administration", icon: Users },
+  platform: { label: "Platform", icon: Server },
+};
+
+export type RouteVisibility = "implemented" | "planned" | "hidden";
+
+export type RouteLayout = "main" | "fullscreen" | "split-pane" | "wizard" | "settings" | "auth";
+
 export interface RouteMeta {
+  /** A stable identifier independent of `path` — a `"planned"` entry's
+   * `path` may not correspond to a real route at all. */
+  id: string;
   path: string;
   title: string;
+  description: string;
   breadcrumb: string;
+  /** `null` for a route that isn't part of the primary nav taxonomy at
+   * all (e.g. `/design-system`, `/unauthorized`). */
+  navGroup: NavGroup | null;
+  /** The nav item's own label, when it differs from `title` (rare) —
+   * falls back to `title` when `null`. */
+  navLabel: string | null;
+  /** `null` for a sub-item, which renders under its group's own icon
+   * (docs/frontend Prompt 003 §7's own example: only top-level items
+   * carry an icon; nested items are indented text). */
+  icon: LucideIcon | null;
   /** `null` means no role restriction (every authenticated user). */
   roles: Role[] | null;
-  /** Which `features/<feature>` module owns this route, for traceability
-   * back to docs/frontend/backend-feature-matrix.md. `null` for
-   * foundation-only routes that don't belong to a business feature. */
+  /** The `features/<slug>` module this route belongs to, matching
+   * `docs/frontend/backend-feature-matrix.md`'s own Frontend Mapping
+   * table exactly — traceability back to the real backend capability,
+   * never invented. `null` for foundation-only routes. */
   feature: string | null;
+  visibility: RouteVisibility;
+  layout: RouteLayout;
+  /** An identifier a future analytics integration would use — `null`
+   * since no analytics integration exists yet (§22 "if already
+   * supported"; it isn't). */
+  analyticsId: string | null;
+  external: boolean;
   showInNav: boolean;
 }
 
+function implemented(
+  meta: Omit<RouteMeta, "visibility" | "external" | "analyticsId" | "showInNav"> & { showInNav?: boolean },
+): RouteMeta {
+  return { ...meta, visibility: "implemented", external: false, analyticsId: null, showInNav: meta.showInNav ?? true };
+}
+
+function planned(
+  meta: Omit<
+    RouteMeta,
+    "visibility" | "external" | "analyticsId" | "showInNav" | "path" | "layout"
+  > & { path?: string; layout?: RouteLayout },
+): RouteMeta {
+  return {
+    ...meta,
+    path: meta.path ?? `/${meta.navGroup}/${meta.id}`,
+    layout: meta.layout ?? "main",
+    visibility: "planned",
+    external: false,
+    analyticsId: null,
+    showInNav: true,
+  };
+}
+
 export const ROUTE_REGISTRY: readonly RouteMeta[] = [
-  {
+  implemented({
+    id: "dashboard",
     path: "/",
     title: "Dashboard",
+    description: "Platform overview and gateway health.",
     breadcrumb: "Dashboard",
+    navGroup: "overview",
+    navLabel: null,
+    icon: LayoutDashboard,
     roles: null,
     feature: null,
-    showInNav: true,
-  },
-  {
+    layout: "main",
+  }),
+  implemented({
+    id: "design-system",
     path: "/design-system",
     title: "Design System Showcase",
+    description: "Internal component gallery — not a product page.",
     breadcrumb: "Design System",
+    navGroup: null,
+    navLabel: null,
+    icon: null,
     roles: null,
     feature: null,
-    /** Internal/dev-only (docs/frontend Prompt 002 §25) — registered
-     * for completeness, never surfaced in navigation. The route itself
-     * additionally 404s outside development — see the page's own
-     * `env.appEnv` gate. */
+    layout: "main",
     showInNav: false,
-  },
-];
+  }),
+
+  // ---- Operations ---------------------------------------------------------------------
+  planned({
+    id: "monitoring",
+    title: "Monitoring",
+    description: "Distributed collectors, time-series metrics, health/availability/SLA/SLO.",
+    breadcrumb: "Monitoring",
+    navGroup: "operations",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "monitoring",
+  }),
+  planned({
+    id: "alerting",
+    title: "Alerting",
+    description: "Alert detection, correlation, deduplication, routing, escalation.",
+    breadcrumb: "Alerting",
+    navGroup: "operations",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "alerting",
+  }),
+  planned({
+    id: "incidents",
+    title: "Incidents",
+    description: "Incident correlation, SLA clocks, major-incident war rooms, postmortems.",
+    breadcrumb: "Incidents",
+    navGroup: "operations",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "incidents",
+  }),
+  planned({
+    id: "change-management",
+    title: "Change Management",
+    description: "Risk-scored change requests, CAB review, change calendar, rollback planning.",
+    breadcrumb: "Change Management",
+    navGroup: "operations",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "change-management",
+  }),
+  planned({
+    id: "scheduler",
+    title: "Scheduler",
+    description: "Distributed job scheduling: cron/calendar/dependency triggers, retry policies.",
+    breadcrumb: "Scheduler",
+    navGroup: "operations",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "scheduler",
+  }),
+  planned({
+    id: "observability",
+    title: "Observability",
+    description: "Metrics, logs, traces, SLO/error-budget tracking, anomaly detection.",
+    breadcrumb: "Observability",
+    navGroup: "operations",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "observability",
+  }),
+  planned({
+    id: "backup-dr",
+    title: "Backup & DR",
+    description: "Backup orchestration, snapshots, restore, disaster recovery drills/failover.",
+    breadcrumb: "Backup & DR",
+    navGroup: "operations",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "backup-dr",
+  }),
+  planned({
+    id: "reporting",
+    title: "Reporting",
+    description: "Report design, scheduling, export, and distribution across the platform.",
+    breadcrumb: "Reporting",
+    navGroup: "operations",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "reporting",
+  }),
+
+  // ---- Automation ---------------------------------------------------------------------
+  planned({
+    id: "automation",
+    title: "Automation",
+    description: "Playbooks, workflows, scripts, TOSCA deployments, scheduled operational jobs.",
+    breadcrumb: "Automation",
+    navGroup: "automation",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "automation",
+  }),
+  planned({
+    id: "playbooks",
+    title: "Playbooks",
+    description: "Automation content repository: versioning, signatures, approval workflows.",
+    breadcrumb: "Playbooks",
+    navGroup: "automation",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "playbooks",
+  }),
+  planned({
+    id: "workflows",
+    title: "Workflows",
+    description: "DAG workflow execution: pause/resume/cancel/rollback/replay, checkpointing.",
+    breadcrumb: "Workflows",
+    navGroup: "automation",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "workflows",
+  }),
+  planned({
+    id: "validation",
+    title: "Validation",
+    description: "Infrastructure readiness, operational health, and compliance verification runs.",
+    breadcrumb: "Validation",
+    navGroup: "automation",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "validation",
+  }),
+  planned({
+    id: "configuration",
+    title: "Configuration",
+    description: "Desired-state configuration profiles, drift detection, backup/restore/rollback.",
+    breadcrumb: "Configuration",
+    navGroup: "automation",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "configuration",
+  }),
+
+  // ---- Intelligence -------------------------------------------------------------------
+  planned({
+    id: "ai-assistant",
+    title: "AI Assistant",
+    description: "AI-IOS operations copilot, grounded in retrieved platform documentation.",
+    breadcrumb: "AI Assistant",
+    navGroup: "intelligence",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "ai-assistant",
+  }),
+  planned({
+    id: "ai-agents",
+    title: "AI Agents",
+    description: "Multi-agent orchestration, tool registry, agent memory, guardrails.",
+    breadcrumb: "AI Agents",
+    navGroup: "intelligence",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "ai-agents",
+  }),
+  planned({
+    id: "prompt-management",
+    title: "Prompts",
+    description: "Prompt registry: versioning, testing, evaluation, A/B experiments, approvals.",
+    breadcrumb: "Prompts",
+    navGroup: "intelligence",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "prompt-management",
+  }),
+  planned({
+    id: "rag",
+    title: "Knowledge Retrieval",
+    description: "Document parsing/chunking/embedding/indexing for retrieval-augmented generation.",
+    breadcrumb: "Knowledge Retrieval",
+    navGroup: "intelligence",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "rag",
+  }),
+  planned({
+    id: "document-intelligence",
+    title: "Document Intelligence",
+    description: "Document parsing, entity/table extraction, summarization, translation.",
+    breadcrumb: "Document Intelligence",
+    navGroup: "intelligence",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "document-intelligence",
+  }),
+  planned({
+    id: "knowledge-graph",
+    title: "Knowledge Graph",
+    description: "Platform graph: digital twins, dependency/impact/blast-radius analysis.",
+    breadcrumb: "Knowledge Graph",
+    navGroup: "intelligence",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "knowledge-graph",
+  }),
+
+  // ---- Governance ---------------------------------------------------------------------
+  planned({
+    id: "rbac",
+    title: "Roles & Permissions",
+    description: "Hierarchical roles, permission catalog, resource-instance authorization.",
+    breadcrumb: "Roles & Permissions",
+    navGroup: "governance",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "rbac",
+  }),
+  planned({
+    id: "compliance",
+    title: "Compliance",
+    description: "Continuous compliance assessment, evidence, findings, risk register.",
+    breadcrumb: "Compliance",
+    navGroup: "governance",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "compliance",
+  }),
+  planned({
+    id: "policy-engine",
+    title: "Policy Engine",
+    description: "ABAC/RBAC policy authoring, evaluation, quotas, approvals, simulation.",
+    breadcrumb: "Policy Engine",
+    navGroup: "governance",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "policy-engine",
+  }),
+  planned({
+    id: "secrets",
+    title: "Secrets",
+    description: "Centralized secret storage, rotation, certificate/SSH-key/API-key management.",
+    breadcrumb: "Secrets",
+    navGroup: "governance",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "secrets",
+  }),
+
+  // ---- Administration -----------------------------------------------------------------
+  planned({
+    id: "users",
+    title: "Users",
+    description: "Profiles, preferences, invitations, bulk import/export, activity feed.",
+    breadcrumb: "Users",
+    navGroup: "administration",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "users",
+  }),
+  planned({
+    id: "organizations",
+    title: "Organizations",
+    description: "Multi-tenant organization settings, domains, branding, quotas, departments.",
+    breadcrumb: "Organizations",
+    navGroup: "administration",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "organizations",
+  }),
+  planned({
+    id: "projects",
+    title: "Projects",
+    description: "Project lifecycle, membership, roles, templates.",
+    breadcrumb: "Projects",
+    navGroup: "administration",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "projects",
+  }),
+  planned({
+    id: "admin",
+    title: "Admin Portal",
+    description: "Multi-tenant admin, feature flags, platform config, diagnostics.",
+    breadcrumb: "Admin Portal",
+    navGroup: "administration",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "admin",
+  }),
+  planned({
+    id: "billing",
+    title: "Licensing & Billing",
+    description: "Licensing, subscriptions, entitlements, usage metering, invoicing.",
+    breadcrumb: "Licensing & Billing",
+    navGroup: "administration",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "billing",
+  }),
+  planned({
+    id: "notifications-admin",
+    title: "Notifications",
+    description: "Multi-channel delivery: templates, preferences, subscriptions, digests.",
+    breadcrumb: "Notifications",
+    navGroup: "administration",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "notifications",
+  }),
+
+  // ---- Platform -----------------------------------------------------------------------
+  planned({
+    id: "inventory",
+    title: "Inventory",
+    description: "Authoritative CMDB: every discovered asset, relationships, topology.",
+    breadcrumb: "Inventory",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "inventory",
+  }),
+  planned({
+    id: "discovery",
+    title: "Discovery",
+    description: "Automated discovery of hybrid, cloud, edge, industrial, Kubernetes assets.",
+    breadcrumb: "Discovery",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "discovery",
+  }),
+  planned({
+    id: "assets",
+    title: "Asset Management",
+    description: "Ownership, warranty, contracts, maintenance, compliance, cost, health.",
+    breadcrumb: "Asset Management",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "assets",
+  }),
+  planned({
+    id: "clusters",
+    title: "Clusters",
+    description: "Cluster onboarding, fleet grouping, health monitoring, upgrade planning.",
+    breadcrumb: "Clusters",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "clusters",
+  }),
+  planned({
+    id: "edge",
+    title: "Edge",
+    description: "Site/device onboarding, zero-touch provisioning, OTA/firmware updates.",
+    breadcrumb: "Edge",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "edge",
+  }),
+  planned({
+    id: "cloud",
+    title: "Cloud",
+    description: "Multi-cloud account/resource discovery, provisioning, FinOps, capacity planning.",
+    breadcrumb: "Cloud",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "cloud",
+  }),
+  planned({
+    id: "integrations",
+    title: "Integrations",
+    description: "Connector registry: lifecycle, credentials, sync, integration flows.",
+    breadcrumb: "Integrations",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "integrations",
+  }),
+  planned({
+    id: "webhooks",
+    title: "Webhooks",
+    description: "Incoming/outgoing webhook subscriptions, filtering, signing, replay.",
+    breadcrumb: "Webhooks",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "webhooks",
+  }),
+  planned({
+    id: "plugin-marketplace",
+    title: "Plugin Marketplace",
+    description: "Plugin lifecycle, manifest validation, signing, publisher trust, listings.",
+    breadcrumb: "Plugin Marketplace",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "plugin-marketplace",
+  }),
+  planned({
+    id: "api-gateway-admin",
+    title: "API Gateway",
+    description: "Routing, rate limiting, quotas, circuit breaking, request transformation.",
+    breadcrumb: "API Gateway",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "api-gateway-admin",
+  }),
+  planned({
+    id: "sdk-cli",
+    title: "SDK & CLI",
+    description: "SDK generation, versioning, and cross-platform CLI distribution.",
+    breadcrumb: "SDK & CLI",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "sdk-cli",
+  }),
+  planned({
+    id: "developer-platform",
+    title: "Developer Platform",
+    description: "External API exposure, developer onboarding, API products/plans.",
+    breadcrumb: "Developer Platform",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "developer-platform",
+  }),
+  planned({
+    id: "developer-portal",
+    title: "Developer Portal",
+    description: "Documentation, interactive API exploration, samples, code playground.",
+    breadcrumb: "Developer Portal",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "developer-portal",
+  }),
+  planned({
+    id: "installation",
+    title: "Installation",
+    description: "Infrastructure validation, platform installation and deployment.",
+    breadcrumb: "Installation",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "installation",
+  }),
+  planned({
+    id: "upgrades",
+    title: "Upgrades",
+    description: "Policy-driven upgrades: compatibility validation, health-gated rollback.",
+    breadcrumb: "Upgrades",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "upgrades",
+  }),
+  planned({
+    id: "qa",
+    title: "Testing & QA",
+    description: "Test orchestration, coverage tracking, quality gates, chaos engineering.",
+    breadcrumb: "Testing & QA",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "qa",
+  }),
+  planned({
+    id: "performance",
+    title: "Performance",
+    description: "Benchmarking, profiling, capacity planning, regression detection.",
+    breadcrumb: "Performance",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "performance",
+  }),
+  planned({
+    id: "hardening",
+    title: "Production Hardening",
+    description: "Production readiness validation, security, and certification.",
+    breadcrumb: "Production Hardening",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "hardening",
+  }),
+  planned({
+    id: "releases",
+    title: "Releases",
+    description: "Release creation, signing, packaging, promotion, and distribution.",
+    breadcrumb: "Releases",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "releases",
+  }),
+] as const;
 
 export function getRouteMeta(path: string): RouteMeta | undefined {
   return ROUTE_REGISTRY.find((route) => route.path === path);
 }
 
+export function getRouteById(id: string): RouteMeta | undefined {
+  return ROUTE_REGISTRY.find((route) => route.id === id);
+}
+
 export function getNavRoutes(): RouteMeta[] {
-  return ROUTE_REGISTRY.filter((route) => route.showInNav);
+  return ROUTE_REGISTRY.filter((route) => route.showInNav && route.navGroup !== null);
+}
+
+export interface NavGroupEntry {
+  group: NavGroup;
+  label: string;
+  icon: LucideIcon;
+  routes: RouteMeta[];
+}
+
+/** Groups every nav-visible route by its `navGroup`, in `NAV_GROUPS`
+ * order, skipping any group with no routes — the single source
+ * `PrimaryNavigation` renders from. */
+export function getNavGroups(): NavGroupEntry[] {
+  return NAV_GROUPS.map((group) => ({
+    group,
+    label: NAV_GROUP_META[group].label,
+    icon: NAV_GROUP_META[group].icon,
+    routes: getNavRoutes().filter((route) => route.navGroup === group),
+  })).filter((entry) => entry.routes.length > 0);
+}
+
+/** Walks a route's own breadcrumb trail — currently flat (every route
+ * is one level deep in the registry, `navGroup` provides the parent
+ * label) since no nested route hierarchy exists yet. */
+export function getBreadcrumbTrail(path: string): RouteMeta[] {
+  const route = getRouteMeta(path);
+  return route ? [route] : [];
 }

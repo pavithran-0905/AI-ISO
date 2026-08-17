@@ -20,6 +20,10 @@ export interface DropdownProps {
   trigger: React.ReactNode;
   items: DropdownItem[];
   align?: "start" | "end";
+  /** Non-interactive content above the items (e.g. `UserMenu`'s own
+   * identity block) — excluded from the `role="menuitem"` roving-focus
+   * set on purpose, since it isn't a menu item. */
+  header?: React.ReactNode;
 }
 
 /**
@@ -29,7 +33,7 @@ export interface DropdownProps {
  * Destructive items (`destructive: true`) get the `danger` tone per
  * §11's icon rules.
  */
-export function Dropdown({ open, onClose, trigger, items, align = "start" }: DropdownProps) {
+export function Dropdown({ open, onClose, trigger, items, align = "start", header }: DropdownProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   useDismissableLayer(open, containerRef, onClose);
 
@@ -73,6 +77,7 @@ export function Dropdown({ open, onClose, trigger, items, align = "start" }: Dro
             align === "start" ? "left-0" : "right-0",
           )}
         >
+          {header}
           {items.map((item) => {
             const Icon = item.icon;
             return (

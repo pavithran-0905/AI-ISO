@@ -1,34 +1,43 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { WizardLayout } from "@/layouts/wizard-layout";
+import { WizardLayout, type WizardStep } from "@/layouts/wizard-layout";
 
-const STEPS = [
-  { id: "one", label: "Step One" },
-  { id: "two", label: "Step Two" },
-  { id: "three", label: "Step Three" },
+const STEPS: WizardStep[] = [
+  { id: "basics", label: "Basics" },
+  { id: "details", label: "Details" },
+  { id: "review", label: "Review" },
 ];
 
 describe("WizardLayout", () => {
-  it("renders every step label, content, and footer", () => {
+  it("marks earlier steps complete and the current step with aria-current=step", () => {
     render(
-      <WizardLayout steps={STEPS} currentStepId="two" footer={<button type="button">Next</button>}>
+      <WizardLayout steps={STEPS} currentStepId="details" footer={<button>Next</button>}>
         <p>step content</p>
       </WizardLayout>,
     );
 
     for (const step of STEPS) expect(screen.getByText(step.label)).toBeInTheDocument();
+    expect(screen.getByText("Details").closest("li")?.querySelector("[aria-current]")).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
     expect(screen.getByText("step content")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Next" })).toBeInTheDocument();
   });
 
-  it("marks the current step with aria-current", () => {
+  it("renders an error indicator and accessible note for a step marked invalid", () => {
+    const steps: WizardStep[] = [
+      { id: "basics", label: "Basics", status: "invalid" },
+      { id: "details", label: "Details" },
+    ];
+
     render(
-      <WizardLayout steps={STEPS} currentStepId="two" footer={null}>
-        <p>content</p>
+      <WizardLayout steps={steps} currentStepId="details" footer={null}>
+        <p>step content</p>
       </WizardLayout>,
     );
 
-    expect(screen.getByText("2")).toHaveAttribute("aria-current", "step");
+    expect(screen.getByText("(needs attention)")).toBeInTheDocument();
   });
 });

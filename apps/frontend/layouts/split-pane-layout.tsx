@@ -65,11 +65,17 @@ export function SplitPaneLayout({
       <div
         role="separator"
         aria-orientation="vertical"
+        aria-label="Resize panels"
+        aria-valuenow={Math.round(splitPercent)}
+        aria-valuemin={minPanePercent}
+        aria-valuemax={100 - minPanePercent}
         tabIndex={0}
         onPointerDown={startDragging}
         onKeyDown={(event) => {
           if (event.key === "ArrowLeft") setSplitPercent((value) => clamp(value - 2));
           if (event.key === "ArrowRight") setSplitPercent((value) => clamp(value + 2));
+          if (event.key === "Home") setSplitPercent(minPanePercent);
+          if (event.key === "End") setSplitPercent(100 - minPanePercent);
         }}
         className={cn(
           "bg-border hover:bg-ring focus-visible:ring-ring hidden shrink-0 cursor-col-resize",

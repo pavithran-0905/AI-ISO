@@ -6,14 +6,17 @@ import { AuthGuard, GuestGuard } from "@/auth/guards";
 import { TestQueryProvider } from "../../query-test-utils";
 
 const replace = vi.fn();
+const mockPathname = vi.hoisted(() => ({ current: "/" }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace }),
+  usePathname: () => mockPathname.current,
 }));
 
 describe("AuthGuard", () => {
   afterEach(() => {
     useAuthStore.getState().clear();
     replace.mockClear();
+    mockPathname.current = "/";
   });
 
   it("renders children once authenticated", () => {
@@ -44,6 +47,21 @@ describe("AuthGuard", () => {
 
     expect(screen.queryByText("protected content")).not.toBeInTheDocument();
     expect(replace).toHaveBeenCalledWith("/unauthorized");
+  });
+
+  it("includes the attempted path as ?from= so a future login can return the user there", () => {
+    mockPathname.current = "/monitoring";
+    useAuthStore.setState({ status: "unauthenticated" });
+
+    render(
+      <TestQueryProvider>
+        <AuthGuard>
+          <p>protected content</p>
+        </AuthGuard>
+      </TestQueryProvider>,
+    );
+
+    expect(replace).toHaveBeenCalledWith("/unauthorized?from=%2Fmonitoring");
   });
 
   it("renders nothing (no redirect yet) while idle", () => {
