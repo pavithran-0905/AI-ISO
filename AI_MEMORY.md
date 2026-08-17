@@ -9192,3 +9192,98 @@ newly-in-window certificate and persisted its `is_expiring` flag
 overdue certification (`expired: 1`) -- confirmed via the container's
 own structured logs and independent `psql` status checks, with no
 manual trigger of any kind.
+
+## Prompt 080 — Enterprise Release & Distribution Framework
+
+`services/release-distribution-framework`, port 8051, Redis db 53,
+PostgreSQL `aiios_release_distribution_framework`. **This is the final
+prompt document in the docs/ sequence (000-080).** 18 tables across
+release channels, release versions, release builds, release
+packages/artifacts, release promotions, distribution/regions,
+download statistics, the supply-chain trio (checksums, signatures,
+SBOM publications), release notes, LTS versions, EOL schedules, and
+statistics/reports/audit; 12 spec REST endpoints (all
+administrator-gated); 9 domain events; 10 pure engines (a new *linear*
+lifecycle engine distinct from every prior job engine, the shared job
+engine reused for builds, real checksum computation, a bridged
+promotion adjacency, air-gapped/region classification, LTS/EOL
+warning-window detection, download rate, note classification, and
+release health scoring); ~18 service classes across 12 files; 5
+leader-elected workers; 129 tests at 96.58% coverage against real
+PostgreSQL and Redis. Ruff, Black, MyPy all clean.
+
+**A new engine shape: a linear lifecycle with no failure branch,
+distinct from every job engine in this build so far.**
+`app.release.engine` drives `ReleaseVersion` through
+DRAFT → VALIDATED → SIGNED → PUBLISHED → ARCHIVED -- not the familiar
+PENDING/RUNNING/{SUCCEEDED,FAILED} shape every prior service (076-079)
+reused, because a release version itself never "fails": build failure
+lives on the separate `ReleaseBuild` entity, which *does* reuse the
+shared job engine unmodified. A new `next_status_toward(current,
+target)` helper lets `ReleaseVersionService.publish()` walk a DRAFT
+release all the way to PUBLISHED in one call -- docs/080 names no
+intermediate `POST /releases/validate`/`POST /releases/sign` routes --
+while still publishing each intermediate event individually. One
+consequence worth remembering: because the loop condition is "while
+not yet at target," re-publishing an already-published release is a
+harmless no-op, not an error; only a genuinely backwards or terminal
+move (publishing an `ARCHIVED` version) raises. Worth reusing this
+"linear pipeline, no failure branch, walk-to-target helper" shape for
+any future service whose central entity moves through ordered stages
+that can always be re-attempted rather than terminally failing.
+
+**A spec's own inconsistent vocabulary, bridged and documented rather
+than silently reinterpreted.** docs/080's "RELEASE PROMOTION" prose
+describes Development → QA → UAT → Production and Canary → Stable →
+LTS, but `ReleaseChannelType` has no distinct QA/UAT value.
+`app.promotion.engine`'s `ALLOWED_PROMOTIONS` dict preserves the
+literal Canary→Stable/Stable→LTS transitions exactly and generalizes
+the rest into this service's own channel ladder, with the
+interpretation spelled out in the engine's own module docstring and
+repeated in the README -- so a future reader hits the reasoning at the
+point of the discrepancy, not just in a commit message.
+
+**A `.dockerignore` collision caught only by the live Docker build, not
+by tests, Ruff, Black, or MyPy.** The build-status engine originally
+lived at `app/build/engine.py`. The repo-root `.dockerignore`'s
+`**/build/` pattern (there to exclude JS/TS build output directories)
+silently excluded this service's own `app/build/` from the Docker
+build context -- the image built without error but the container
+crashed on startup with `ModuleNotFoundError: No module named
+'app.build'`. Nothing that runs on the host filesystem (pytest, Ruff,
+Black, MyPy) could have caught this, since none of them build a Docker
+image. Fixed by renaming the module to `app/release_build/engine.py`.
+**This is the same class of bug as [[aiios_pytest_test_prefix_collection_glob]]
+and [[aiios_reserved_column_names]]: a name that is completely
+reasonable in isolation collides with a generic pattern some other
+piece of tooling owns.** Added to cross-session memory as a new
+instance of this bug class -- worth a deliberate check (`build`,
+`dist`, `target`, `out`, `bin`, `node_modules`) whenever a future
+service's natural domain vocabulary might shadow a common
+build-artifact directory name, and worth remembering that this
+specific class of bug is invisible to every gate except an actual
+Docker build.
+
+**Live e2e confirmed two independent workers firing autonomously on
+their very next scheduled tick, with all 5 confirmed alive via
+logs.** A release channel was seeded via `psql` (no create-channel
+route exists by design), then a release version was created,
+published (walking DRAFT through to PUBLISHED in one HTTP call), and
+promoted canary→stable, all through real HTTP with a real
+RS256-signed JWT. A release build was then backdated 3 hours into
+`RUNNING` and an LTS version was seeded 30 days into its 90-day
+support-expiry warning window, both via `psql`, between two consecutive
+scheduled ticks. On the very next tick, sixty seconds later, the build
+timeout sweep worker failed the stuck build (`failed: 1`,
+`error_message: "Release build timed out."`) and the LTS support
+expiry sweep worker flagged the newly-in-window line (`notified: 1`,
+`support_expiry_notice_sent` persisted `true`) -- confirmed via `psql`
+re-reads and the container's own structured logs, which also showed
+promotion approval timeout sweep, EOL schedule sweep, and statistics
+rollup all ticking cleanly on both observed intervals. RBAC confirmed
+(401 no token, 403 non-admin role, 200 admin). No worker was ever
+manually triggered.
+
+**With Prompt 080 pushed, the docs/ sequence (000-080) is complete** --
+a `docs/081*` glob returns nothing, confirming there is no further
+prompt document to continue to.
