@@ -9045,3 +9045,74 @@ logging `failed: 0` since the run was already handled. No manual
 trigger of any kind. All 5 workers were confirmed registered on the
 same run; RBAC confirmed (401 no token, 403 non-admin role, 200
 admin).
+
+## Prompt 078 — Enterprise Performance & Benchmark Framework
+
+`services/performance-benchmark-framework`, port 8049, Redis db 51,
+PostgreSQL `aiios_performance_benchmark_framework`. 18 tables across
+benchmark suites/profiles/runs/results, baselines, performance
+profiles/metrics, capacity models/forecasts, optimization
+recommendations, performance regressions, resource utilization,
+latency/throughput statistics, SLO results, and
+statistics/reports/audit; 11 spec REST endpoints (all
+administrator-gated, only 2 of the 11 mutate anything -- the rest are
+populated entirely by the 5 workers); 8 domain events; 10 pure engines
+(a shared, event-free benchmark-run job engine, direction-aware
+regression/improvement classification with metric-name-then-suite-type
+inference, direction-aware SLO compliance, compound-growth capacity
+forecasting, impact-scored optimization recommendations with a
+regression-type-to-category mapping, latency percentile computation,
+throughput rate/drop detection, utilization bottleneck classification,
+median-based baseline selection, and equal-weighted performance-score
+analytics); ~17 service classes across 11 files; 5 leader-elected
+workers; 160 tests at 96.68% coverage against real PostgreSQL and
+Redis. Ruff, Black, MyPy all clean.
+
+**Regression detection closes the loop into optimization
+recommendations automatically**, rather than leaving "AI OPTIMIZATION"
+(docs/078's own declared seam over Prompt 060) as an inert, unreachable
+service: `RegressionSweepWorker` calls
+`OptimizationRecommendationService.create()` immediately after
+recording a regression, mapping the regression's own kind to a
+category (database → query, workflow → workflow, API → API, CPU/
+memory → infrastructure, everything else → infrastructure default);
+`CapacityThresholdSweepWorker` does the same for breached forecasts,
+always as a `SCALING` recommendation. Every recommendation this build
+generates traces back to a concrete measured fact -- nothing is
+invented to satisfy the spec's own AI-sounding language.
+
+**Automatic Baseline Selection implemented as a side effect of
+recording a result, not a manual step**: docs/078 lists this
+capability explicitly and has no `POST /baselines` route at all, so
+`BenchmarkResultService.record()` calls
+`BenchmarkBaselineService.get_or_create_initial()` on every result,
+which creates the baseline from a metric's own first-ever value if
+none exists yet. Worth reaching for this "auto-select from the first
+real data point" shape whenever a future service's own spec names an
+"automatic X selection" capability with no corresponding write route.
+
+**A genuine worker bug caught by the test suite, before Docker
+e2e**: `CapacityThresholdSweepWorker.tick()` created an
+`optimization_recommendations` row but never called `await
+session.commit()` at the end of its own async-with block (every other
+data-writing worker in this build does). The test asserting the
+recommendation existed -- read back through a *separate* session, per
+this codebase's own worker-testing convention -- failed immediately
+with a length-0 assertion, rather than silently passing on a stale
+in-memory object. Confirms, once again, why worker tests must re-read
+state through a fresh session rather than trusting the one that
+performed the write: an uncommitted transaction looks identical to a
+committed one from inside the same session.
+
+**Live e2e confirmed three workers firing autonomously in sequence,
+one tick apart**: a benchmark run was started via the real API, its
+`started_at` backdated via `psql`; the benchmark run timeout sweep
+worker's very next tick failed it (`failed: 1`, confirmed in the
+container's own structured audit log). A baseline and a regressed
+result were seeded via `psql`; the regression sweep worker's very next
+tick (60 seconds later, its own configured interval) detected an 80%
+latency regression, recorded a `CRITICAL`-severity
+`performance_regressions` row, published `RegressionDetected`, and
+generated a matching `infrastructure`-category optimization
+recommendation -- all read directly from the container's own
+structured logs, with no manual trigger of any kind at any point.
