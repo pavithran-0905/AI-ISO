@@ -8792,3 +8792,99 @@ repository is missing the method the call site actually needs.
   seeds activity with a bare `utcnow()` timestamp will land inside the
   excluded in-progress hour and see a `0` count that looks like a bug
   but is the worker behaving exactly as designed.
+
+## Prompt 075 — Enterprise Installation & Deployment Service
+
+`services/installation-deployment-service`, port 8046, Redis db 48,
+PostgreSQL `aiios_installation_deployment`. 21 tables across deployment
+profiles/targets/inventory/jobs/history/versions/artifacts/status-board,
+installation sessions/logs, pre-flight results/dependency checks,
+configuration profiles, TLS certificates/generated secrets, upgrade/
+rollback history, verification results, and statistics/reports/audit;
+10 spec REST endpoints (all administrator-gated); 9 domain events; 10
+pure engines (a shared job lifecycle reused unmodified by all four job
+types -- install/deploy/upgrade/rollback -- worst-of-N check
+aggregation shared between preflight and post-install verification, a
+self-contained `SemanticVersion` numeric parser reused by upgrade and
+rollback path validation, self-signed certificate generation via
+`cryptography.x509`, cryptographically random secret generation via
+stdlib `secrets`); 18 service classes across 13 files; 5 leader-elected
+workers; 137 tests at 97.82% coverage against real PostgreSQL and
+Redis. Ruff, Black, MyPy all clean.
+
+**Full return to administrator-only routing.** Unlike 072-074's
+developer/third-party-facing shape, every one of this service's 10
+routes sits behind `require_administrator` -- installing, deploying,
+upgrading, and rolling back a platform has no "caller acting on their
+own account" shape the way a developer publishing their own plugin
+does. This is a deliberate, documented reversion to 069-071's
+administrator-heavy routing, not an inconsistency: the right routing
+shape follows from what the service actually does, not from a fixed
+per-era convention.
+
+**This is a control plane, not an installer**, decided directly from
+docs/075's own "DO NOT IMPLEMENT" list (Operating System Installer,
+Container Runtime, Kubernetes Distribution, Cloud Provider Deployment
+Services). Every "engine" this build ships models and orchestrates
+*records* of installation/deployment/upgrade/rollback activity and
+validates what it can validate from inside its own process (its own
+database and cache connections); it never shells out to `kubectl`,
+`helm`, or a cloud API. The one genuinely-executed capability is
+self-signed TLS certificate generation, because that's pure Python
+with no external tool dependency -- CA import, CSR signing, and ACME
+renewal are declared seams for the same reason external infra tooling
+is everywhere else in this build.
+
+**Two edge-triggered notification workers were designed correctly on
+the first attempt** by applying Prompt 073's "publish once, on the
+crossing, not on every tick past it" lesson and Prompt 074's repeated
+repository-misuse lesson proactively, before writing any code:
+`CertificateExpirySweepWorker` only notifies Certificate Expiring on
+the actual `VALID -> EXPIRING` transition (compares the status before
+and after `TlsCertificateService.refresh_status`, not just the after
+state), and `UpgradeAvailabilitySweepWorker` only notifies Upgrade
+Available while the newer version's own `released_at` still falls
+inside a lookback window (twice the worker's own sweep interval) --
+neither has a dedicated "already notified" column anywhere in the
+21-table schema, so both had to derive edge-triggering from data that
+was already there, the same discipline
+`services/developer-portal-service`'s SDK Released notification used.
+Both were verified with a two-tick test (`first_tick` notifies,
+`second_tick` on the same data does not) and confirmed live in Docker.
+
+### Things worth remembering
+
+- Redis db assignment continues sequentially: ..., 47 (Prompt 074),
+  **48 (this prompt)**. Port assignment: ..., 8045 (Prompt 074), **8046
+  (this prompt)**.
+- **Caller-reported-outcome is the right shape whenever a service
+  cannot itself perform the check it needs to record.** Both
+  `PreflightService` and `VerificationService` follow
+  `services/developer-portal-service`'s `WebhookTestService` precedent
+  exactly: this process can genuinely probe its own database and cache
+  connections, but everything else (CPU, memory, OS, DNS, an installed
+  workload's own health) needs an agent this build does not implement,
+  so the caller reports what it found and the service records +
+  aggregates + notifies. Worth reaching for this pattern by default
+  whenever a "validation" or "check" capability is named in a spec but
+  the check itself requires infrastructure access this process
+  legitimately does not have.
+- **Live e2e confirmed the deployment job timeout sweep worker fires
+  autonomously**: a deployment job's `started_at` was backdated
+  directly via `psql` against the running container's own database
+  (no route exists to backdate a job), and the tick immediately after
+  starting the job showed `failed: 0` in the worker's own structured
+  logs, while the *next* scheduled tick after backdating showed
+  `failed: 1` and correctly flipped only the backdated job to `FAILED`
+  -- a second, genuinely fresh job (from an upgrade started moments
+  earlier) was confirmed left untouched at `RUNNING` in the same run.
+  `deployment_history` was confirmed recording the full
+  `started -> failed` lifecycle for the timed-out job. All 5 workers
+  were confirmed registered and leader-elected on the same run.
+- **Rollback validity is checked against actual version history, not
+  just numeric ordering**: `app.rollback.engine.can_rollback_to`
+  requires the target version to be both older than current *and*
+  present in the organization's own `deployment_versions` table --
+  worth checking for on any future "revert to a prior state" feature,
+  since numeric-only validation would happily "roll back" to a version
+  that was never actually deployed.
