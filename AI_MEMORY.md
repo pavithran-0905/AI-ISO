@@ -8585,3 +8585,111 @@ defects motivated held completely on this build.
   its own already-authenticated caller. Worth checking explicitly per
   service, not assuming the administrator-gating ratio from the
   previous few prompts carries over.
+
+## Prompt 073 — Enterprise Public API & Developer Platform
+
+`services/public-api-platform`, port 8044, Redis db 46, PostgreSQL
+`aiios_public_api_platform`. 23 tables across developer accounts/
+organizations, applications/credentials, API products/plans/
+subscriptions, API keys/personal access tokens/OAuth clients/OAuth
+tokens, API versions/OpenAPI documents/GraphQL schemas/changelog, usage/
+rate limits/quotas, sandbox sessions/mock services, and statistics/
+reports/audit; 15 spec REST endpoints; 8 domain events; 10 pure engines
+(developer account lifecycle -- the one AI-IOS lifecycle in this build
+where a non-terminal status is reinstatable rather than one-way --
+application lifecycle, constant-time PKCE verification plus OAuth token
+expiry and grant-type checks, a shared credential lifecycle reused
+across four different credential tables, API product governance with
+an explicit rejection path, numeric semantic versioning plus a strictly
+linear version lifecycle, rate-limit threshold math, calendar-correct
+quota period-window computation, sandbox mock-response resolution,
+usage analytics math); 15 service classes; 5 leader-elected workers;
+160 tests at 96.99% coverage against real PostgreSQL and Redis. Ruff,
+Black, MyPy all clean.
+
+**Scope boundary, decided up front and documented in the README**: per
+docs/073's own "DO NOT IMPLEMENT" section (API Gateway Proxy Engine,
+Third-party Identity Providers, Cloud API Management Products, External
+Billing Systems), this service manages the ecosystem around public
+APIs -- developers, applications, credentials, products, quotas,
+documentation -- and never proxies a live request itself; that already
+belongs to `services/api-gateway-service` (Prompt 056). Consistent with
+that boundary, `api_usage` has no ingestion route (recording a call is
+internal/administrative) -- five *groups* of tables here (`api_usage`,
+`api_rate_limits`, `api_quotas`, `api_sandbox`/`api_mock_services`, and
+`openapi_documents`/`graphql_schemas`/`api_changelog`) all have no
+create route, the same "admin/internal-managed, read-only over HTTP"
+pattern
+`services/mobile-api-service` (Prompt 072) and
+`services/administration-portal-service` (Prompt 070) already
+established as a recurring, legitimate AI-IOS pattern rather than a
+one-off).
+
+**A second scope decision specific to this prompt**: "Webhook Failure"
+(one of the seven notification kinds) is a declared seam -- this
+service owns no webhook data at all (`services/webhook-service`,
+Prompt 057, does), so `DeveloperNotifier.notify_webhook_failure` exists
+and is directly tested like every other notification, but nothing in
+this build calls it internally; a real deployment would wire it to
+whatever consumes webhook-service's own failure events. This differs
+from 071's "Deprecation Notice"-style seams (which *do* have an
+internal caller, just a sweep worker instead of a route) -- here there
+is genuinely no data this service could observe to trigger the
+notification itself.
+
+**A third first for this build**: `DeveloperAccountStatus`'s own
+transition table has no terminal state at all --
+`PENDING_VERIFICATION -> {ACTIVE, SUSPENDED}`, `ACTIVE -> {SUSPENDED}`,
+`SUSPENDED -> {ACTIVE}` -- a suspended developer can always be
+reinstated. Every other lifecycle engine built so far (device trust,
+applications, API products, API versions, credentials) has at least one
+truly terminal state (`REVOKED`, `DEPRECATED`, `SUNSET`, `EXPIRED`).
+Worth remembering when designing a future lifecycle: not every status
+machine needs a point of no return, and forcing one in where the domain
+doesn't call for it would have made a legitimate "unsuspend this
+developer" administrative action impossible to model.
+
+Hand-verification of all 10 pure engines found **zero defects** in one
+combined run (58 checks). Full integration and live-e2e testing also
+found **zero new defects** -- every domain field name was checked
+against the reserved-column list individually before the first
+migration was generated (`ApiVersion.version_label`, not the bare
+`version` the table's own vocabulary ("API Versioning", "Semantic
+Versioning") would have naturally suggested -- precisely the collision
+071 found for three different tables), and every enum-typed column
+access in services/workers was written as `EnumClass(value)` coercion
+from the start.
+
+### Things worth remembering
+
+- **Redis db assignment continues sequentially**: ..., 45 (Prompt 072),
+  **46 (this prompt)**. Port assignment: ..., 8043 (Prompt 072), **8044
+  (this prompt)**.
+- **A developer-facing caller is identified by email, not an opaque
+  platform user id** -- every prior AI-IOS service treated a verified
+  token's `sub` claim as an opaque id to compare or store as-is; here,
+  for a public developer-portal login flow, `sub` carries the
+  developer's own email address, and `CurrentDeveloper` resolves the
+  caller by looking up `developer_accounts.email` within the token's
+  own `organization_id`. Worth checking explicitly for any future
+  externally-facing (as opposed to internal-platform-facing) service:
+  the identity claim's *meaning* can differ by audience even when the
+  JWT shape stays identical.
+- **Quota-breach event publication is edge-triggered, not
+  level-triggered**: `QuotaService.consume` compares "was already
+  exceeded" against "is now exceeded" before publishing
+  `QuotaExceeded`, so a developer who keeps calling after crossing
+  their own limit does not flood the event bus with a fresh event on
+  every subsequent call. The same "publish once, on the crossing, not
+  on every tick past it" discipline is worth checking for on any future
+  threshold-based event.
+- **Live e2e confirmed the credential expiry sweep worker fires
+  autonomously**: an API key's `expires_at` was backdated directly via
+  `psql` against the running container's own database (no route exists
+  to backdate a credential), and the very next scheduled tick --
+  watched in the container's own structured logs, `checked: 1` followed
+  by subsequent ticks correctly showing `checked: 0` once nothing
+  remained overdue -- flipped its status to `EXPIRED` with no manual
+  trigger of any kind. The statistics rollup worker was also confirmed
+  firing every tick in the same run, idempotently updating (not
+  duplicating) the same window's row each time.
