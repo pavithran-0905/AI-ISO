@@ -5,6 +5,11 @@ import { useAuthStore } from "@/auth/store";
 import { UserMenu } from "@/components/navigation/user-menu";
 import { TestQueryProvider } from "../../../query-test-utils";
 
+const push = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push }),
+}));
+
 function mockFetchOnce(status: number, body: unknown) {
   vi.stubGlobal(
     "fetch",
@@ -24,6 +29,7 @@ describe("UserMenu", () => {
   afterEach(() => {
     useAuthStore.getState().clear();
     vi.unstubAllGlobals();
+    push.mockClear();
   });
 
   it("offers only Documentation when unauthenticated (no identity to show)", () => {
@@ -62,7 +68,7 @@ describe("UserMenu", () => {
     expect(screen.getByRole("menuitem", { name: "Sign out" })).toBeInTheDocument();
   });
 
-  it("clears the session when Sign out is selected", async () => {
+  it("clears the session and redirects to /login when Sign out is selected", async () => {
     useAuthStore.setState({ status: "authenticated", userId: "u1", role: "operator", organizationId: "org1" });
     mockFetchOnce(200, {
       success: true,
@@ -85,6 +91,7 @@ describe("UserMenu", () => {
 
     fireEvent.click(screen.getByRole("menuitem", { name: "Sign out" }));
 
-    expect(useAuthStore.getState().status).toBe("unauthenticated");
+    await waitFor(() => expect(useAuthStore.getState().status).toBe("unauthenticated"));
+    expect(push).toHaveBeenCalledWith("/login");
   });
 });

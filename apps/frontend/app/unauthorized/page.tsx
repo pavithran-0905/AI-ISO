@@ -4,14 +4,15 @@ import { AccessDeniedState } from "@/components/feedback/access-denied-state";
 import { buttonVariants } from "@/components/ui/button";
 
 /**
- * The 401 destination `AuthGuard` will redirect to once a login page
- * exists (docs/frontend Prompt 001 §15, completed by Prompt 003 §27).
- * `?from=` (set by `AuthGuard`) is the "return-to destination" — shown
- * here and preserved on the primary action so a future login page can
- * read it and send the user back to what they were trying to reach,
- * not always the dashboard. No "log in" action exists yet (no login
- * page — see `docs/frontend/architecture/authentication.md`); adding
- * one here would link to a route that 404s.
+ * A generic 401 state (docs/frontend Prompt 001 §15). `AuthGuard`
+ * (Prompt 004 §10) now redirects an unauthenticated visitor straight
+ * to `/login?from=...&reason=...` rather than here, so nothing in the
+ * app currently links to this page — it's kept as a standalone 401
+ * destination for anything that isn't routed through `AuthGuard`
+ * (e.g. a page that wants to show "unauthorized" without navigating
+ * away first). `?from=` (the same "return-to destination" convention
+ * `AuthGuard` uses) is forwarded onto the Sign In link so it isn't
+ * lost if something does link here.
  */
 export default async function UnauthorizedPage({
   searchParams,
@@ -19,19 +20,18 @@ export default async function UnauthorizedPage({
   searchParams: Promise<{ from?: string }>;
 }) {
   const { from } = await searchParams;
+  const loginHref = from ? `/login?from=${encodeURIComponent(from)}` : "/login";
 
   return (
     <div className="bg-background text-foreground flex min-h-screen items-center justify-center">
       <AccessDeniedState
         variant="unauthorized"
         action={
-          <div className="flex flex-col items-center gap-2">
-            {from && (
-              <p className="text-muted-foreground text-xs">
-                You&apos;ll return to <span className="font-mono">{from}</span> once signed in.
-              </p>
-            )}
-            <Link href="/" className={buttonVariants("primary")}>
+          <div className="flex items-center gap-2">
+            <Link href={loginHref} className={buttonVariants("primary")}>
+              Sign in
+            </Link>
+            <Link href="/" className={buttonVariants("outline")}>
               Back to dashboard
             </Link>
           </div>

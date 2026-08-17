@@ -4,7 +4,7 @@ import { CircleUserRound, HelpCircle, LogOut, Settings, Sparkles } from "lucide-
 import { useState } from "react";
 
 import { useSession } from "@/auth/session";
-import { useAuthStore } from "@/auth/store";
+import { useLogout } from "@/auth/use-logout";
 import { Dropdown } from "@/components/overlays/dropdown";
 import { IconButton } from "@/components/ui/icon-button";
 import { typography } from "@/lib/typography";
@@ -12,24 +12,19 @@ import { typography } from "@/lib/typography";
 const HELP_URL = "https://github.com/pavicsi52-commits/AI-ISO";
 
 /**
- * The user/account menu (docs/frontend Prompt 003 §18) — built on the
- * real session (`@/auth/session`), never inventing an attribute the
- * backend doesn't confirm. `role`/`organizationId` are frequently
- * `null` today (the documented backend gap — see
- * `docs/frontend/architecture/authentication.md`); this menu shows
- * "Not assigned"/"No organization" rather than guessing or omitting
- * the row entirely, so the gap is visible, not hidden.
- *
- * No route is guarded by `AuthGuard` yet (Prompt 001 §13 — no login
- * page exists), so `isAuthenticated` is `false` in the app's actual
- * running state today. The menu degrades to theme/help only when
- * unauthenticated, rather than showing an identity section with
- * nothing in it.
+ * The user/account menu (docs/frontend Prompt 003 §18, logout wired by
+ * Prompt 004 §11) — built on the real session (`@/auth/session`),
+ * never inventing an attribute the backend doesn't confirm.
+ * `role`/`organizationId` are frequently `null` today (the documented
+ * backend gap — see `docs/frontend/architecture/authentication.md`);
+ * this menu shows "Not assigned"/"No organization" rather than
+ * guessing or omitting the row entirely, so the gap is visible, not
+ * hidden.
  */
 export function UserMenu() {
   const [open, setOpen] = useState(false);
   const { isAuthenticated, user, role, organizationId } = useSession();
-  const clearSession = useAuthStore((state) => state.clear);
+  const { logout } = useLogout();
 
   const items = isAuthenticated
     ? [
@@ -46,7 +41,7 @@ export function UserMenu() {
           label: "Sign out",
           icon: LogOut,
           destructive: true,
-          onSelect: () => clearSession(),
+          onSelect: () => void logout(),
         },
       ]
     : [{ label: "Documentation", icon: HelpCircle, onSelect: () => window.open(HELP_URL, "_blank", "noopener") }];

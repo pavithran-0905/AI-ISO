@@ -18,7 +18,11 @@ export function AuthBootstrap({ children }: { children: React.ReactNode }): Reac
 
   useEffect(() => {
     setAuthTokenProvider(getAccessToken);
-    setUnauthorizedHandler(clear);
+    // A 401 from the API client means the backend rejected the current
+    // token (expired/invalid) — distinct from an explicit sign-out, so
+    // `AuthGuard` can tell the user their session expired rather than
+    // showing a plain sign-in prompt (Prompt 004 §8).
+    setUnauthorizedHandler(() => clear("expired"));
   }, [clear]);
 
   return children;

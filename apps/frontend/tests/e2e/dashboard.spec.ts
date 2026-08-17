@@ -1,5 +1,15 @@
 import { expect, test } from "@playwright/test";
 
+import { seedAuthenticatedSession } from "./support/seed-session";
+
+// The dashboard is a protected route (docs/frontend Prompt 004 §10) —
+// these specs exercise its own UI, not the login flow (see
+// `auth.spec.ts`), so a session is seeded directly rather than going
+// through a real `POST /auth/login` that needs a live backend.
+test.beforeEach(async ({ context }) => {
+  await seedAuthenticatedSession(context);
+});
+
 test("dashboard loads and shows the AI-IOS header", async ({ page }) => {
   await page.goto("/");
 

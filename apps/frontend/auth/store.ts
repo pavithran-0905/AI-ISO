@@ -22,8 +22,14 @@ interface AuthState {
   role: Role | null;
   organizationId: string | null;
   status: SessionStatus;
+  /** Why the session was last cleared — read by `AuthGuard` (Prompt 004
+   * §8) to decide whether to tell the user their session expired, vs. a
+   * plain sign-in prompt for a visitor who was never authenticated.
+   * Deliberately not persisted (see `partialize` below): only relevant
+   * for the redirect happening in this page load. */
+  lastClearReason: "expired" | "manual" | null;
   setTokens: (tokens: AuthTokens) => void;
-  clear: () => void;
+  clear: (reason?: "expired" | "manual") => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -35,6 +41,7 @@ export const useAuthStore = create<AuthState>()(
       role: null,
       organizationId: null,
       status: "idle",
+      lastClearReason: null,
 
       setTokens: (tokens) => {
         const claims = decodeTokenClaims(tokens.accessToken);
@@ -45,10 +52,11 @@ export const useAuthStore = create<AuthState>()(
           role: claims?.role ?? null,
           organizationId: claims?.organization_id ?? null,
           status: "authenticated",
+          lastClearReason: null,
         });
       },
 
-      clear: () =>
+      clear: (reason = "manual") =>
         set({
           accessToken: null,
           refreshToken: null,
@@ -56,6 +64,7 @@ export const useAuthStore = create<AuthState>()(
           role: null,
           organizationId: null,
           status: "unauthenticated",
+          lastClearReason: reason,
         }),
     }),
     {
