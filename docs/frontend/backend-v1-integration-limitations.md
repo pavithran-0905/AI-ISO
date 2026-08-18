@@ -36,6 +36,21 @@ have one), entirely frontend-side, no backend change. `role` has no
 equivalent workaround since nothing analogous to "list my roles" exists
 to select from.
 
+**One service enforces this gap as a hard block, not a silent no-op**:
+`observability-platform-service/app/api/deps.py#get_organization_id`
+derives `organization_id` strictly from the JWT's own claims (never a
+query param or header, unlike every other service) and raises a `403`
+when the claim is absent — which, given the gap above, is always.
+`/observability/topology` and `/observability/events` (Monitoring's
+Services and Events tabs) are therefore unreachable for any caller
+under the current login flow, not a permissions issue with any
+specific account. Closing it for real means either populating
+`organization_id` at login (benefits every service, the more correct
+fix) or making this one service accept a caller-supplied value like
+the rest of the platform does (narrower, but moves it away from its
+own more-defensible design). Deliberately left unfixed pending that
+decision — every other Monitoring tab (Assets, Overview) is unaffected.
+
 Full detail: `architecture/authentication.md`.
 
 ## No confirmed `notification-center-service` read/list REST contract
