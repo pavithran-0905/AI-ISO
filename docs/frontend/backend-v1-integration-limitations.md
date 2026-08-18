@@ -317,3 +317,167 @@ specific asset — there is no real, confirmed relationship to link
 through today. Wiring `InventoryClient` into a real route (a backend
 change, out of scope for this frontend prompt) would be a prerequisite
 for building that link honestly.
+
+## `reporting-service` performs no tenant isolation on `organization_id`
+
+**Discovered**: Prompt 008.
+
+Every dependency-injection factory in `services/reporting-service/app/api/deps.py`
+(`get_job_service`, `get_template_service`, `get_schedule_service`,
+`get_archive_service`, `get_statistics_service`, and every repository
+factory) constructs its repository with **no `tenant_scope` argument** —
+e.g. `ReportJobRepository(session)` (`deps.py:196`) — even though
+`shared_core.database.repository.BaseRepository` accepts one and only
+applies row-level org scoping when it's actually passed
+(`packages/shared-core/src/shared_core/database/repository.py:54-80`).
+`organization_id` is therefore a plain, caller-supplied, unchecked
+query/body parameter on nearly every endpoint (reports, templates,
+schedules, recipients, distributions, archive, statistics) — nothing
+in this service stops an authenticated caller from passing a different
+organization's id and reading its reports, templates, schedules, or
+archive. This is a strictly worse gap than the "no permission checks"
+pattern already seen in `alerting-service`: that one only means every
+authenticated user can act on data they can already see; this one
+means the `organization_id` filter itself isn't enforced at all.
+Confirmed no auth/tenant middleware fills the gap either — the
+service's own middleware stack (`app/core/factory.py:184-197`)
+registers only CORS/Timing/RequestContext/Localization/RequestValidation/
+SecurityHeaders.
+
+**Frontend behavior**: every Reporting API call still sends the real,
+currently-selected `organization_id` (never a hardcoded or guessed
+value) — the frontend does not exploit or route around this gap. This
+is flagged here as a backend authorization issue for
+`reporting-service` to fix (scoping every repository construction with
+its `tenant_scope`), not something a frontend change can or should
+paper over.
+
+## `reporting-service` performs no permission/role check on any route
+
+**Discovered**: Prompt 008. Same pattern as the Prompt 007 entry above
+("No permission/role distinction on any `alerting-service` route").
+
+Every router (`app/api/reports.py`, `app/api/templates.py`,
+`app/api/delivery.py`) uses only `Depends(get_current_user_id)`, which
+decodes the JWT for a user id and nothing else — confirmed across
+every route in all three files.
+
+**Frontend behavior**: `features/reporting` gates every mutation
+button behind the existing coarse role capability model
+(`@/permissions`) as a pure UX convenience, mapped onto the closest of
+the 9 real actions (`generate`→`execute`, schedule management→`execute`,
+distribution/archive/share→`export`, template approval→`approve`) —
+never a simulation of real backend authorization.
+
+## `GET /reports` has no pagination, search, or sort parameters
+
+**Discovered**: Prompt 008. Same pattern as the Prompt 007 `GET /alerts`
+entry above.
+
+Confirmed by reading `app/api/reports.py:136-150`: the only accepted
+parameters are `organization_id` (required), `category`, and
+`enabled_only`. Likewise `GET /reports/templates` (only `category`),
+`GET /reports/schedules` (only `report_id`), and `GET /reports/distributions`/
+`GET /reports/archive` (a `limit` up to 1000 but no offset/cursor —
+first-N only, no true pagination).
+
+**Frontend behavior**: the Reports list applies free-text search and
+column sorting entirely client-side over the endpoint's own complete,
+unpaginated result for the active `category`/`enabled_only` filter —
+honest because nothing is hidden behind a page boundary the client
+can't see, the same reasoning already established for Alerting's own
+list page.
+
+## Reports/templates/schedules expose no `version` field — no reachable optimistic-locking conflict
+
+**Discovered**: Prompt 008.
+
+`BaseRepository.update()` (`packages/shared-core/.../repository.py:113-140`)
+supports an `expected_version` argument and increments every entity's
+real `version` column on write — but `ReportResponse`, `TemplateResponse`,
+and `ScheduleResponse` never expose that column, and no service method
+in `app/services/report.py`/`template.py`/`schedule.py` ever passes
+`expected_version=` when calling `.update()`. Concurrent edits to the
+same report/template/schedule are silently last-write-wins; there is
+no reachable 409 to react to.
+
+**Frontend behavior**: §30 asks the frontend to "respect the actual
+version/concurrency contract" and show "Your report changed elsewhere.
+Reload the latest version before continuing" on a real conflict —
+since no such conflict is ever reachable through this API today, no
+version-conflict UI was built. Every write waits for the backend's
+confirmed response before updating what's shown (no optimistic
+update), which is the concurrency safeguard this contract can actually
+support.
+
+## No way to re-fetch a past generation's results — `POST /reports/generate` is the only place they're visible
+
+**Discovered**: Prompt 008.
+
+There is no `GET /reports/{id}/executions` and no
+`GET /reports/executions/{execution_id}` endpoint (confirmed: neither
+exists in `app/api/reports.py`). An execution and its export artifacts
+are only ever visible in the single `GenerateResponse` returned by the
+`POST /reports/generate` call that produced them (or indirectly, as a
+one-line summary, via `GET /reports/history`).
+
+**Frontend behavior**: Report Detail keeps the most recent
+`GenerateResult` in local component state and shows it right below the
+report's own Actions section — it is honestly described as "Latest
+generation," not a browsable list of past runs, and disappears on
+navigating away or reloading the page. History (`ReportHistorySection`)
+is the only durable record of past generations, and it only carries a
+summary string, not artifacts.
+
+## No revoke endpoint for a share link
+
+**Discovered**: Prompt 008.
+
+`POST /reports/exports/{id}/share` mints a token
+(`app/services/distribution.py`); the only way it stops working is its
+own `expires_at`, checked lazily on the next redemption attempt
+(`resolve_share_token()`). No endpoint exists to invalidate a link
+before that.
+
+**Frontend behavior**: `ShareExportDialog` shows the minted token and
+its real expiry, but offers no "revoke" action — building one would
+require inventing a capability the backend doesn't have.
+
+## `GET /reports/archive` cannot be filtered by report id
+
+**Discovered**: Prompt 008.
+
+Confirmed by reading `app/api/delivery.py:465-486`: the only filters
+are `search` (title substring) and `status`, plus a `limit`. There is
+no `report_id`/`job_id` parameter.
+
+**Frontend behavior**: Report Detail does not attempt an "Archive for
+this report" section — it would require fetching the organization's
+entire archive and filtering client-side against an unbounded,
+`limit`-capped result, which could silently miss entries beyond the
+cap. The org-wide Archive page (`/reporting/archive`) is the only
+place archived reports are browsable, consistent with not fabricating
+a per-report view the backend can't back reliably.
+
+## AI-narrative sections have no independent loading/generating state
+
+**Discovered**: Prompt 008.
+
+An `AI_SUMMARY` designer section is rendered inline as part of the
+single synchronous `POST /reports/generate` call
+(`app/renderer/engine.py`'s `_render_ai_section`) — there is no
+separate endpoint to poll a narrative's own generation progress. It
+resolves to exactly one of two real backend states: success (prose
+text, optionally with a citations table) or failure (an error message,
+surfaced in `degraded_sections` without failing the rest of the
+report).
+
+**Frontend behavior**: the Generate dialog shows one loading state for
+the whole pipeline (§13/§21's "loading"/"unavailable"/"error" — no
+separate "generating narrative…" sub-state exists to show, since the
+backend has none). A degraded AI section is visible via
+`degradedSections`, labeled honestly, never presented as if it
+succeeded. The narrative's actual rendered text is only visible by
+downloading/opening the generated artifact — there is no JSON view of
+rendered section content (`GenerateResponse` returns only execution
+metadata and export artifacts, never per-section rendered output).

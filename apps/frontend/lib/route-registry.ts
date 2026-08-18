@@ -22,7 +22,7 @@
  */
 
 import type { LucideIcon } from "lucide-react";
-import { Activity, Gauge, LayoutDashboard, Server, ShieldCheck, Siren, Sparkles, Users, Workflow } from "lucide-react";
+import { Activity, FileBarChart, Gauge, LayoutDashboard, Server, ShieldCheck, Siren, Sparkles, Users, Workflow } from "lucide-react";
 
 import type { Role } from "@/auth/types";
 
@@ -277,16 +277,88 @@ export const ROUTE_REGISTRY: readonly RouteMeta[] = [
     roles: null,
     feature: "backup-dr",
   }),
-  planned({
+  implemented({
     id: "reporting",
+    path: "/reporting",
     title: "Reporting",
     description: "Report design, scheduling, export, and distribution across the platform.",
     breadcrumb: "Reporting",
     navGroup: "operations",
     navLabel: null,
+    icon: FileBarChart,
+    roles: null,
+    feature: "reporting",
+    layout: "main",
+  }),
+  implemented({
+    id: "reporting-reports",
+    path: "/reporting/reports",
+    title: "Reports",
+    description: "Every saved report for this organization.",
+    breadcrumb: "Reports",
+    navGroup: "operations",
+    navLabel: null,
     icon: null,
     roles: null,
     feature: "reporting",
+    layout: "main",
+    showInNav: false,
+  }),
+  implemented({
+    id: "reporting-templates",
+    path: "/reporting/templates",
+    title: "Templates",
+    description: "Reusable report definitions, versioned and approved before use.",
+    breadcrumb: "Templates",
+    navGroup: "operations",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "reporting",
+    layout: "main",
+    showInNav: false,
+  }),
+  implemented({
+    id: "reporting-schedules",
+    path: "/reporting/schedules",
+    title: "Scheduled Reports",
+    description: "Every recurring report schedule for this organization.",
+    breadcrumb: "Scheduled Reports",
+    navGroup: "operations",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "reporting",
+    layout: "main",
+    showInNav: false,
+  }),
+  implemented({
+    id: "reporting-history",
+    path: "/reporting/history",
+    title: "Generated Reports",
+    description: "Every report generation event recorded for this organization.",
+    breadcrumb: "Generated Reports",
+    navGroup: "operations",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "reporting",
+    layout: "main",
+    showInNav: false,
+  }),
+  implemented({
+    id: "reporting-archive",
+    path: "/reporting/archive",
+    title: "Archive",
+    description: "Immutable, retention-governed copies of generated reports.",
+    breadcrumb: "Archive",
+    navGroup: "operations",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "reporting",
+    layout: "main",
+    showInNav: false,
   }),
 
   // ---- Automation ---------------------------------------------------------------------
