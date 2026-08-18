@@ -118,4 +118,64 @@ export async function seedAuthenticatedSession(context: BrowserContext): Promise
       body: envelope({ status: "healthy", service: "gateway", version: "0.1.0", environment: "development" }),
     }),
   );
+
+  // Monitoring (Prompt 006) — same reasoning, extended to inventory-service
+  // and observability-platform-service's real endpoints.
+  await context.route("**/inventory/statistics*", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: envelope({ total_assets: 0, health_distribution: {} }) }),
+  );
+  await context.route("**/inventory/search*", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: envelope({ items: [], pagination: { total: 0, page: 1, page_size: 25, total_pages: 0, has_next: false, has_previous: false } }),
+    }),
+  );
+  await context.route("**/inventory/assets/*", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: envelope({
+        id: "e2e-asset",
+        organization_id: "e2e-org",
+        project_id: null,
+        name: "e2e-server",
+        display_name: "E2E Server",
+        hostname: "e2e-server.internal",
+        fqdn: null,
+        ip_address: null,
+        vendor: null,
+        manufacturer: null,
+        model: null,
+        operating_system: null,
+        environment: "production",
+        asset_type: "physical_server",
+        category_id: null,
+        class_id: null,
+        location_id: null,
+        owner_id: null,
+        status: "managed",
+        health: "healthy",
+        lifecycle_state: "operational",
+        criticality: "medium",
+        metadata: {},
+        tags: [],
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-01T00:00:00Z",
+      }),
+    }),
+  );
+  await context.route("**/inventory/relationships*", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: envelope([]) }),
+  );
+  await context.route("**/observability/topology*", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: envelope({ environment: "production", nodes: [] }) }),
+  );
+  await context.route("**/observability/events*", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: envelope({ events: [], page: { next_cursor: null, has_more: false } }),
+    }),
+  );
 }

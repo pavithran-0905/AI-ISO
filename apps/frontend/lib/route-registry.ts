@@ -22,7 +22,7 @@
  */
 
 import type { LucideIcon } from "lucide-react";
-import { Activity, LayoutDashboard, Server, ShieldCheck, Sparkles, Users, Workflow } from "lucide-react";
+import { Activity, Gauge, LayoutDashboard, Server, ShieldCheck, Sparkles, Users, Workflow } from "lucide-react";
 
 import type { Role } from "@/auth/types";
 
@@ -140,16 +140,60 @@ export const ROUTE_REGISTRY: readonly RouteMeta[] = [
   }),
 
   // ---- Operations ---------------------------------------------------------------------
-  planned({
+  implemented({
     id: "monitoring",
+    path: "/monitoring",
     title: "Monitoring",
-    description: "Distributed collectors, time-series metrics, health/availability/SLA/SLO.",
+    description: "Asset health, service topology, and platform events.",
     breadcrumb: "Monitoring",
+    navGroup: "operations",
+    navLabel: null,
+    icon: Gauge,
+    roles: null,
+    feature: "monitoring",
+    layout: "main",
+  }),
+  implemented({
+    id: "monitoring-assets",
+    path: "/monitoring/assets",
+    title: "Assets",
+    description: "Searchable, filterable inventory of every managed asset and its health.",
+    breadcrumb: "Assets",
     navGroup: "operations",
     navLabel: null,
     icon: null,
     roles: null,
     feature: "monitoring",
+    layout: "main",
+    showInNav: false,
+  }),
+  implemented({
+    id: "monitoring-services",
+    path: "/monitoring/services",
+    title: "Service Health",
+    description: "Per-service health derived from the platform's dependency topology.",
+    breadcrumb: "Services",
+    navGroup: "operations",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "monitoring",
+    layout: "main",
+    showInNav: false,
+  }),
+  implemented({
+    id: "monitoring-events",
+    path: "/monitoring/events",
+    title: "Events",
+    description: "Platform, infrastructure, deployment, and configuration events.",
+    breadcrumb: "Events",
+    navGroup: "operations",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "monitoring",
+    layout: "main",
+    showInNav: false,
   }),
   planned({
     id: "alerting",

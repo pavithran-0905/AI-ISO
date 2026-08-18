@@ -151,3 +151,72 @@ liveness check). If this turns out to be a real gap, it's a backend
 authorization issue to fix in `services/api-gateway-service`, not
 something the frontend should route around by inventing its own
 access check.
+
+## No metric-series-discovery endpoint (`observability-platform-service`)
+
+**Discovered**: Prompt 006.
+
+`GET /observability/metrics` is real and well-typed (`MetricsResponse`
+with real `series`/`samples` fields), but requires `series_id: UUID`
+as a required query parameter — and no endpoint exists to list/discover
+what series ids are available for an organization or service. The
+series' own descriptive fields (`name`, `metric_type`, `unit`,
+`service_name`) are only returned *after* querying with an already-known
+id, which doesn't help with discovery.
+
+**Frontend behavior**: no Metrics/charts UI was built at all this
+prompt (`docs/frontend/rfi/monitoring.md`'s own "What's PLANNED").
+Building a metric selector against a guessed-at series id would be
+exactly the kind of endpoint/field invention Prompt 006 §2 forbids.
+Revisit once a discovery endpoint exists (e.g. `GET /observability/metrics/series`
+or similar) or a confirmed way to enumerate series ids is found.
+
+## `observability-platform-service` events have no asset correlation
+
+**Discovered**: Prompt 006.
+
+`ObservabilityEventResponse` (`GET /observability/events`) has no
+asset-id reference field — only an optional `service_name: str | None`.
+There is no reliable way to determine which `inventory-service` asset
+(if any) a given event relates to.
+
+**Frontend behavior**: the Monitoring Events timeline and Asset Detail
+page are built independently — Asset Detail does not attempt to show
+"events for this asset," and the Events page never claims an
+asset-level scope it can't back with real data.
+
+## `inventory-service` has no category/class/location name-resolution endpoint
+
+**Discovered**: Prompt 006.
+
+`AssetResponse.category_id`/`.class_id`/`.location_id` are bare UUIDs.
+The underlying category/asset-class/location service and repository
+code exists internally (`app/services/category.py`,
+`app/services/asset_class.py`, `app/services/location.py`) but none of
+it is wired to an API router (`app/api/__init__.py`'s registered
+routers: `analytics, asset, export, group, health, import_,
+relationship, search, statistics, topology` — no `category`/`class`/`location`
+router among them).
+
+**Frontend behavior**: Asset Detail shows these three fields as raw,
+clearly-labeled ids ("Category id: `<uuid>`") rather than inventing
+resolved names. Add a category/class/location router to
+`inventory-service` (a backend change, out of scope for this frontend
+prompt) to unblock resolving them to human-readable labels.
+
+## `GET /inventory/search` has no `health` filter parameter
+
+**Discovered**: Prompt 006.
+
+Confirmed by reading the route handler directly
+(`services/inventory-service/app/api/search.py`): the only filters are
+`asset_type`, `status`, `owner_id`, `project_id`, and free-text `q` —
+`health` isn't one of them, even though `AssetResponse.health` is a
+real, distinct field from `status`.
+
+**Frontend behavior**: the Monitoring Overview's "Critical issues"
+section fetches one bounded, sorted page (100 most-recently-updated
+assets) and filters by `health` client-side, rather than issuing an
+unbounded fetch or fabricating server-side filtering that doesn't
+exist. The UI notes explicitly when this scan was truncated relative
+to the organization's total asset count.

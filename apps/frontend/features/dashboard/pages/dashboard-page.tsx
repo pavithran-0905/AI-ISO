@@ -1,8 +1,7 @@
 "use client";
 
 import { RefreshCw } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import Link from "next/link";
 
 import { IconButton } from "@/components/ui/icon-button";
 import { PageHeader } from "@/components/navigation/page-header";
@@ -16,11 +15,25 @@ import { SectionState } from "@/features/dashboard/components/section-state";
 import { SystemStatusSection } from "@/features/dashboard/components/system-status-section";
 import { formatRelativeTime } from "@/lib/relative-time";
 import { typography } from "@/lib/typography";
-import { cn } from "@/utils/cn";
+import { useRefreshAction } from "@/lib/use-refresh-action";
 import { useSelectedOrganization } from "@/organization/use-organizations";
 
-function SectionHeading({ children }: { children: React.ReactNode }) {
-  return <h2 className={cn(typography.cardTitle, "mb-3")}>{children}</h2>;
+/** `viewAllHref` only ever points at a route registered as
+ * `"implemented"` in `lib/route-registry.ts` (§26: "only link to
+ * routes that actually exist") — Monitoring shipped in Prompt 006, so
+ * these two sections finally have somewhere real to send the operator
+ * for the fuller view. */
+function SectionHeading({ children, viewAllHref }: { children: React.ReactNode; viewAllHref?: string }) {
+  return (
+    <div className="mb-3 flex items-center justify-between">
+      <h2 className={typography.cardTitle}>{children}</h2>
+      {viewAllHref && (
+        <Link href={viewAllHref} className="text-primary text-xs font-medium hover:underline">
+          View in Monitoring
+        </Link>
+      )}
+    </div>
+  );
 }
 
 export function DashboardPage() {
@@ -32,16 +45,7 @@ export function DashboardPage() {
     needsSelection,
     hasNoAccess,
   } = useSelectedOrganization();
-  const queryClient = useQueryClient();
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastRefreshedAt, setLastRefreshedAt] = useState<string>(() => new Date().toISOString());
-
-  async function handleRefresh() {
-    setIsRefreshing(true);
-    await queryClient.invalidateQueries();
-    setLastRefreshedAt(new Date().toISOString());
-    setIsRefreshing(false);
-  }
+  const { refresh, isRefreshing, lastRefreshedAt } = useRefreshAction();
 
   return (
     <div className="flex flex-col gap-6">
@@ -59,7 +63,7 @@ export function DashboardPage() {
             aria-label="Refresh dashboard"
             variant="outline"
             loading={isRefreshing}
-            onClick={handleRefresh}
+            onClick={refresh}
           />
         }
       />
@@ -79,7 +83,7 @@ export function DashboardPage() {
             </section>
 
             <section>
-              <SectionHeading>Operational health</SectionHeading>
+              <SectionHeading viewAllHref="/monitoring">Operational health</SectionHeading>
               <HealthOverviewSection organizationId={selectedOrganizationId} />
             </section>
 
@@ -96,7 +100,7 @@ export function DashboardPage() {
             </div>
 
             <section>
-              <SectionHeading>System status</SectionHeading>
+              <SectionHeading viewAllHref="/monitoring/services">System status</SectionHeading>
               <SystemStatusSection organizationId={selectedOrganizationId} />
             </section>
           </div>
