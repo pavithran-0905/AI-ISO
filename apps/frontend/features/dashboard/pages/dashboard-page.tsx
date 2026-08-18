@@ -104,7 +104,9 @@ export function DashboardPage() {
               </section>
 
               <section>
-                <SectionHeading>Recent automation activity</SectionHeading>
+                <SectionHeading viewAllHref="/automation/executions" viewAllLabel="View in Automation">
+                  Recent automation activity
+                </SectionHeading>
                 <RecentActivitySection organizationId={selectedOrganizationId} />
               </section>
             </div>

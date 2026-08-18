@@ -2,53 +2,75 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { RecentActivitySection } from "@/features/dashboard/components/recent-activity-section";
-import { useAutomationExecutions } from "@/features/dashboard/hooks/use-automation-executions";
-import type { AutomationExecution } from "@/features/dashboard/types";
+import { useExecutions } from "@/features/automation/hooks/use-executions";
+import type { AutomationExecution } from "@/features/automation/types";
 
-vi.mock("@/features/dashboard/hooks/use-automation-executions", () => ({
-  useAutomationExecutions: vi.fn(),
+vi.mock("@/features/automation/hooks/use-executions", () => ({
+  useExecutions: vi.fn(),
 }));
 
-const mocked = vi.mocked(useAutomationExecutions);
+const mocked = vi.mocked(useExecutions);
 
 function execution(overrides: Partial<AutomationExecution>): AutomationExecution {
   return {
-    id: "e1",
+    id: "e1abc234-0000-0000-0000-000000000000",
     organizationId: "org-1",
     jobId: "job-42",
+    executionPlanId: null,
     status: "completed",
+    executionMode: "immediate",
     triggeredBy: "user-1",
+    variables: {},
     startedAt: "2026-01-01T00:00:00Z",
     completedAt: "2026-01-01T00:05:00Z",
+    timeoutSeconds: null,
     errorMessage: null,
+    createdAt: "2026-01-01T00:00:00Z",
     ...overrides,
   };
 }
 
+function mockExecutions(executions: AutomationExecution[]) {
+  mocked.mockReturnValue({
+    isLoading: false,
+    isError: false,
+    data: executions,
+    error: null,
+    refetch: vi.fn(),
+  } as unknown as ReturnType<typeof useExecutions>);
+}
+
 describe("RecentActivitySection", () => {
-  it("renders each execution's job and status", () => {
-    mocked.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: [execution({})],
-      error: null,
-      refetch: vi.fn(),
-    } as unknown as ReturnType<typeof useAutomationExecutions>);
+  it("renders each execution's status", () => {
+    mockExecutions([execution({})]);
 
     render(<RecentActivitySection organizationId="org-1" />);
 
-    expect(screen.getByText("Job job-42")).toBeInTheDocument();
     expect(screen.getByText("Completed")).toBeInTheDocument();
   });
 
+  it("links each execution to its own Automation detail page", () => {
+    mockExecutions([execution({})]);
+
+    render(<RecentActivitySection organizationId="org-1" />);
+
+    expect(screen.getByRole("link", { name: /Run e1abc234/ })).toHaveAttribute(
+      "href",
+      "/automation/executions/e1abc234-0000-0000-0000-000000000000",
+    );
+  });
+
+  it("falls back to createdAt when a run hasn't started yet", () => {
+    mockExecutions([execution({ status: "pending", startedAt: null, completedAt: null })]);
+
+    render(<RecentActivitySection organizationId="org-1" />);
+
+    expect(screen.getByText("Pending")).toBeInTheDocument();
+    expect(screen.getByRole("time")).toHaveAttribute("datetime", "2026-01-01T00:00:00Z");
+  });
+
   it("shows an honest empty state, not a generic 'no data'", () => {
-    mocked.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: [],
-      error: null,
-      refetch: vi.fn(),
-    } as unknown as ReturnType<typeof useAutomationExecutions>);
+    mockExecutions([]);
 
     render(<RecentActivitySection organizationId="org-1" />);
 

@@ -5,30 +5,6 @@
  * the endpoint each one comes from.
  */
 
-/** `ExecutionStatus` per `services/automation-service/app/models/enums.py`. */
-export const EXECUTION_STATUSES = [
-  "pending",
-  "running",
-  "paused",
-  "completed",
-  "failed",
-  "cancelled",
-  "timed_out",
-  "rolled_back",
-] as const;
-export type ExecutionStatusValue = (typeof EXECUTION_STATUSES)[number];
-
-export interface AutomationExecution {
-  id: string;
-  organizationId: string;
-  jobId: string;
-  status: ExecutionStatusValue;
-  triggeredBy: string | null;
-  startedAt: string | null;
-  completedAt: string | null;
-  errorMessage: string | null;
-}
-
 /** `HealthState` per `services/api-gateway-service/app/models/enums.py`
  * (mirrors `shared_core.enums.health_status.HealthStatus`). */
 export const HEALTH_STATES = ["healthy", "degraded", "warning", "unhealthy", "maintenance", "unknown"] as const;

@@ -22,7 +22,7 @@
  */
 
 import type { LucideIcon } from "lucide-react";
-import { Activity, FileBarChart, Gauge, LayoutDashboard, Server, ShieldCheck, Siren, Sparkles, Users, Workflow } from "lucide-react";
+import { Activity, Bot, FileBarChart, Gauge, LayoutDashboard, Server, ShieldCheck, Siren, Sparkles, Users, Workflow } from "lucide-react";
 
 import type { Role } from "@/auth/types";
 
@@ -362,16 +362,46 @@ export const ROUTE_REGISTRY: readonly RouteMeta[] = [
   }),
 
   // ---- Automation ---------------------------------------------------------------------
-  planned({
+  implemented({
     id: "automation",
+    path: "/automation",
     title: "Automation",
-    description: "Playbooks, workflows, scripts, TOSCA deployments, scheduled operational jobs.",
+    description: "Automation jobs, executions, and operational run history.",
     breadcrumb: "Automation",
+    navGroup: "automation",
+    navLabel: null,
+    icon: Bot,
+    roles: null,
+    feature: "automation",
+    layout: "main",
+  }),
+  implemented({
+    id: "automation-automations",
+    path: "/automation/automations",
+    title: "Automations",
+    description: "Every automation job defined for this organization.",
+    breadcrumb: "Automations",
     navGroup: "automation",
     navLabel: null,
     icon: null,
     roles: null,
     feature: "automation",
+    layout: "main",
+    showInNav: false,
+  }),
+  implemented({
+    id: "automation-executions",
+    path: "/automation/executions",
+    title: "Executions",
+    description: "Every automation run recorded for this organization.",
+    breadcrumb: "Executions",
+    navGroup: "automation",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "automation",
+    layout: "main",
+    showInNav: false,
   }),
   planned({
     id: "playbooks",
