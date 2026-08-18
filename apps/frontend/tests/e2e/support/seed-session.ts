@@ -111,7 +111,11 @@ export async function seedAuthenticatedSession(context: BrowserContext): Promise
   await context.route("http://localhost:8027/alerts*", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: envelope([]) }),
   );
-  await context.route("**/automation/executions*", (route) =>
+  // Scoped to the real API origin for the same reason as `/alerts*`
+  // above — Automation (Prompt 009) now has a real frontend page at
+  // this exact path (`/automation/executions`), which a bare glob
+  // would also intercept.
+  await context.route("http://localhost:8027/automation/executions*", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: envelope([]) }),
   );
   // The gateway's own unauthenticated liveness check (`GatewayLivenessCard`)

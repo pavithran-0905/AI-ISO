@@ -481,3 +481,204 @@ succeeded. The narrative's actual rendered text is only visible by
 downloading/opening the generated artifact — there is no JSON view of
 rendered section content (`GenerateResponse` returns only execution
 metadata and export artifacts, never per-section rendered output).
+
+## `automation-service` and `scheduler-service` perform no tenant isolation; `scheduler-service` leaves most routes unauthenticated entirely
+
+**Discovered**: Prompt 009. Same pattern as the Prompt 008
+`reporting-service` entry above, found again in two more services.
+
+`automation-service`: every DI factory in `app/api/deps.py` constructs
+its repositories with `session` only, never the `tenant_scope`
+argument `BaseRepository` accepts — confirmed by grepping `tenant_scope`
+across the whole service; the only hits are the pass-through parameter
+in `app/repositories/*.py` itself. Worse than Reporting's version of
+this gap: `GET /automation/jobs/{id}`, `PUT`, `DELETE`, and
+`POST .../execute|cancel|pause|resume` take **no `organization_id` at
+all** — they resolve purely by primary key with zero ownership check,
+so any authenticated user can execute or delete any job on the
+platform by id, not just read across tenants.
+
+`scheduler-service` has the identical no-`tenant_scope` gap, and
+additionally: of its 42 non-health routes, only 8 use any auth
+dependency at all (`create_job`, `update_job`, `delete_job`, `run_job`,
+`pause_job`, `resume_job`, `cancel_job`, `recover_failure`,
+`create_window`, `generate_report`) — every list/get/logs/trigger/
+dependency/retry-policy/analytics route (30 of 42) has no
+`Depends(...)` for identity at all, confirmed by parsing every route
+function's signature and finding no global `dependencies=[...]` on the
+app or router. `scheduler-service` was not built against in this
+prompt (see the next entry) specifically because of this and the
+absent automation link.
+
+**Frontend behavior**: `features/automation`/`features/workflows`
+still always send the real, currently-selected `organization_id` on
+every call that accepts one. This is flagged as a backend
+authorization issue for both services to fix, not something a frontend
+change can or should route around.
+
+## `scheduler-service` never actually dispatches an `automation_job`
+
+**Discovered**: Prompt 009.
+
+`scheduler-service`'s own execution service states outright (its
+module docstring): it dispatches by publishing a `JobStarted` event
+with the job's payload and records success once that publish succeeds
+— it does not perform the job's own work. Grepping `automation` across
+the entire `scheduler-service` app tree returns zero hits beyond the
+`JobType.AUTOMATION_JOB` enum member's literal value; there is no
+`AutomationClient`, no HTTP call into `automation-service`, and
+`automation-service` has no consumer for whatever `scheduler-service`
+publishes. A scheduled job of type `automation_job` reports
+`completed` regardless of whether any automation ever ran.
+
+**Frontend behavior**: `scheduler-service` isn't integrated into this
+feature at all — `automation-service`'s own executions (the real
+signal for "did an automation run and how did it go") are what
+Automation/Executions shows. Building a "scheduled automations" view
+against `scheduler-service` would show a real-looking but functionally
+meaningless completion status.
+
+## `automation-service` has full parameter and target models with zero routes
+
+**Discovered**: Prompt 009.
+
+`AutomationParameter` (model, schema, service, DI wiring) and
+`AutomationTarget` (same) are both fully implemented server-side.
+Neither has a single `@router`-decorated endpoint — confirmed by
+enumerating every route in `app/api/jobs.py`, `executions.py`,
+`templates.py`, `statistics.py`, `reports.py`. `AutomationParameter.parameter_type`
+is a plain unvalidated `str(32)` (default `"string"`), not an enum —
+there is no `ParameterKind`/`ParameterType` enum anywhere in the
+service, and no `is_secret`/`allowed_values`/`min`/`max`/`pattern`
+field on it at all. `AutomationTarget` (with real `target_type`/
+`connector_type` enums, `credential_ref` via secrets-management) is
+equally real and equally unreachable.
+
+`AutomationJob.target_selector: dict[str, Any]` is also confirmed
+write-only — no execution code path ever reads it. The only working
+way to attach targets to a run is `POST .../execute`'s own
+`target_ids: list[UUID]`, resolved against rows that, per the above,
+can only be created by direct database access — there is no create
+route for a target either.
+
+**Frontend behavior**: `VariablesEditor` is a plain free-form key/value
+editor, not a schema-driven typed form — building one against a schema
+that cannot be fetched would be exactly the "do not hardcode
+parameters" invention §13 forbids. No target picker was built for the
+same reason: there is nothing real to populate it with. Runs execute
+with no targets, on the automation-service host itself, which
+`RunAutomationDialog`'s confirmation step states explicitly.
+
+## `automation-service` has full schedule and rollback/approval models with zero routes, and its cron engine never starts
+
+**Discovered**: Prompt 009.
+
+`AutomationSchedule` (model, schema, fully-implemented
+`AutomationScheduleService` with `list_for_job`/`create`/`set_enabled`/
+`record_run`/`delete`, DI-wired as `ScheduleSvc`) has zero routes.
+Separately, `app/scheduling/scheduler_integration.py` builds a
+`shared_core.scheduler.Job` from a schedule, but nothing ever
+constructs the actual `SchedulerManager` that would run it — confirmed
+by reading `app/core/factory.py`'s startup sequence (`_lifespan`),
+which starts the database, cache, events, notifications, HTTP client,
+connector manager, and queue worker, and never touches the scheduler
+integration module at all, despite that module's own docstring
+claiming otherwise. `next_run_at` is therefore never computed by
+anything.
+
+Approvals (`ExecutionMode.APPROVAL_REQUIRED` exists as an enum value,
+but `create_execution` never checks for an approval before dispatching)
+and rollback (`AutomationRollbackService`, `RollbackSvc`) are the same
+pattern: fully implemented, DI-wired, zero routes.
+
+**Frontend behavior**: no automation scheduling UI was built (§22/§23)
+— it would be entirely decorative against an engine that never starts.
+No approval-gate UI for Automation either (unlike Workflows, where
+approvals are real and routed — see below); `approval_required` as an
+execution mode is offered in the create/edit form's dropdown (it's a
+real enum value the backend accepts) but nothing in the UI implies it
+actually pauses for approval, since nothing backend-side enforces it.
+
+## An execution's selected targets are only recoverable from an internal `_target_ids` key inside its `variables`
+
+**Discovered**: Prompt 009.
+
+`AutomationExecutionResponse` has no `target_ids`/`targets` field.
+`AutomationExecutionService.create_execution` instead writes the
+caller's selected target ids into the execution's own `variables` dict
+under the key `"_target_ids"` (`app/services/execution.py`), so it
+round-trips back mixed in with the operator's real variables on every
+read.
+
+**Frontend behavior**: `features/automation/lib/execution-variables.ts#splitExecutionVariables`
+strips this key out before showing "Variables" to a user, and surfaces
+it separately as "Targets" — neither section is contaminated by the
+other's data.
+
+## `PUT /automation/jobs/{id}` is a full replace whose schema defaults `status` to draft
+
+**Discovered**: Prompt 009.
+
+`AutomationJobUpdateRequest.status: JobStatus = JobStatus.DRAFT`
+(`app/schemas/job.py`) — a genuine default, not merely optional. Since
+the endpoint is a full replace (not a partial patch), any update that
+doesn't explicitly resend the current status silently demotes a live
+(`active`) automation to `draft`. Separately, `POST /automation/jobs`
+hard-codes the new job's status to `active` and ignores any
+client-supplied value — there is no `status` field on the create
+request at all.
+
+**Frontend behavior**: `AutomationJobUpdateInput` (the frontend type)
+makes every field required, and the edit form always sends the job's
+current status explicitly; the create form never offers a status
+control, since the backend would ignore it.
+
+## Neither `automation-service` nor `workflow-runtime-service` exposes real-time execution updates
+
+**Discovered**: Prompt 009. Same pattern already established for
+Alerting/Reporting, confirmed again for both of these services.
+
+Grepped `websocket|EventSourceResponse|StreamingResponse|text/event-stream`
+across both service trees — zero hits in either. Both publish real
+domain events to RabbitMQ (`AutomationStarted`, `AutomationCompleted`,
+etc. on one side; workflow-equivalent events on the other), but
+neither bridges them to an HTTP-reachable stream.
+
+**Frontend behavior**: `useExecution`/`useWorkflowInstance` and their
+log/step counterparts poll every 5 seconds while the run is active
+(`ACTIVE_EXECUTION_STATUSES`/`ACTIVE_INSTANCE_STATUSES`) and stop
+polling once it reaches a terminal status — no follow/pause-streaming
+control is offered, since there is no stream to pause.
+
+## No Retry endpoint on either service
+
+**Discovered**: Prompt 009.
+
+Grepped `retry` across both services' `app/api/` trees — the only hits
+are repository imports for retry-history rows that are written
+backend-side during dispatch but have no route to read, on either
+service. No `POST .../retry` or `.../rerun` exists anywhere.
+
+**Frontend behavior**: no Retry action was built. Re-running is done
+through Run Automation/Run Workflow, which the UI describes as a fresh
+run, never implying it resumes or reuses the failed attempt's own
+history.
+
+## No Monitoring or Alerting relationship from either automation service
+
+**Discovered**: Prompt 009. Same discipline as the Prompt 007/008
+cross-link findings.
+
+Grepped `alert|monitoring_service|incident` across both
+`automation-service` and `workflow-runtime-service` — zero hits beyond
+enum *labels* that happen to contain those words (e.g.
+`AutomationType.MONITORING_ACTIONS`). No job/execution/workflow/
+instance schema carries an inventory-asset or alert reference, and
+`automation-service`'s own `InventoryClient` (a real, fully-implemented
+dynamic-inventory client) is dead code — wired into `app/api/deps.py`
+but never called by any route or service method, the same dead-code
+pattern already found in `alerting-service` during Prompt 007.
+
+**Frontend behavior**: no Automation↔Monitoring or Automation↔Alerting
+cross-links were built (§26/§27) — there is no real relationship to
+link through today.
