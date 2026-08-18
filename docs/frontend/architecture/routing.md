@@ -11,7 +11,7 @@ metadata, and the 404/401/403/error destinations.
 ```
 app/layout.tsx            <html>/<body> + AppProviders only — no visible chrome.
 app/(app)/layout.tsx        MainLayout (header/content/footer) for every route in the group.
-app/(app)/page.tsx           The dashboard (modules/dashboard/DashboardPage).
+app/(app)/page.tsx           The dashboard (features/dashboard/pages/DashboardPage).
 ```
 
 The root layout deliberately does **not** render `MainLayout`: a route

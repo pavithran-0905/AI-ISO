@@ -2,7 +2,7 @@
 
 `apps/frontend/api/client.ts` is the only module in the app allowed to
 call `fetch()`. Every feature must go through a feature-level API
-function (e.g. `auth/api.ts`, `modules/dashboard/services/health-service.ts`)
+function (e.g. `auth/api.ts`, `features/dashboard/api/gateway-liveness-api.ts`)
 that calls `apiClient.get/post/put/patch/delete`.
 
 ## What it does, per Prompt 001 §10's own checklist

@@ -28,10 +28,14 @@ application was **adopted as the foundation**, not replaced:
   `not-found.tsx`/`error.tsx` conventions) — there is no separate
   React Router to add on top of it.
 - **The existing `modules/dashboard/` placeholder was left in place,
-  untouched.** It proves the platform's presentation layer works
-  end-to-end against the gateway (health check → rendered card) and
-  predates the `features/` convention this prompt establishes for every
-  *future* business module — see `features/README.md` in the app.
+  untouched, through Prompts 001-004.** It proved the platform's
+  presentation layer worked end-to-end against the gateway (health
+  check → rendered card) and predated the `features/` convention this
+  prompt establishes for every *future* business module — see
+  `features/README.md` in the app. Frontend Prompt 005 migrated it into
+  `features/dashboard/` (the pattern's first real occupant) once the
+  dashboard became a real business feature rather than a bootstrap
+  placeholder — see `developer-guide/dashboard.md`.
 
 Every other section of Prompt 001 (API architecture, auth/RBAC
 foundation, routing/permission metadata, layouts, design tokens,
@@ -57,11 +61,17 @@ running backend (Prompts 000-080) actually exposes.
 
 ## What exists today vs. what's foundation-only
 
-Per Prompt 001 §34, no business-module screens were built. What exists
-is the **foundation**: the API client, the auth/permission architecture
-(built against the real, verified backend contract — including a
-documented backend gap, see `architecture/authentication.md`), the
-route/layout/design-token/error-state scaffolding, and the one
-pre-existing placeholder page (the dashboard). Every future business
-module (monitoring, alerting, reporting, ...) will be built inside
-`features/<feature>/` following the pattern in `apps/frontend/features/README.md`.
+Prompt 001 built the **foundation** only (§34): the API client, the
+auth/permission architecture (built against the real, verified backend
+contract — including a documented backend gap, see
+`architecture/authentication.md`), and the route/layout/design-token/
+error-state scaffolding, plus the application shell (Prompt 003) and
+authentication UX (Prompt 004) on top of it. Frontend Prompt 005 built
+the first **real** business feature — the enterprise dashboard, in
+`features/dashboard/` — including a new foundation-level
+`organization/` module (sibling to `auth/`/`permissions/`) that every
+future org-scoped feature will also need, since almost every real V1
+business endpoint requires an `organization_id` the JWT doesn't
+currently provide. Every subsequent business module (monitoring,
+alerting, reporting, ...) will be built inside `features/<feature>/`
+following the same pattern — see `apps/frontend/features/README.md`.

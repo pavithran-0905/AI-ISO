@@ -28,13 +28,15 @@ request, 401 clears the session) — this specific pattern is exactly the
 kind of thing that looks correct per-file but silently breaks at the
 seam, which is why it's tested as a seam, not just as two units.
 
-## modules/dashboard/ and the rest of the app
+## features/dashboard/ and the rest of the app
 
-`modules/dashboard/` is pre-existing (see `docs/frontend/README.md`)
-and was left untouched rather than migrated to `features/dashboard/`.
-It follows the boundary rules already (its own `components/`, `hooks/`,
-`services/`, `types/`) and only reaches into shared code the same way a
-`features/<feature>/` module would (`@/components/data-display/card`,
-`@/api/client`, indirectly through `services/health-service.ts`). It is
-not a second, competing convention — it is one deliberately-preserved
-instance of an earlier one.
+`features/dashboard/` (Frontend Prompt 005) is the first real occupant
+of the `features/<feature>/` pattern — the earlier `modules/dashboard/`
+placeholder it replaced (see `docs/frontend/README.md`) was migrated
+in, not left as a second, competing convention. It follows the
+boundary rules exactly like every future `features/<feature>/` module
+will: its own `api/`, `components/`, `hooks/`, `types/`, reaching into
+shared code only through `@/components/data-display/card`,
+`@/api/client`, and the new foundation-level `organization/` module
+(sibling to `auth/`/`permissions/`, not itself a feature — see
+`docs/frontend/developer-guide/dashboard.md` for why it exists).

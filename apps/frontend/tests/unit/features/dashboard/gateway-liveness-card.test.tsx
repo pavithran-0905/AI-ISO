@@ -1,52 +1,52 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { HealthStatusCard } from "@/modules/dashboard/components/health-status-card";
-import { useGatewayHealth } from "@/modules/dashboard/hooks/use-health";
+import { GatewayLivenessCard } from "@/features/dashboard/components/gateway-liveness-card";
+import { useGatewayLiveness } from "@/features/dashboard/hooks/use-gateway-liveness";
 
-vi.mock("@/modules/dashboard/hooks/use-health", () => ({
-  useGatewayHealth: vi.fn(),
+vi.mock("@/features/dashboard/hooks/use-gateway-liveness", () => ({
+  useGatewayLiveness: vi.fn(),
 }));
 
-const mockedUseGatewayHealth = vi.mocked(useGatewayHealth);
+const mockedUseGatewayLiveness = vi.mocked(useGatewayLiveness);
 
-describe("HealthStatusCard", () => {
+describe("GatewayLivenessCard", () => {
   it("shows a loading message while fetching", () => {
-    mockedUseGatewayHealth.mockReturnValue({
+    mockedUseGatewayLiveness.mockReturnValue({
       isLoading: true,
       isError: false,
       data: undefined,
       error: null,
-    } as ReturnType<typeof useGatewayHealth>);
+    } as ReturnType<typeof useGatewayLiveness>);
 
-    render(<HealthStatusCard />);
+    render(<GatewayLivenessCard />);
 
     expect(screen.getByText(/checking gateway status/i)).toBeInTheDocument();
   });
 
   it("shows an error state when the gateway is unreachable", () => {
-    mockedUseGatewayHealth.mockReturnValue({
+    mockedUseGatewayLiveness.mockReturnValue({
       isLoading: false,
       isError: true,
       data: undefined,
       error: new Error("Failed to fetch"),
-    } as ReturnType<typeof useGatewayHealth>);
+    } as ReturnType<typeof useGatewayLiveness>);
 
-    render(<HealthStatusCard />);
+    render(<GatewayLivenessCard />);
 
     expect(screen.getByText("Unreachable")).toBeInTheDocument();
     expect(screen.getByText("Failed to fetch")).toBeInTheDocument();
   });
 
-  it("shows health details on success", () => {
-    mockedUseGatewayHealth.mockReturnValue({
+  it("shows liveness details on success", () => {
+    mockedUseGatewayLiveness.mockReturnValue({
       isLoading: false,
       isError: false,
       data: { status: "healthy", service: "gateway", version: "0.1.0", environment: "development" },
       error: null,
-    } as ReturnType<typeof useGatewayHealth>);
+    } as ReturnType<typeof useGatewayLiveness>);
 
-    render(<HealthStatusCard />);
+    render(<GatewayLivenessCard />);
 
     expect(screen.getByText("healthy")).toBeInTheDocument();
     expect(screen.getByText("gateway")).toBeInTheDocument();

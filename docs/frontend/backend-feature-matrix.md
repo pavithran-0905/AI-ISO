@@ -153,7 +153,7 @@ Every prompt below is backend-`IMPLEMENTED` (verified above). None has a fronten
 | 045 | alerting-service | `features/alerting` | PLANNED |
 | 046 | ai-assistant-service | `features/ai-assistant` | PLANNED |
 | 047 | reporting-service | `features/reporting` | PLANNED |
-| 048 | dashboard-service | `features/dashboard-builder` *(distinct from the pre-existing `modules/dashboard/` placeholder — see `docs/frontend/README.md`)* | PLANNED |
+| 048 | dashboard-service | `features/dashboard-builder` *(distinct from `features/dashboard` — the Prompt 005 executive dashboard is sourced from organization-service/alerting-service/automation-service/api-gateway-service, not this service — see `docs/frontend/README.md`)* | PLANNED |
 | 049 | knowledge-graph-service | `features/knowledge-graph` | PLANNED |
 | 050 | policy-engine-service | `features/policy-engine` | PLANNED |
 | 051 | compliance-service | `features/compliance` | PLANNED |

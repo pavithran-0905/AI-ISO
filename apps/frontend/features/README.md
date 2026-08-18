@@ -19,12 +19,12 @@ features/<feature>/
 └── index.ts      # the feature's public surface — nothing outside imports past this file
 ```
 
-**Nothing lives here yet.** docs/frontend Prompt 001 §9/§34 explicitly
-forbids implementing business-module screens in the foundation prompt —
-this file exists only to establish the pattern every subsequent frontend
-prompt will follow.
-
-`modules/dashboard/` (the existing placeholder proving the platform's
-presentation layer works end-to-end against the gateway) predates this
-convention and is intentionally left in place rather than migrated here —
-see docs/frontend/README.md for why.
+**`dashboard/` is the first real occupant** (Frontend Prompt 005) —
+built once the dashboard became a real business feature rather than
+the bootstrap placeholder `modules/dashboard/` used to be (that
+directory no longer exists; it was migrated in, not left in place —
+see docs/frontend/README.md and docs/frontend/developer-guide/dashboard.md).
+Every subsequent business module (monitoring, alerting, reporting,
+ai-assistant, automation, users, rbac, secrets, projects,
+observability, analytics, audit, notifications, release-distribution,
+...) follows the exact same shape.

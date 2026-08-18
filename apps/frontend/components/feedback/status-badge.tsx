@@ -5,7 +5,7 @@ import { cn } from "@/utils/cn";
 /** The full status tone set (§5) — `success`/`warning`/`danger`/
  * `neutral` predate this prompt and stay first for backward
  * compatibility with existing callers (e.g.
- * `modules/dashboard/components/health-status-card.tsx`). */
+ * `features/dashboard/components/gateway-liveness-card.tsx`). */
 export type StatusTone =
   | "success"
   | "warning"

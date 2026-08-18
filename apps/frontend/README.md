@@ -29,9 +29,11 @@ auth/authorization/routing/error architecture). Summary:
   `data-display`, `feedback`, `forms`, `navigation`, `overlays`).
 - `layouts/` — the six reusable page shells (main, auth, fullscreen,
   split-pane, wizard, settings).
-- `features/` — the pattern every future business module follows (see
-  its own README) — empty today, per Prompt 001 §34.
-- `modules/dashboard/` — the pre-existing placeholder, left untouched.
+- `features/` — the pattern every business module follows (see its own
+  README) — `dashboard/` is the first real occupant (Prompt 005);
+  `modules/dashboard/`, the placeholder it replaced, no longer exists.
+- `organization/` — foundation module (sibling to `auth/`, `permissions/`)
+  for which organization's data is in view (Prompt 005).
 - `lib/` — `route-registry.ts`, centralized route metadata.
 - `state/` — Zustand stores (`theme-store.ts` today).
 - `providers/` — React context providers composed once in `app/layout.tsx`.

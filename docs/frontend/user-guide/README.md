@@ -1,14 +1,18 @@
-# AI-IOS User Guide (structure only)
+# AI-IOS User Guide
 
-Per Prompt 001 §28, this prompt establishes the structure only.
-Feature-specific instructions are written when each feature ships, not
-speculatively now.
+Established as structure-only per Prompt 001 §28; sections are written
+as each feature actually ships, not speculatively ahead of it.
 
-## Planned sections
+## Written
+
+- [Navigation](navigation.md) — the application shell (Prompt 003).
+- [Authentication](authentication.md) — signing in/out, sessions
+  (Prompt 004).
+- [Dashboard](dashboard.md) — the executive dashboard (Prompt 005).
+
+## Planned (not yet written)
 
 - Getting Started
-- Navigation
-- Dashboard
 - Monitoring
 - Alerting
 - Reporting
@@ -26,9 +30,3 @@ speculatively now.
 - Release & Distribution
 - Troubleshooting
 - FAQ
-
-## What exists today
-
-Nothing beyond this structure. The only shipped page is the dashboard
-placeholder (`modules/dashboard/`), which is not a business feature —
-see `docs/frontend/README.md`.

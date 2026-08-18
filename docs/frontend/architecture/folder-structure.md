@@ -41,9 +41,12 @@ layouts/
 lib/
   route-registry.ts        Centralized route metadata (title/breadcrumb/roles/nav visibility).
 
-features/                 Empty — the pattern for every future business module. See its own README.
+features/
+  dashboard/               The first real occupant (Frontend Prompt 005) — see its own README.
 
-modules/dashboard/        Pre-existing, untouched — see docs/frontend/README.md.
+organization/              Foundation module (sibling to auth/, permissions/) — which
+                            organization's data is currently in view. See
+                            docs/frontend/developer-guide/dashboard.md for why it exists.
 
 state/
   theme-store.ts            The one genuine client-state store today (persisted theme preference).
@@ -66,8 +69,9 @@ tests/
 ## Rules
 
 - No `src/modules/` **and** `src/features/` both holding live feature
-  code — `modules/dashboard/` is the one deliberate, documented
-  exception (pre-existing, untouched), not a second active convention.
+  code — `modules/dashboard/` (the pre-existing placeholder) was
+  migrated into `features/dashboard/` in Prompt 005, not kept as a
+  second active convention; `modules/` no longer exists.
 - Generic components (`components/`) never import from `features/`,
   `modules/`, `auth/`, or `permissions/` for anything business-specific.
 - `lib/` stays small — a thing that isn't a pure function (`utils/`) and
