@@ -56,6 +56,18 @@ export class ApiNetworkError extends Error {
   }
 }
 
+/** Every AI-IOS backend service's own placeholder for the not-yet-built
+ * multi-tenant Organization feature (each service defines this same fixed
+ * UUID as its own `DEFAULT_ORGANIZATION_ID`, e.g.
+ * `services/authentication-service/app/constants.py`). The gateway's
+ * per-request routing (`services/api-gateway-service/app/api/proxy.py`)
+ * cannot resolve *any* route — public or not — without an organization:
+ * an authenticated call carries one in its JWT claims, but a pre-auth
+ * call (login, register, refresh) has no token yet, so this header is
+ * the only way the gateway can route it. Sent on every request; the
+ * gateway prefers the JWT-derived organization when one is present. */
+const DEFAULT_ORGANIZATION_ID = "00000000-0000-0000-0000-000000000001";
+
 const DEFAULT_TIMEOUT_MS = 30_000;
 const RETRYABLE_STATUSES = new Set([502, 503, 504]);
 const RETRYABLE_METHODS = new Set(["GET", "HEAD"]);
@@ -137,6 +149,7 @@ async function performRequest<TData>(
     Accept: "application/json",
     "X-Request-ID": requestId,
     "X-Correlation-ID": requestId,
+    "X-Organization-Id": DEFAULT_ORGANIZATION_ID,
     ...(options.headers as Record<string, string> | undefined),
   };
 

@@ -21,6 +21,8 @@ class CorsConfig:
         "Content-Type",
         "X-Request-ID",
         "X-Correlation-ID",
+        "X-Organization-Id",
+        "X-API-Key",
     )
     allow_credentials: bool = False
     max_age_seconds: int = 600
