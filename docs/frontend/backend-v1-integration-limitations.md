@@ -682,3 +682,182 @@ pattern already found in `alerting-service` during Prompt 007.
 **Frontend behavior**: no Automation↔Monitoring or Automation↔Alerting
 cross-links were built (§26/§27) — there is no real relationship to
 link through today.
+
+## `ai-assistant-service` applies no tenant filter on any by-id lookup — the worst instance of this pattern found all session
+
+**Discovered**: Prompt 010.
+
+Every prior "tenant isolation" finding this session (Reporting,
+Automation) was at least the caller-supplied-but-unchecked pattern —
+`organization_id` was accepted as a parameter but never verified
+against the fetched row. `ai-assistant-service` goes one step further:
+`ConversationService.get_by_id(self, conversation_id: UUID)`
+(`app/services/conversation.py:34`) and `PromptService.get_by_id(self,
+prompt_id: UUID)` (`app/prompts/service.py:90`) don't even *accept* an
+`organization_id` parameter — both call straight through to
+`require_by_id(id)` on a generic base repository with zero tenant
+scoping anywhere in the call chain. A valid UUID for any
+organization's conversation or prompt (obtained by guessing,
+enumeration, or simply having seen it once) returns that
+organization's real data to any authenticated caller, regardless of
+which organization they belong to.
+
+**Frontend behavior**: this frontend always sends the real,
+currently-selected `organization_id` on every *list* call (the one
+place a filter is genuinely applied server-side,
+`list_for_org`/`list_for_user`), and never fabricates a client-side
+tenant check for the by-id routes the backend itself doesn't enforce.
+No workaround is possible from the frontend for a backend
+authorization gap.
+
+## `caller_permissions` / `allow_mutating_tools` are trusted from the request body with no cross-check against the caller's real role
+
+**Discovered**: Prompt 010.
+
+`ChatRequest.caller_permissions: list[str]` and `allow_mutating_tools:
+bool` (`app/schemas/chat.py`) are read directly by the tool-execution
+authorization gate to decide whether a model-requested tool call is
+allowed — confirmed by source inspection of the executor, which checks
+a tool's `required_permission` against exactly this client-supplied
+list. Neither value is cross-checked against the caller's actual
+JWT-derived identity in any way; a client can claim any permission
+set, or set `allow_mutating_tools: true`, regardless of role.
+
+**Frontend behavior**: `derivedCallerPermissions()`
+(`features/ai-assistant/lib/caller-permissions.ts`) still populates
+`caller_permissions` from the existing coarse capability model, purely
+for consistency with how every other feature already sends permission
+context — documented on the type itself as never a security boundary.
+The mutating-tools toggle is additionally hidden client-side for a
+role the coarse model denies `execute` to, which prevents an
+accidental opt-in through this UI but does nothing to stop a crafted
+request.
+
+## `POST /ai/chat/stream` does not provide real token-level streaming
+
+**Discovered**: Prompt 010.
+
+The route's own module docstring (`app/api/chat.py`) is explicit: it
+is a genuine `StreamingResponse` emitting real SSE frames, but the
+underlying provider call is awaited to full completion first
+(`turn = await chat.send(...)`) before the finished answer is chopped
+into fixed 256-character `delta` chunks and dripped out. Total latency
+to the last byte is identical to the synchronous `POST /ai/chat` — the
+only difference is a cosmetic typewriter effect.
+
+**Frontend behavior**: `chat-api.ts` deliberately consumes only
+`POST /ai/chat`. Building a UI against `/chat/stream` would imply real
+incremental generation the backend doesn't provide, which §10
+explicitly forbids faking.
+
+## No interactive per-tool-call confirmation endpoint
+
+**Discovered**: Prompt 010.
+
+`ChatRequest` carries `allow_mutating_tools` as a single whole-turn
+flag; there is no endpoint or field anywhere that would let a client
+pause a turn mid-flight to approve or deny one specific tool call the
+model is about to make. A mutating tool is authorized for the entire
+turn or denied outright within it — there is no narrower grain.
+
+**Frontend behavior**: `MutatingToolsToggle` is a composer-level,
+pre-emptive, OFF-by-default consent sent *with* the request, never a
+fake mid-conversation "the assistant wants to do X, allow?" dialog
+that the backend has no way to actually pause for.
+
+## No agent-attribution field on any chat/message/conversation response
+
+**Discovered**: Prompt 010.
+
+`ChatRequest.agent_type` is accepted as a hint on every call, but
+`ChatResponse`, `MessageResponse`, and `ConversationResponse`
+(`app/schemas/chat.py`) carry no `agent_id`/`agent_type` field back —
+confirmed by reading every field on all three schemas. There is no way
+to ask "which agent actually produced this answer?" after the fact.
+
+**Frontend behavior**: the agent picker in `Composer` is offered only
+when starting a brand-new conversation (`isNewConversation`), and no
+part of this feature ever renders an agent name as confirmed post-hoc
+attribution — `AGENT_TYPES`' own docstring in `features/ai-assistant/types`
+states this explicitly.
+
+## No context-injection API for cross-module references
+
+**Discovered**: Prompt 010.
+
+Nothing in `ChatRequest` or any other schema accepts a structured
+reference to an external entity (an alert id, an automation job id,
+an asset id) that the model could be given as grounded context beyond
+plain conversation text. The only way to give the assistant that
+context is to say it in the message itself.
+
+**Frontend behavior**: `AskAiButton` (§41) opens a new conversation
+with a plain-text draft referencing the real entity's real name/id
+(e.g. `Tell me about alert "Disk almost full" (id: a1).`) — never a
+fabricated structured payload the assistant doesn't actually receive.
+
+## Uniform `502`/`AIIOS-AI-0001` error for every chat failure mode
+
+**Discovered**: Prompt 010.
+
+A guardrail-infrastructure failure, every configured model provider
+failing in the fallback chain, and an embedding-provider failure all
+surface as the identical `502` status and `AIIOS-AI-0001` error code —
+confirmed by source inspection of the exception handling in
+`app/services/chat.py`. A client cannot distinguish "the AI is
+misconfigured" from "every provider is down" from "the guardrail
+service itself broke" without a raw backend log.
+
+**Frontend behavior**: the composer surfaces the backend's own error
+message via `ApiRequestError` on a failed send, without inventing a
+more specific category the backend itself can't provide — and keeps
+the typed message in the box so retrying is just pressing Send again.
+
+## `GET /ai/models`'s `is_default` field is computed, not a real configured default
+
+**Discovered**: Prompt 010.
+
+`ModelProviderResponse.is_default` (`app/api/agents.py`) is set via
+`index == 0` over `enumerate(registry.available_providers)` — i.e.
+"alphabetically/insertion-order first configured provider" — not any
+operator-configured default setting. Confirmed by source inspection;
+no such setting exists anywhere in the model registry.
+
+**Frontend behavior**: `catalogApi.listModels()` keeps the field on
+its return type for completeness but this feature never renders it as
+a "default" badge or otherwise treats it as meaningful, per its own
+code comment.
+
+## No delete/expire endpoint for assistant memory despite an `expires_at` column
+
+**Discovered**: Prompt 010.
+
+`AiMemory.expires_at` exists as a column and `MemoryCreateRequest`
+accepts one, but no route reads or acts on it, and there is no
+`DELETE`/clear endpoint of any kind on `/ai/memory` — confirmed by
+reading every route in `app/api/insights.py`. A memory entry, once
+created, is permanent and unexpiring in practice regardless of what
+`expires_at` was set to.
+
+**Frontend behavior**: `MemoryList` is read-only — this feature never
+calls `POST /ai/memory` at all, since the assistant is the realistic
+writer of its own memory and exposing a manual "remember this" form
+with no way to undo it would be a one-way door.
+
+## No permission/role check on any `ai-assistant-service` route
+
+**Discovered**: Prompt 010. Same pattern as every service audited this
+session (Alerting, Reporting, Automation, Workflow Runtime).
+
+Every route across `chat.py`, `insights.py`, `knowledge.py`,
+`agents.py`, and `prompts.py` depends only on
+`Depends(get_current_user_id)` — none checks a role or fine-grained
+permission, including the prompt-approval and rollback routes, which
+one might expect to be more tightly held than a plain conversation.
+
+**Frontend behavior**: mutation controls throughout this feature are
+gated by the coarse role capability model (§25) — generate/ingest →
+`create`, decide a recommendation → `approve`, prompt admin actions →
+the administrative check, the mutating-tools toggle → `execute` — a
+UX convenience only, consistent with every prior prompt's identical
+finding.

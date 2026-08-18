@@ -8,6 +8,7 @@ import { useState } from "react";
 import { ApiRequestError } from "@/api/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog } from "@/components/overlays/dialog";
+import { AskAiButton } from "@/features/ai-assistant/components/ask-ai-button";
 import { RunAutomationDialog } from "@/features/automation/components/run-automation-dialog";
 import {
   useCancelAutomation,
@@ -133,6 +134,7 @@ export function JobActions({ job }: { job: AutomationJob }) {
           Delete
         </Button>
       )}
+      <AskAiButton draft={`Tell me about the automation "${job.name}" (id: ${job.id}).`} />
 
       <RunAutomationDialog job={job} open={runOpen} onClose={() => setRunOpen(false)} />
 

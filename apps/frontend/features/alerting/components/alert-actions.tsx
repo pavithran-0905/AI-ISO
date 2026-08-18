@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/overlays/dialog";
 import { Label } from "@/components/forms/label";
 import { Textarea } from "@/components/forms/textarea";
+import { AskAiButton } from "@/features/ai-assistant/components/ask-ai-button";
 import { useAcknowledgeAlert } from "@/features/alerting/hooks/use-acknowledge-alert";
 import { useCloseAlert } from "@/features/alerting/hooks/use-close-alert";
 import { useEscalateAlert } from "@/features/alerting/hooks/use-escalate-alert";
@@ -55,11 +56,11 @@ const ACTION_COPY: Record<ActionKind, { title: string; confirmLabel: string; fie
  * pending (built into `Button`'s `loading` prop, preventing duplicate
  * submission), and reports success/failure via toast.
  *
- * Visibility once an alert is already resolved/closed/expired
- * (`RESOLVED_ALERT_STATUSES`) is hidden entirely — there's nothing left
- * to acknowledge, resolve, or escalate, and no backend "reopen" route
- * exists to undo it. This is a lifecycle-state UX heuristic, not a
- * simulation of backend authorization.
+ * The lifecycle mutations (not "Ask AI") are hidden once an alert is
+ * already resolved/closed/expired (`RESOLVED_ALERT_STATUSES`) — there's
+ * nothing left to acknowledge, resolve, or escalate, and no backend
+ * "reopen" route exists to undo it. This is a lifecycle-state UX
+ * heuristic, not a simulation of backend authorization.
  *
  * Button visibility is gated by the coarse role-based capability model
  * (`@/permissions`) as a UX convenience only — §25: the backend
@@ -76,9 +77,7 @@ export function AlertActions({ alert }: { alert: Alert }) {
   const escalate = useEscalateAlert(alert.id);
   const close = useCloseAlert(alert.id);
 
-  if (RESOLVED_ALERT_STATUSES.has(alert.status)) {
-    return null;
-  }
+  const isResolved = RESOLVED_ALERT_STATUSES.has(alert.status);
 
   function openDialog(kind: ActionKind) {
     setNote("");
@@ -109,26 +108,27 @@ export function AlertActions({ alert }: { alert: Alert }) {
 
   return (
     <div className="flex flex-wrap gap-2">
-      {can("update") && (
+      {!isResolved && can("update") && (
         <Button variant="outline" onClick={() => openDialog("acknowledge")} disabled={isPending}>
           Acknowledge
         </Button>
       )}
-      {can("update") && (
+      {!isResolved && can("update") && (
         <Button variant="outline" onClick={() => openDialog("resolve")} disabled={isPending}>
           Resolve
         </Button>
       )}
-      {can("execute") && (
+      {!isResolved && can("execute") && (
         <Button variant="outline" onClick={() => openDialog("escalate")} disabled={isPending}>
           Escalate
         </Button>
       )}
-      {can("update") && (
+      {!isResolved && can("update") && (
         <Button variant="danger" onClick={() => openDialog("close")} disabled={isPending}>
           Close
         </Button>
       )}
+      <AskAiButton draft={`Tell me about alert "${alert.title}" (id: ${alert.id}).`} />
 
       {copy && (
         <Dialog

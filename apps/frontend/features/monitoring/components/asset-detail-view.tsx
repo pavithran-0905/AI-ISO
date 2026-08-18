@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/data-disp
 import { StatusIndicator } from "@/components/data-display/status-indicator";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/feedback/empty-state";
+import { AskAiButton } from "@/features/ai-assistant/components/ask-ai-button";
 import { SectionState } from "@/features/dashboard/components/section-state";
 import { useAssetRelationships } from "@/features/monitoring/hooks/use-asset-relationships";
 import { ASSET_HEALTH_TO_STATUS } from "@/features/monitoring/lib/status-maps";
@@ -23,6 +24,9 @@ import type { Asset } from "@/features/monitoring/types";
 export function AssetDetailView({ asset }: { asset: Asset }) {
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex justify-end">
+        <AskAiButton draft={`Tell me about the asset "${asset.name}" (id: ${asset.id}).`} />
+      </div>
       <IdentitySection asset={asset} />
       <HealthSection asset={asset} />
       <MetadataSection asset={asset} />

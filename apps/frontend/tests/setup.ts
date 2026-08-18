@@ -28,6 +28,14 @@ if (typeof HTMLDialogElement !== "undefined") {
   };
 }
 
+// jsdom has no layout engine, so it never implements Element.scrollIntoView
+// (used by e.g. the AI Assistant transcript's auto-scroll-to-bottom effect).
+// A no-op is sufficient for tests, which only exercise that the call site
+// doesn't throw, not real scroll positioning.
+if (typeof Element !== "undefined" && !Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = function scrollIntoView() {};
+}
+
 afterEach(() => {
   cleanup();
   window.localStorage.clear();

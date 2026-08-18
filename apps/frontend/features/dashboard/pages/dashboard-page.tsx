@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { IconButton } from "@/components/ui/icon-button";
 import { PageHeader } from "@/components/navigation/page-header";
+import { AskAiButton } from "@/features/ai-assistant/components/ask-ai-button";
 import { AttentionRequiredSection } from "@/features/dashboard/components/attention-required-section";
 import { GatewayLivenessCard } from "@/features/dashboard/components/gateway-liveness-card";
 import { HealthOverviewSection } from "@/features/dashboard/components/health-overview-section";
@@ -61,9 +62,12 @@ export function DashboardPage() {
         title="Dashboard"
         description="Platform overview and operational health."
         secondaryActions={
-          <span className="text-muted-foreground hidden text-xs sm:inline">
-            Updated <time dateTime={lastRefreshedAt}>{formatRelativeTime(lastRefreshedAt)}</time>
-          </span>
+          <>
+            <span className="text-muted-foreground hidden text-xs sm:inline">
+              Updated <time dateTime={lastRefreshedAt}>{formatRelativeTime(lastRefreshedAt)}</time>
+            </span>
+            <AskAiButton />
+          </>
         }
         primaryAction={
           <IconButton

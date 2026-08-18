@@ -7,6 +7,7 @@ import { useState } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog } from "@/components/overlays/dialog";
+import { AskAiButton } from "@/features/ai-assistant/components/ask-ai-button";
 import { GenerateReportDialog } from "@/features/reporting/components/generate-report-dialog";
 import { useDeleteReport, useFavoriteReports, useToggleFavorite } from "@/features/reporting/hooks/use-reports";
 import type { GenerateResult, Report } from "@/features/reporting/types";
@@ -70,6 +71,7 @@ export function ReportActions({ organizationId, report, onGenerated }: { organiz
           Delete
         </Button>
       )}
+      <AskAiButton draft={`Tell me about the report "${report.name}" (id: ${report.id}).`} />
 
       <GenerateReportDialog report={report} open={generateOpen} onClose={() => setGenerateOpen(false)} onGenerated={onGenerated} />
 
