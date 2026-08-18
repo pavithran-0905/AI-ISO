@@ -22,7 +22,7 @@
  */
 
 import type { LucideIcon } from "lucide-react";
-import { Activity, Gauge, LayoutDashboard, Server, ShieldCheck, Sparkles, Users, Workflow } from "lucide-react";
+import { Activity, Gauge, LayoutDashboard, Server, ShieldCheck, Siren, Sparkles, Users, Workflow } from "lucide-react";
 
 import type { Role } from "@/auth/types";
 
@@ -195,16 +195,32 @@ export const ROUTE_REGISTRY: readonly RouteMeta[] = [
     layout: "main",
     showInNav: false,
   }),
-  planned({
+  implemented({
     id: "alerting",
+    path: "/alerting",
     title: "Alerting",
-    description: "Alert detection, correlation, deduplication, routing, escalation.",
+    description: "Active alerts, severity, acknowledgement, and resolution.",
     breadcrumb: "Alerting",
+    navGroup: "operations",
+    navLabel: null,
+    icon: Siren,
+    roles: null,
+    feature: "alerting",
+    layout: "main",
+  }),
+  implemented({
+    id: "alerting-alerts",
+    path: "/alerting/alerts",
+    title: "Alerts",
+    description: "Every alert for this organization, filterable and searchable.",
+    breadcrumb: "Alerts",
     navGroup: "operations",
     navLabel: null,
     icon: null,
     roles: null,
     feature: "alerting",
+    layout: "main",
+    showInNav: false,
   }),
   planned({
     id: "incidents",

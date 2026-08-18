@@ -5,40 +5,6 @@
  * the endpoint each one comes from.
  */
 
-export const ALERT_SEVERITIES = ["critical", "high", "medium", "low", "info"] as const;
-export type AlertSeverity = (typeof ALERT_SEVERITIES)[number];
-
-/** `AlertStatus` per `services/alerting-service/app/models/enums.py` —
- * the full set the backend can report. `RESOLVED_STATUSES` below is
- * this dashboard's own (documented, not backend-defined) notion of
- * "no longer needs attention." */
-export const ALERT_STATUSES = [
-  "new",
-  "open",
-  "acknowledged",
-  "investigating",
-  "suppressed",
-  "escalated",
-  "resolved",
-  "closed",
-  "expired",
-] as const;
-export type AlertStatusValue = (typeof ALERT_STATUSES)[number];
-
-export const RESOLVED_ALERT_STATUSES: ReadonlySet<AlertStatusValue> = new Set(["resolved", "closed", "expired"]);
-
-export interface Alert {
-  id: string;
-  organizationId: string;
-  severity: AlertSeverity;
-  status: AlertStatusValue;
-  title: string;
-  message: string;
-  source: string;
-  triggeredAt: string;
-  resolvedAt: string | null;
-}
-
 /** `ExecutionStatus` per `services/automation-service/app/models/enums.py`. */
 export const EXECUTION_STATUSES = [
   "pending",

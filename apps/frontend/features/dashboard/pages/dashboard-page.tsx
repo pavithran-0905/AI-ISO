@@ -20,16 +20,24 @@ import { useSelectedOrganization } from "@/organization/use-organizations";
 
 /** `viewAllHref` only ever points at a route registered as
  * `"implemented"` in `lib/route-registry.ts` (§26: "only link to
- * routes that actually exist") — Monitoring shipped in Prompt 006, so
- * these two sections finally have somewhere real to send the operator
- * for the fuller view. */
-function SectionHeading({ children, viewAllHref }: { children: React.ReactNode; viewAllHref?: string }) {
+ * routes that actually exist") — Monitoring (Prompt 006) and Alerting
+ * (Prompt 007) shipped, so these sections finally have somewhere real
+ * to send the operator for the fuller view. */
+function SectionHeading({
+  children,
+  viewAllHref,
+  viewAllLabel,
+}: {
+  children: React.ReactNode;
+  viewAllHref?: string;
+  viewAllLabel?: string;
+}) {
   return (
     <div className="mb-3 flex items-center justify-between">
       <h2 className={typography.cardTitle}>{children}</h2>
       {viewAllHref && (
         <Link href={viewAllHref} className="text-primary text-xs font-medium hover:underline">
-          View in Monitoring
+          {viewAllLabel ?? "View in Monitoring"}
         </Link>
       )}
     </div>
@@ -89,7 +97,9 @@ export function DashboardPage() {
 
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
               <section>
-                <SectionHeading>Attention required</SectionHeading>
+                <SectionHeading viewAllHref="/alerting/alerts" viewAllLabel="View in Alerting">
+                  Attention required
+                </SectionHeading>
                 <AttentionRequiredSection organizationId={selectedOrganizationId} />
               </section>
 

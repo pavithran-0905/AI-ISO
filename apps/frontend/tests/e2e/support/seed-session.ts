@@ -101,7 +101,14 @@ export async function seedAuthenticatedSession(context: BrowserContext): Promise
   await context.route("**/gateway/health*", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: envelope({ overall_status: "healthy", instances: [] }) }),
   );
-  await context.route("**/alerts*", (route) =>
+  // Scoped to the real API origin (`config/env.ts`'s default,
+  // `.env`'s `NEXT_PUBLIC_API_BASE_URL`) — a bare `**/alerts*` glob
+  // would also match the frontend's OWN page navigations to
+  // `/alerting/alerts` and `/alerting/alerts/[id]` (Prompt 007;
+  // Playwright routes intercept document navigations too, not just
+  // XHR/fetch), silently replacing the whole page with this stub's raw
+  // JSON instead of the app shell.
+  await context.route("http://localhost:8027/alerts*", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: envelope([]) }),
   );
   await context.route("**/automation/executions*", (route) =>

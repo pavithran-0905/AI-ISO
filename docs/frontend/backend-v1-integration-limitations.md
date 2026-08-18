@@ -220,3 +220,100 @@ assets) and filters by `health` client-side, rather than issuing an
 unbounded fetch or fabricating server-side filtering that doesn't
 exist. The UI notes explicitly when this scan was truncated relative
 to the organization's total asset count.
+
+## `GET /alerts` has no pagination, search, or sort parameters
+
+**Discovered**: Prompt 007.
+
+Confirmed by reading `services/alerting-service/app/api/alerts.py`'s
+route signature and the `AlertService.list_for_org` method it calls
+(`app/services/alert.py`): the only accepted parameters are
+`organization_id` (required), `status`, and `severity`. There is no
+`page`/`page_size`/`sort`/`q`.
+
+**Frontend behavior**: `features/alerting`'s Alerts page applies
+free-text search and column sorting entirely client-side, over the
+endpoint's own complete (not paginated) result for the active
+status/severity filter — this is honest specifically because nothing
+is hidden behind a page boundary the client can't see, unlike a
+bounded scan over a paginated endpoint (contrast with Monitoring's
+"Critical issues," above, which *is* a documented incomplete scan).
+`status`/`severity` themselves are still sent as real server-side
+query parameters.
+
+## No Reopen or Suppress/Unsuppress action on an alert instance
+
+**Discovered**: Prompt 007.
+
+`AlertInstance`'s internal state machine
+(`services/alerting-service/app/services/alert.py`'s `_TRANSITIONS`)
+permits `RESOLVED → OPEN` and `SUPPRESSED → OPEN`, but no route in
+`app/api/alerts.py` ever calls `transition(..., AlertStatus.OPEN,
+...)` — there is no `POST /alerts/{id}/reopen` or equivalent. Likewise,
+suppression is a separate resource (`GET/POST /alert-suppressions`,
+evaluated at ingestion time) with no corresponding
+"unsuppress this specific alert instance" endpoint — a grep for
+"unsuppress" across the service returns nothing.
+
+**Frontend behavior**: `AlertActions` exposes exactly the four
+mutations that are real routes — Acknowledge, Resolve, Escalate, Close
+— and hides every action once an alert reaches
+`resolved`/`closed`/`expired`, since there is no backend way to move it
+back. No "Reopen" or "Unsuppress" button was built.
+
+## No permission/role distinction on any `alerting-service` route
+
+**Discovered**: Prompt 007.
+
+Every route across `app/api/alerts.py`, `app/api/maintenance_windows.py`,
+`app/api/alert_configuration.py`, and `app/api/alert_analytics.py` uses
+only `Depends(get_current_user_id)` — which decodes the JWT for a user
+id and nothing else. No route checks a role or a fine-grained
+permission before allowing a read or a mutation (acknowledge, resolve,
+escalate, close all included).
+
+**Frontend behavior**: `AlertActions` still gates each mutation button
+behind the existing coarse capability model
+(`@/permissions`, `usePermissions().can(...)`) as a pure UX
+convenience — hiding a button saves a read-only viewer a wasted click
+and a backend 403, per §25's own framing ("frontend checks are UX
+only"). It does not simulate or claim any real backend authorization
+that doesn't exist.
+
+## `AlertStatistics` has several untyped nested fields
+
+**Discovered**: Prompt 007. Same pattern as the Prompt 005 entry
+above ("Several V1 statistics endpoints have untyped nested fields").
+
+`AlertStatisticsResponse.top_sources`, `.top_rules`, `.trend_data`, and
+`.escalation_statistics` are `dict[str, Any]` at the Pydantic schema
+level, with no further-confirmed internal shape.
+
+**Frontend behavior**: `features/alerting/types#AlertStatistics` only
+declares the well-typed scalar fields (counts, ratios, durations,
+`computed_at`) — the four untyped fields are never fetched into a
+frontend type or rendered.
+
+## An alert's `source_reference` is a free-form object with no fixed key — and no route resolves it to an inventory asset
+
+**Discovered**: Prompt 007.
+
+`AlertResponse.source_reference` is `dict[str, Any]`
+(`app/schemas/alert.py`), populated by whatever the ingesting caller
+passed to `AlertIngestionService.ingest` at creation time
+(`app/services/ingestion.py`) — there is no fixed key (such as an
+`asset_id`) guaranteed to exist in it. Separately,
+`app/clients/inventory_client.py` defines an `InventoryClient` with a
+real `get_asset(asset_id)` method reading `inventory-service`'s own
+`GET /inventory/assets/{id}` — but nothing in the service ever
+constructs or calls it outside its own isolated unit test
+(`tests/test_clients.py`); no route wires it into an alert response.
+
+**Frontend behavior**: Alert Detail shows `source_reference` as raw,
+labeled key/value pairs (matching how Asset Detail already shows its
+own unresolvable ids) rather than assuming a particular key exists.
+No Alerting↔Monitoring cross-link was built from an alert to a
+specific asset — there is no real, confirmed relationship to link
+through today. Wiring `InventoryClient` into a real route (a backend
+change, out of scope for this frontend prompt) would be a prerequisite
+for building that link honestly.

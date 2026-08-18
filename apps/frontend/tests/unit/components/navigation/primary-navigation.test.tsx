@@ -41,19 +41,23 @@ describe("PrimaryNavigation", () => {
     renderNav();
     const nav = screen.getByRole("navigation", { name: "Primary" });
     expect(screen.getByRole("button", { name: /operations/i })).toHaveAttribute("aria-expanded", "true");
-    expect(within(nav).getByText("Alerting")).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /alerting/i })).not.toBeInTheDocument();
-    const alertingRow = within(nav).getByText("Alerting").closest("div[aria-disabled]");
-    expect(alertingRow).toHaveAttribute("aria-disabled", "true");
-    expect(within(alertingRow as HTMLElement).getByText("Planned")).toBeInTheDocument();
+    expect(within(nav).getByText("Incidents")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /incidents/i })).not.toBeInTheDocument();
+    const incidentsRow = within(nav).getByText("Incidents").closest("div[aria-disabled]");
+    expect(incidentsRow).toHaveAttribute("aria-disabled", "true");
+    expect(within(incidentsRow as HTMLElement).getByText("Planned")).toBeInTheDocument();
   });
 
-  it("renders an implemented sub-item (Monitoring, shipped in Prompt 006) as a real link, not disabled", () => {
+  it("renders implemented sub-items (Monitoring/Alerting, shipped in Prompts 006/007) as real links, not disabled", () => {
     renderNav();
     const nav = screen.getByRole("navigation", { name: "Primary" });
-    const link = within(nav).getByRole("link", { name: "Monitoring" });
-    expect(link).toHaveAttribute("href", "/monitoring");
-    expect(link).not.toHaveAttribute("aria-disabled");
+    const monitoringLink = within(nav).getByRole("link", { name: "Monitoring" });
+    expect(monitoringLink).toHaveAttribute("href", "/monitoring");
+    expect(monitoringLink).not.toHaveAttribute("aria-disabled");
+
+    const alertingLink = within(nav).getByRole("link", { name: "Alerting" });
+    expect(alertingLink).toHaveAttribute("href", "/alerting");
+    expect(alertingLink).not.toHaveAttribute("aria-disabled");
   });
 
   it("collapses a group's sub-items when its header is clicked", () => {
@@ -63,7 +67,7 @@ describe("PrimaryNavigation", () => {
     fireEvent.click(operationsButton);
 
     expect(operationsButton).toHaveAttribute("aria-expanded", "false");
-    expect(within(nav).queryByText("Alerting")).not.toBeInTheDocument();
+    expect(within(nav).queryByText("Incidents")).not.toBeInTheDocument();
   });
 
   it("collapses to icon-only width and moves labels into hover tooltips", () => {
