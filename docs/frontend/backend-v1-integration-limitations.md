@@ -1282,3 +1282,174 @@ credential it assigned within the current browser session — it
 explicitly tells the user this rather than implying a full credential
 history exists. No "revoke credential" action was built, since no
 route performs one.
+
+## `user-management-service` enforces no authorization on any route — the most severe finding this session
+
+**Discovered**: Prompt 014.
+
+Confirmed by full source inspection of every file under
+`services/user-management-service/app/api/`: `GET /users`,
+`POST /users/search`, `GET/PUT/PATCH/DELETE /users/{id}`,
+`POST /users/invite` and its siblings, `POST/GET/DELETE
+/users/{id}/notes`, and every self-scoped router (profile, preferences,
+settings, metadata, tags, addresses, contacts, avatar) all depend only
+on `CurrentUserId` (`app/api/deps.py:104-124`) — decode the JWT, return
+the subject, nothing else. Zero role/permission dependency exists
+anywhere in this service (confirmed by grep of the whole `app/` tree
+for role/permission-shaped identifiers, matching only an unrelated
+`session_scope(` false positive). This extends and generalizes the
+earlier Prompt 013 finding that `PATCH /users/{id}` has no ownership
+check — the entire service has no authorization concept at all, not
+just that one route.
+
+**Frontend behavior**: the Users administration page's primary nav
+entry is restricted to `super_admin`/`organization_admin` via
+`lib/route-registry.ts`'s `roles` field — real enforcement inside
+`PrimaryNavigation`, but only controlling link visibility, not the
+underlying API. A permanent, on-page `Alert` banner states this
+plainly (not just a code comment), since the risk of a false sense of
+security here is unusually high.
+
+## Four services define four separate, unsynchronized role vocabularies
+
+**Discovered**: Prompt 014.
+
+The frontend's own JWT `role` claim (6 values), `organization-service`'s
+`MemberRole` (`member`/`admin`/`owner`, 3-tier ranked), `project-service`'s
+`project_roles` table (8 seeded system codes, ranked 10–100), and
+`rbac-service`'s own role catalog (10 seeded system roles) are four
+independent systems — none references another, no service consults
+another service's role table when making an authorization decision.
+
+**Frontend behavior**: never conflated — every type and component that
+touches a role concept names explicitly which of the four it means
+(`OrganizationMemberRoleValue`, `ProjectRoleCodeValue`, `RbacRole`, the
+existing platform `Role`). See the developer guide's comparison table.
+
+## `rbac-service`'s role/permission-assignment routes are real, and confirmed to have zero live effect
+
+**Discovered**: Prompt 014.
+
+`POST/DELETE /users/{id}/roles` genuinely persists/removes a role-
+assignment row in `rbac-service`'s own tables. Confirmed by grepping
+every other service in the monorepo for any client call into
+`rbac-service`: none exists. `services/api-gateway-service/app/services/auth.py`,
+`services/organization-service/app/organizations/membership.py`, and
+every other service's own authorization guard explicitly document
+choosing local, self-contained enforcement over calling `rbac-service`.
+The only place `rbac-service` enforces anything is against its own
+mutating routes, via its own `AuthorizationEvaluator` querying its own
+tables — a real, self-consistent system nothing outside this one
+service ever queries. `RoleAssignmentService.list_for_user()` is also
+unrouted — there is no way to view what's already assigned to a user
+either.
+
+**Frontend behavior**: `RoleAssignmentSection` builds the real
+workflow Prompt 014 asks for (§20), but with a permanent, unmissable
+warning (not a tooltip or docstring) that assigning a role here has no
+live effect on the user's actual access anywhere else in AI-IOS today.
+
+## No route lists an organization's members, anywhere
+
+**Discovered**: Prompt 014.
+
+`organization-service`'s `OrganizationMemberService.list_for_org()`
+and `.remove()` (`app/services/member.py:50-60`) are both fully
+implemented — neither has a route. No `app/api/member.py` file exists
+in this service at all. `.add()` is only ever called internally, once,
+from `POST /organizations` (making the creator the owner) — never
+exposed as a general "add a member directly" endpoint (membership is
+otherwise only created via invitation accept).
+
+**Frontend behavior**: no "organization members" list/management UI
+was built anywhere — not in Administration, not in Settings. A user's
+organization membership cannot be shown on their detail page for this
+reason (see the "Access & Membership" gap below).
+
+## No route reverses project membership from a user's perspective, and no team-membership endpoint exists at all
+
+**Discovered**: Prompt 014.
+
+`GET /projects/{id}/members` only works in the forward direction
+(given a project, list its members) — no route in `project-service`
+answers "which projects does user X belong to." Separately,
+`organization-service` has no team-members endpoint of any kind
+(confirmed: no `app/api/*.py` file exposes team membership) — the only
+place it's even recorded is `OrganizationMember.team_id`, itself
+unreachable per the organization-members finding above.
+
+**Frontend behavior**: `UserDetailView`'s "Access & Membership" section
+states this gap explicitly, citing all four services checked, rather
+than showing a partial or misleading membership list.
+
+## `project-service` member/role routes have no self-lockout protection, and `role_code: "owner"` is a hidden ownership transfer
+
+**Discovered**: Prompt 014.
+
+`ProjectMemberService.remove`/`.update_role` (`app/services/member.py`)
+have no last-owner, last-admin, or self-removal guard of any kind — a
+caller can remove a project's only Owner, or remove themselves, and
+the backend will comply. Separately, `PUT /projects/{id}/members/{userId}/roles`
+with `role_code: "owner"` is special-cased server-side
+(`app/api/project_member.py:111-143`) into a full ownership transfer —
+the prior `project.owner_id` holder is automatically demoted to
+Administrator — not a plain role edit.
+
+**Frontend behavior**: `ProjectMembersSection` (Settings → Projects)
+blocks removing/demoting a project's sole Owner client-side, with a
+message stating this is the frontend's own guard since the backend has
+none. Setting a role to `"owner"` shows a distinct "Transfer project
+ownership?" confirmation, never a plain role-change dropdown.
+
+## `GET /users` and `POST /users/search` discard their own computed pagination metadata; two request fields are silently dead
+
+**Discovered**: Prompt 014.
+
+Both routes compute real `PaginationMetadata` (`total`/`page`/
+`page_size`/`has_next`/`has_previous`) via the shared framework
+internally, then discard everything except the bare item array before
+responding (confirmed: `app/api/user.py`'s route handlers only ever
+emit `data=[...]`, never `meta`). Separately, `UserSearchRequest`'s
+`department`/`tags` fields are accepted by the schema but never
+referenced anywhere in the route handler — confirmed dead on the wire.
+
+**Frontend behavior**: `UserTable` renders a real Previous/Next pager,
+never a page-count picker (no total exists to build one against).
+`UserFilters` exposes only `query`/`status`, the two fields that
+actually filter anything.
+
+## Two separate invitation systems exist; neither supports listing, and only one supports resending
+
+**Discovered**: Prompt 014.
+
+`user-management-service`'s `/users/invite` (email/message only, no
+role/team) has a real, working `/resend` but no list and no revoke.
+`organization-service`'s `/organizations/{id}/invite` (email/role/
+department/team, admin-enforced) has a fully-implemented but unrouted
+`InvitationService.resend()` and `UserInvitationRepository.list_pending()`,
+and no revoke/cancel method exists in its service layer at all
+(`InvitationStatus.REVOKED` is a defined enum value with zero code
+path that ever assigns it).
+
+**Frontend behavior**: built against `organization-service`'s system
+(role-carrying, admin-enforced — the more appropriate one for an
+access-administration page). `InvitationsPage` is a send-only form
+with a permanent banner explaining nothing can be listed afterward on
+either system — not a placeholder for a future list.
+
+## `DELETE /users/{id}` is a soft delete via `is_active`, not a `status` transition to `"deleted"`
+
+**Discovered**: Prompt 014.
+
+Confirmed: the route calls `BaseRepository.delete` → `mark_deleted`,
+which sets `deleted_at`/`deleted_by`/`is_active=False` — a separate
+mechanism from `UserService.patch`'s real `status`-transition state
+machine (`transition_status`, checked against `_VALID_TRANSITIONS`).
+The user then 404s from every other route in this service (list/
+search/get all filter `is_active=True`), but a direct row inspection
+would still show whatever `status` value it had before deletion.
+
+**Frontend behavior**: `usersApi.remove`'s own docstring and
+`UserStatusActions`' delete confirmation both describe this accurately
+— a removal, not a status change — rather than implying the two are
+the same operation.

@@ -770,16 +770,82 @@ export const ROUTE_REGISTRY: readonly RouteMeta[] = [
   }),
 
   // ---- Administration -----------------------------------------------------------------
-  planned({
+  // Prompt 014 promotes the pre-existing "users" planned() stub to a
+  // real 5-entry family (Users/Teams/Roles/Permissions/Invitations),
+  // matching this prompt's own IA. `roles` restricts the primary nav
+  // entry to administrators — a deliberate frontend-side tightening:
+  // `user-management-service` itself enforces no permission check on
+  // any of these routes at all (confirmed absent), so this is a UX
+  // convenience, never a real security boundary. See the developer
+  // guide.
+  implemented({
     id: "users",
+    path: "/administration/users",
     title: "Users",
-    description: "Profiles, preferences, invitations, bulk import/export, activity feed.",
+    description: "Every user account, search, status lifecycle, and admin notes.",
     breadcrumb: "Users",
     navGroup: "administration",
     navLabel: null,
-    icon: null,
-    roles: null,
+    icon: Users,
+    roles: ["super_admin", "organization_admin"],
     feature: "users",
+    layout: "main",
+  }),
+  implemented({
+    id: "administration-teams",
+    path: "/administration/teams",
+    title: "Teams",
+    description: "Organization teams — identity and metadata only, no membership roster.",
+    breadcrumb: "Teams",
+    navGroup: "administration",
+    navLabel: null,
+    icon: null,
+    roles: ["super_admin", "organization_admin"],
+    feature: "users",
+    layout: "main",
+    showInNav: false,
+  }),
+  implemented({
+    id: "administration-roles",
+    path: "/administration/roles",
+    title: "Roles",
+    description: "rbac-service's own role catalog — reference only, not the live enforcement mechanism.",
+    breadcrumb: "Roles",
+    navGroup: "administration",
+    navLabel: null,
+    icon: null,
+    roles: ["super_admin", "organization_admin"],
+    feature: "users",
+    layout: "main",
+    showInNav: false,
+  }),
+  implemented({
+    id: "administration-permissions",
+    path: "/administration/permissions",
+    title: "Permissions",
+    description: "rbac-service's own fine-grained permission catalog — reference only.",
+    breadcrumb: "Permissions",
+    navGroup: "administration",
+    navLabel: null,
+    icon: null,
+    roles: ["super_admin", "organization_admin"],
+    feature: "users",
+    layout: "main",
+    showInNav: false,
+  }),
+  implemented({
+    id: "administration-invitations",
+    path: "/administration/invitations",
+    title: "Invitations",
+    description: "Send an organization invitation — no pending-invitations list exists on this backend.",
+    breadcrumb: "Invitations",
+    navGroup: "administration",
+    navLabel: null,
+    icon: null,
+    roles: ["super_admin", "organization_admin"],
+    feature: "users",
+    layout: "main",
+    showInNav: false,
   }),
   planned({
     id: "organizations",

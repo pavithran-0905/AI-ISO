@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/feedback/empty-state";
 import { NoOrganizationAccessState, OrganizationPicker } from "@/features/dashboard/components/organization-picker";
 import { SectionState } from "@/features/dashboard/components/section-state";
 import { ProjectIdentityForm } from "@/features/settings/components/project-identity-form";
+import { ProjectMembersSection } from "@/features/settings/components/project-members-section";
 import { ProjectPicker } from "@/features/settings/components/project-picker";
 import { ProjectSettingsForm } from "@/features/settings/components/project-settings-form";
 import { renderSettingsNavLink } from "@/features/settings/components/settings-nav-link";
@@ -57,6 +58,7 @@ export function ProjectsPage() {
                           <ProjectSettingsForm projectId={selectedProject.id} settings={settingsQuery.data} canEdit={isAdministrative} />
                         )}
                       </SectionState>
+                      <ProjectMembersSection projectId={selectedProject.id} canEdit={isAdministrative} />
                     </>
                   )}
                 </div>

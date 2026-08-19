@@ -1,0 +1,1254 @@
+# FRONTEND PROMPT 014
+# Enterprise User Management & Access Administration Experience
+
+## ROLE
+
+Act as a Principal Product Designer, Enterprise Identity & Access Management UX Architect, Frontend Architect, Senior Next.js/React Engineer, Accessibility Engineer, Security UX Specialist, and Enterprise SaaS Administration Specialist.
+
+Frontend Prompts 001–013 are COMPLETE.
+
+Use the existing:
+
+- application shell
+- design system
+- authentication architecture
+- permission architecture
+- routing
+- API client
+- Dashboard
+- Monitoring
+- Alerting
+- Reporting
+- Automation
+- AI Assistant
+- Infrastructure
+- Topology
+- Settings
+- query/state architecture
+- documentation architecture
+
+Do not create competing architecture.
+
+==================================================
+CRITICAL BACKEND V1 FREEZE
+==================================================
+
+AI-IOS Backend V1 is COMPLETE and FROZEN.
+
+THIS IS A FRONTEND-ONLY PROMPT.
+
+DO NOT:
+
+- modify backend source code
+- modify authentication-service
+- modify rbac-service
+- modify user-management services
+- add backend endpoints
+- modify backend APIs
+- modify database schemas
+- modify migrations
+- modify authentication logic
+- modify RBAC logic
+- modify backend business logic
+- modify backend configuration
+- modify backend dependencies
+
+If a required capability is unavailable:
+
+1. Document it.
+2. Do not fabricate it.
+3. Do not modify backend.
+4. Build only supported frontend functionality.
+5. Record the limitation in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Backend modifications MUST remain ZERO.
+
+==================================================
+1. OBJECTIVE
+==================================================
+
+Build the production-grade AI-IOS User Management and Access Administration experience.
+
+The frontend should allow authorized administrators to manage or inspect the identity/access capabilities already exposed by Backend V1.
+
+Potential capabilities:
+
+- Users
+- User details
+- Invitations
+- User status
+- Teams/groups
+- Roles
+- Permissions
+- Organization membership
+- Project access
+- Access overview
+- User activity where V1 provides it
+
+Only implement capabilities actually supported by V1.
+
+Do not create fake administration features.
+
+==================================================
+2. INSPECT BACKEND V1 FIRST
+==================================================
+
+Inspect actual V1 implementations for:
+
+- authentication-service
+- rbac-service
+- user management
+- organization management
+- project membership
+- roles
+- permissions
+- invitations
+- access policies
+
+Identify:
+
+- routes
+- request schemas
+- response schemas
+- identifiers
+- statuses
+- roles
+- permissions
+- relationships
+- pagination
+- filtering
+- search
+- sorting
+- mutations
+- authorization requirements
+
+The backend source is the source of truth.
+
+Do not infer API behaviour.
+
+==================================================
+3. INFORMATION ARCHITECTURE
+==================================================
+
+Recommended:
+
+Administration
+├── Users
+├── Teams / Groups
+├── Roles
+├── Permissions
+└── Invitations
+
+Only expose sections supported by V1.
+
+Do not show unsupported navigation items.
+
+==================================================
+4. ACCESS CONTROL
+==================================================
+
+The frontend must be permission-aware.
+
+Use the existing permission architecture from Prompt 001.
+
+Do not implement a new RBAC system.
+
+Frontend checks control visibility and UX.
+
+Backend authorization remains authoritative.
+
+==================================================
+5. USER MANAGEMENT ROUTE
+==================================================
+
+Use the centralized route registry.
+
+Recommended:
+
+/administration/users
+
+or the existing canonical route convention.
+
+Do not create duplicate routes.
+
+==================================================
+6. USER LIST
+==================================================
+
+Create an enterprise-grade user table.
+
+Potential columns:
+
+- Name
+- Email
+- Status
+- Role
+- Organization
+- Team
+- Last Activity
+- Created
+- Actions
+
+Only include fields actually returned by V1.
+
+Support where supported:
+
+- search
+- filtering
+- sorting
+- pagination
+- column visibility
+- row actions
+
+==================================================
+7. USER STATUS
+==================================================
+
+Use actual V1 status values.
+
+Possible examples:
+
+Active
+Inactive
+Pending
+Suspended
+Invited
+
+These are examples only.
+
+Inspect V1 before implementation.
+
+Do not invent lifecycle states.
+
+==================================================
+8. USER SEARCH
+==================================================
+
+Use actual backend search capabilities.
+
+Potential:
+
+- name
+- email
+- identifier
+- role
+
+Only expose confirmed fields.
+
+Do not perform incomplete client-side search over paginated data.
+
+==================================================
+9. USER FILTERS
+==================================================
+
+Implement supported filters.
+
+Potential:
+
+- status
+- role
+- team
+- organization
+- project
+
+Only expose filters supported by V1.
+
+Provide:
+
+- active filter count
+- clear individual filter
+- reset all
+- URL state where appropriate
+
+==================================================
+10. USER DETAIL
+==================================================
+
+Create:
+
+/administration/users/[id]
+
+Show where supported:
+
+- identity
+- email
+- status
+- roles
+- permissions
+- organization
+- teams
+- projects
+- activity
+- created/updated information
+
+Use a clear hierarchy.
+
+==================================================
+11. USER PROFILE INFORMATION
+==================================================
+
+Separate:
+
+Identity
+Access
+Membership
+Activity
+
+Do not combine all information into one dense panel.
+
+==================================================
+12. USER ACTIONS
+==================================================
+
+Only implement actual V1 actions.
+
+Potential:
+
+- Edit
+- Activate
+- Deactivate
+- Suspend
+- Remove
+- Reset-related operation if supported
+- Assign role
+- Assign team
+
+Do not invent operations.
+
+==================================================
+13. DANGEROUS ACTIONS
+==================================================
+
+For destructive access actions:
+
+show confirmation.
+
+Examples:
+
+Deactivate User
+Remove User
+Revoke Access
+
+The confirmation must clearly identify:
+
+- user
+- action
+- expected impact
+
+Do not make dangerous actions one-click.
+
+==================================================
+14. SELF-LOCKOUT PROTECTION
+==================================================
+
+If the current administrator is viewing their own account:
+
+prevent or appropriately warn against actions that could remove their own required administrative access if V1 semantics allow the frontend to identify this.
+
+Do not invent backend security guarantees.
+
+Backend remains authoritative.
+
+==================================================
+15. USER INVITATIONS
+==================================================
+
+If V1 supports invitations:
+
+create:
+
+/administration/invitations
+
+Support actual capabilities:
+
+- invite
+- pending invitations
+- resend
+- revoke/cancel
+- expiration
+- status
+
+Only implement confirmed operations.
+
+==================================================
+16. INVITATION FORM
+==================================================
+
+Where supported:
+
+- email
+- role
+- team
+- organization
+- project
+
+Only show fields supported by the backend.
+
+Validate before submission.
+
+==================================================
+17. INVITATION STATUS
+==================================================
+
+Use actual V1 statuses.
+
+Do not invent:
+
+Pending
+Accepted
+Expired
+Revoked
+
+unless those states exist in V1.
+
+==================================================
+18. ROLES
+==================================================
+
+If V1 exposes roles:
+
+create a role management view.
+
+Show:
+
+- role name
+- description
+- permission count
+- scope
+- status where available
+
+Do not create a new role model.
+
+==================================================
+19. ROLE DETAIL
+==================================================
+
+If V1 supports role details:
+
+show:
+
+Role
+↓
+Permissions
+↓
+Users/Assignments where available
+
+Make permissions readable.
+
+==================================================
+20. ROLE ASSIGNMENT
+==================================================
+
+If V1 supports role assignment:
+
+provide a safe assignment workflow.
+
+Flow:
+
+Select User
+↓
+Select Role
+↓
+Review Scope
+↓
+Confirm
+↓
+Backend Confirmation
+
+Do not change access optimistically.
+
+==================================================
+21. PERMISSIONS
+==================================================
+
+Use the existing frontend permission model.
+
+If V1 provides permission catalog:
+
+display it where appropriate.
+
+Do not expose internal permission implementation unnecessarily.
+
+Use human-readable descriptions if the backend provides them.
+
+==================================================
+22. TEAMS / GROUPS
+==================================================
+
+If V1 supports teams/groups:
+
+create:
+
+/administration/teams
+
+or the canonical route.
+
+Support only actual V1 capabilities.
+
+Potential:
+
+- list
+- detail
+- members
+- roles
+- projects
+- create
+- edit
+- delete
+
+Do not implement unsupported CRUD.
+
+==================================================
+23. TEAM DETAIL
+==================================================
+
+If supported:
+
+show:
+
+- team identity
+- members
+- roles
+- projects
+- organization
+- status
+
+Do not expose members the current user is not authorized to see.
+
+==================================================
+24. PROJECT ACCESS
+==================================================
+
+If V1 supports project membership:
+
+show project access.
+
+Represent:
+
+User
+→ Project
+→ Role
+
+Only use actual relationships.
+
+==================================================
+25. ORGANIZATION ACCESS
+==================================================
+
+If V1 supports organization membership:
+
+show:
+
+- organization
+- role
+- membership state
+
+Do not expose organizations outside the user's authorized scope.
+
+==================================================
+26. ACCESS SUMMARY
+==================================================
+
+On user detail, provide an easy-to-understand summary:
+
+Organization
+Projects
+Teams
+Roles
+Permissions
+
+Do not expose raw permission JSON as the primary UX.
+
+==================================================
+27. ACTIVITY
+==================================================
+
+If V1 provides user activity/audit data:
+
+show it.
+
+Potential:
+
+- login
+- access change
+- role change
+- invitation
+- configuration change
+
+Only display actual V1 events.
+
+Do not invent audit events.
+
+==================================================
+28. SECURITY INFORMATION
+==================================================
+
+Do not display:
+
+- password hashes
+- tokens
+- session secrets
+- API keys
+- internal authentication credentials
+
+If security metadata is available:
+
+display only appropriate user-facing information.
+
+==================================================
+29. PAGINATION
+==================================================
+
+Use server-side pagination where supported.
+
+Do not load the entire user population into the browser unnecessarily.
+
+==================================================
+30. SORTING
+==================================================
+
+Use backend-supported sort fields.
+
+Do not fabricate server sorting.
+
+==================================================
+31. BULK ACTIONS
+==================================================
+
+Only implement bulk actions if V1 supports them.
+
+If supported:
+
+- select users
+- show count
+- action
+- confirmation
+- progress
+- results
+
+Do not create client-side loops that call individual APIs unless the V1 contract explicitly supports this workflow.
+
+==================================================
+32. API ARCHITECTURE
+==================================================
+
+Use:
+
+Administration Page
+↓
+User/RBAC Hooks
+↓
+Administration API Module
+↓
+Shared API Client
+↓
+Backend V1
+
+Components must not directly call HTTP.
+
+==================================================
+33. TYPES
+==================================================
+
+Use strict TypeScript.
+
+Separate:
+
+API Types
+↓
+Adapters
+↓
+User/RBAC Domain Models
+↓
+UI Models
+
+Do not use:
+
+any
+
+to bypass API contract differences.
+
+==================================================
+34. QUERY ARCHITECTURE
+==================================================
+
+Use TanStack Query.
+
+Queries may include:
+
+- users
+- user detail
+- invitations
+- roles
+- role detail
+- permissions
+- teams
+- team detail
+- project memberships
+
+Only create queries backed by V1.
+
+==================================================
+35. MUTATIONS
+==================================================
+
+Use mutations for actual V1 operations.
+
+Examples:
+
+- update user
+- activate
+- deactivate
+- invite
+- resend invitation
+- revoke invitation
+- assign role
+- remove role
+- add member
+- remove member
+
+Only implement supported operations.
+
+==================================================
+36. CACHE INVALIDATION
+==================================================
+
+After mutation:
+
+- invalidate user list
+- invalidate user detail
+- invalidate role assignments
+- invalidate team membership
+- invalidate permission views
+
+where appropriate.
+
+Never leave stale access information visible.
+
+==================================================
+37. CONCURRENCY
+==================================================
+
+If V1 exposes optimistic-lock/version information:
+
+respect it.
+
+If an access configuration conflict occurs:
+
+show:
+
+"This access configuration changed elsewhere. Reload the latest version before saving."
+
+Do not overwrite silently.
+
+==================================================
+38. READ-ONLY MODE
+==================================================
+
+Users without edit permissions should still be able to inspect authorized data where V1 allows it.
+
+Do not display disabled administrative controls everywhere.
+
+Instead:
+
+- show information
+- hide unavailable actions
+- explain restricted areas where useful
+
+==================================================
+39. RESPONSIVE DESIGN
+==================================================
+
+Desktop:
+
+Data-dense administration tables.
+
+Tablet:
+
+Reduced columns.
+
+Mobile:
+
+Card/list representation.
+
+User detail:
+
+Stacked sections.
+
+Do not force desktop tables onto mobile.
+
+==================================================
+40. ACCESSIBILITY
+==================================================
+
+Target WCAG 2.2 AA.
+
+Ensure:
+
+- tables keyboard accessible
+- filters accessible
+- forms labelled
+- dialogs accessible
+- status readable
+- permission lists accessible
+- focus management
+- confirmation dialogs accessible
+
+==================================================
+41. LOADING STATES
+==================================================
+
+Support:
+
+- user list
+- user detail
+- roles
+- teams
+- invitations
+- permissions
+- mutations
+
+Use existing skeleton primitives.
+
+==================================================
+42. EMPTY STATES
+==================================================
+
+Examples:
+
+"No users found."
+
+"No pending invitations."
+
+"No roles available."
+
+"No teams found."
+
+"No project memberships."
+
+Make messages contextual.
+
+==================================================
+43. ERROR STATES
+==================================================
+
+Support:
+
+- API unavailable
+- permission denied
+- user not found
+- validation error
+- invitation failure
+- role assignment failure
+- conflict
+- timeout
+
+Never expose backend stack traces.
+
+==================================================
+44. PARTIAL FAILURE
+==================================================
+
+Example:
+
+User identity loaded
+Role information unavailable
+
+Keep the available information visible.
+
+Do not blank the entire user detail page.
+
+==================================================
+45. CROSS-MODULE INTEGRATION
+==================================================
+
+Where useful and supported:
+
+User
+→ Activity
+→ Alerts
+→ Reports
+→ Automation
+→ AI Assistant
+
+Only create links where actual V1 identifiers/relationships exist.
+
+Do not fabricate user relationships.
+
+==================================================
+46. DASHBOARD INTEGRATION
+==================================================
+
+If Dashboard exposes administration metrics:
+
+Dashboard
+→ Administration
+
+Do not duplicate administration queries inside Dashboard.
+
+==================================================
+47. SETTINGS INTEGRATION
+==================================================
+
+User Preferences:
+
+Settings
+→ User profile/preferences
+
+Administration:
+
+Settings
+→ Organization configuration
+
+Keep responsibilities clear.
+
+Do not duplicate functionality between Settings and Administration.
+
+==================================================
+48. USER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/user-guide/user-management.md
+
+Document:
+
+- Users
+- User details
+- Search
+- Filters
+- Invitations
+- Roles
+- Permissions
+- Teams
+- Project access
+- Organization access
+- Administrative actions
+- Troubleshooting
+
+Only document implemented V1 capabilities.
+
+==================================================
+49. DEVELOPER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/developer-guide/user-management.md
+
+Document:
+
+- feature architecture
+- API integration
+- user model
+- role model
+- permission model
+- teams
+- invitations
+- query architecture
+- mutations
+- cache invalidation
+- concurrency
+- security
+
+==================================================
+50. RFI / RFP DOCUMENTATION
+==================================================
+
+Create:
+
+docs/frontend/rfi/user-management.md
+
+Document:
+
+- enterprise user administration
+- RBAC integration
+- permission-aware UI
+- organization/project access
+- invitation workflows
+- security UX
+- scalability
+- accessibility
+- maintainability
+
+Clearly separate:
+
+Implemented V1
+
+from:
+
+Unavailable/planned.
+
+==================================================
+51. BACKEND V1 LIMITATIONS
+==================================================
+
+Record unsupported capabilities in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Include:
+
+- capability
+- backend service
+- V1 availability
+- frontend impact
+- current UX handling
+
+Do not modify backend.
+
+==================================================
+52. TESTING
+==================================================
+
+Create tests for:
+
+### Users
+
+- list
+- search
+- filters
+- sorting
+- pagination
+- detail
+
+### Invitations
+
+- create
+- list
+- resend
+- revoke
+- errors
+
+### Roles
+
+- list
+- detail
+- assignment
+
+### Teams
+
+- list
+- detail
+- membership
+
+### Permissions
+
+- visibility
+- read-only
+- authorized actions
+
+### Security
+
+- secrets never displayed
+- restricted data hidden
+
+### Accessibility
+
+- keyboard
+- focus
+- dialogs
+- tables
+- forms
+
+==================================================
+53. E2E
+==================================================
+
+Where environment permits:
+
+- open Administration
+- list users
+- search user
+- inspect user detail
+- inspect role/access
+- open invitations where supported
+- inspect roles where supported
+- inspect teams where supported
+
+Use safe test data.
+
+Do not perform destructive production administration.
+
+Do not modify backend.
+
+==================================================
+54. DESIGN SYSTEM
+==================================================
+
+Use Prompt 002.
+
+Reuse:
+
+- Settings patterns
+- tables
+- forms
+- dialogs
+- status components
+- permission components
+- drawers
+
+Do not create another administration visual language.
+
+==================================================
+55. DEPENDENCY SAFETY
+==================================================
+
+Use existing dependencies.
+
+Do not add an IAM/RBAC library.
+
+Backend V1 already owns authentication and authorization.
+
+The frontend must consume those contracts.
+
+==================================================
+56. BACKEND FREEZE VERIFICATION
+==================================================
+
+Before completion:
+
+[ ] Backend source changes = 0
+[ ] Authentication changes = 0
+[ ] RBAC changes = 0
+[ ] Backend API changes = 0
+[ ] Database changes = 0
+[ ] Migration changes = 0
+[ ] Backend configuration changes = 0
+[ ] Backend dependency changes = 0
+
+==================================================
+57. VALIDATION
+==================================================
+
+Run:
+
+- typecheck
+- lint
+- unit tests
+- production build
+- applicable E2E
+
+Do not claim success without execution.
+
+==================================================
+58. GIT SAFETY
+==================================================
+
+Before commit:
+
+- inspect git status
+- inspect changed files
+- verify no secrets
+- verify no .env
+- verify no credentials
+- verify no backend changes
+- inspect dependency changes
+- inspect lockfile changes
+
+==================================================
+59. COMMIT
+==================================================
+
+If validation passes:
+
+feat(frontend): implement enterprise user management
+
+Push according to repository workflow.
+
+==================================================
+60. DEFINITION OF DONE
+==================================================
+
+[ ] Administration route implemented.
+[ ] User list implemented.
+[ ] User detail implemented.
+[ ] Search implemented where supported.
+[ ] Filters implemented where supported.
+[ ] Sorting implemented where supported.
+[ ] Pagination implemented.
+[ ] Invitations implemented where supported.
+[ ] Roles implemented where supported.
+[ ] Permissions implemented where supported.
+[ ] Teams implemented where supported.
+[ ] Project access implemented where supported.
+[ ] Organization access implemented where supported.
+[ ] Activity implemented where supported.
+[ ] Actual V1 permissions consumed.
+[ ] Permission-aware UI implemented.
+[ ] Read-only mode implemented.
+[ ] Dangerous actions protected.
+[ ] Self-access safety considered.
+[ ] Concurrency handled where applicable.
+[ ] Loading states implemented.
+[ ] Empty states implemented.
+[ ] Error states implemented.
+[ ] Partial failure handled.
+[ ] Responsive UX implemented.
+[ ] Accessibility requirements met.
+[ ] Settings integration is clear.
+[ ] User guide created.
+[ ] Developer guide created.
+[ ] RFI documentation created.
+[ ] Backend V1 untouched.
+[ ] No authentication changes.
+[ ] No RBAC changes.
+[ ] No backend API changes.
+[ ] No database changes.
+[ ] No unnecessary dependencies.
+[ ] Typecheck passes.
+[ ] Lint passes.
+[ ] Tests pass.
+[ ] Production build passes.
+[ ] Applicable E2E passes.
+[ ] Git state clean except explicitly pre-existing files.
+
+==================================================
+61. FINAL REPORT
+==================================================
+
+Provide:
+
+1. User Management implementation summary
+2. Actual V1 APIs consumed
+3. Routes created
+4. Components created
+5. User model
+6. Role model
+7. Permission model
+8. Invitation workflow
+9. Team/group workflow
+10. Project/organization access
+11. Permission handling
+12. Security review
+13. Concurrency handling
+14. Loading/empty/error handling
+15. Accessibility
+16. Responsive behaviour
+17. Settings integration
+18. User guide
+19. Developer guide
+20. RFI documentation
+21. Tests
+22. E2E
+23. Typecheck
+24. Lint
+25. Production build
+26. Dependency changes
+27. Lockfile changes
+28. Backend files changed — MUST BE ZERO
+29. Authentication files changed — MUST BE ZERO
+30. RBAC files changed — MUST BE ZERO
+31. Backend V1 limitations
+32. Git commit
+33. Known limitations
+34. Recommended next frontend prompt
+
+Do not modify the backend.
+
+Do not fabricate identity/access capabilities.
+
+Proceed with implementation.

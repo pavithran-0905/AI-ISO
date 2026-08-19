@@ -296,6 +296,58 @@ export interface ProjectSettings {
 
 export type UpdateProjectSettingsInput = ProjectSettings;
 
+/**
+ * `ProjectMemberResponse` (`GET /projects/{id}/members`, Prompt 014's
+ * own research). Role is a real FK into a `project_roles` table, not
+ * a free-text string — 8 seeded system codes, rank-ordered, no route
+ * to discover them dynamically (see `PROJECT_ROLE_CODES` below).
+ * Role is present directly on this response — no per-row extra
+ * request needed.
+ */
+export interface ProjectMember {
+  id: string;
+  projectId: string;
+  userId: string;
+  roleId: string;
+  roleCode: string;
+  roleName: string;
+  status: string;
+  invitedBy: string | null;
+  createdAt: string;
+}
+
+/** The 8 real, seeded system project-role codes (confirmed via the
+ * seed migration — no endpoint lists them dynamically, so this is a
+ * hardcoded but real, source-confirmed enum, the same treatment as
+ * Prompt 013's connector categories). Rank order (highest first):
+ * owner &gt; administrator &gt; {operator, automation_engineer,
+ * validation_engineer} &gt; developer &gt; {viewer, auditor}. */
+export const PROJECT_ROLE_CODES = [
+  "owner",
+  "administrator",
+  "operator",
+  "automation_engineer",
+  "validation_engineer",
+  "developer",
+  "viewer",
+  "auditor",
+] as const;
+export type ProjectRoleCodeValue = (typeof PROJECT_ROLE_CODES)[number];
+
+export interface AddProjectMemberInput {
+  userId: string;
+  roleCode: ProjectRoleCodeValue;
+}
+
+/** Setting `roleCode: "owner"` is special-cased by the backend into a
+ * full ownership transfer (the previous owner is demoted to
+ * administrator, `project.ownerId` changes) — never treated as a
+ * plain role edit in the UI; see `ProjectMembersSection`'s own
+ * docstring. */
+export interface UpdateProjectMemberRoleInput {
+  roleCode: ProjectRoleCodeValue;
+}
+
 // ---- Integrations (integration-hub-service) --------------------------------------------
 
 /** `ConnectorCategory` — the 15 real categories. No dedicated

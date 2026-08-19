@@ -50,6 +50,18 @@ describe("route-registry", () => {
     }
   });
 
+  it("Prompt 014 promotes the 'users' stub to implemented, restricted to administrators, with a real sub-family", () => {
+    expect(getRouteMeta("/administration/users")).toMatchObject({
+      id: "users",
+      visibility: "implemented",
+      showInNav: true,
+      roles: ["super_admin", "organization_admin"],
+    });
+    for (const id of ["administration-teams", "administration-roles", "administration-permissions", "administration-invitations"]) {
+      expect(getRouteById(id)).toMatchObject({ visibility: "implemented", showInNav: false, roles: ["super_admin", "organization_admin"] });
+    }
+  });
+
   it("every route id is unique", () => {
     const ids = ROUTE_REGISTRY.map((route) => route.id);
     expect(new Set(ids).size).toBe(ids.length);
