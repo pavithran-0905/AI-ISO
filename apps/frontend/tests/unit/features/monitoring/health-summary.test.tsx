@@ -2,9 +2,9 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { HealthSummary } from "@/features/monitoring/components/health-summary";
-import { useInventoryStatistics } from "@/features/monitoring/hooks/use-inventory-statistics";
+import { useInventoryStatistics } from "@/features/infrastructure/hooks/use-statistics";
 
-vi.mock("@/features/monitoring/hooks/use-inventory-statistics", () => ({
+vi.mock("@/features/infrastructure/hooks/use-statistics", () => ({
   useInventoryStatistics: vi.fn(),
 }));
 

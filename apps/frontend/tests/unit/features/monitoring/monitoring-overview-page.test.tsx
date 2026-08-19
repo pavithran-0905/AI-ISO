@@ -59,7 +59,7 @@ describe("MonitoringOverviewPage", () => {
     renderPage();
 
     expect(screen.getByRole("heading", { name: "Monitoring", level: 1 })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Assets" })).toHaveAttribute("href", "/monitoring/assets");
+    expect(screen.getByRole("link", { name: "Services" })).toHaveAttribute("href", "/monitoring/services");
 
     await waitFor(() => expect(screen.getByText("Total")).toBeInTheDocument());
     expect(screen.getByText("5")).toBeInTheDocument();

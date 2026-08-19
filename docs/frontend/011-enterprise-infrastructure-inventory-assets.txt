@@ -1,0 +1,1242 @@
+# FRONTEND PROMPT 011
+# Enterprise Infrastructure Inventory & Asset Management Experience
+
+## ROLE
+
+Act as a Principal Product Designer, Enterprise Infrastructure UX Architect, Asset Management UX Specialist, Frontend Architect, Senior Next.js/React Engineer, Accessibility Engineer, and Infrastructure Operations Platform Specialist.
+
+Frontend Prompts 001–010 are COMPLETE.
+
+Use the existing:
+
+- application shell
+- design system
+- authentication
+- permissions
+- routing
+- API client
+- Dashboard
+- Monitoring
+- Alerting
+- Reporting
+- Automation
+- AI Assistant
+- query/state architecture
+- documentation architecture
+
+Do not create competing architecture.
+
+==================================================
+CRITICAL BACKEND V1 FREEZE
+==================================================
+
+AI-IOS Backend V1 is COMPLETE and FROZEN.
+
+THIS IS A FRONTEND-ONLY PROMPT.
+
+DO NOT:
+
+- modify backend source code
+- modify inventory services
+- modify infrastructure services
+- add backend endpoints
+- change backend APIs
+- modify database schemas
+- modify migrations
+- modify authentication
+- modify RBAC
+- modify backend business logic
+- modify backend configuration
+- modify backend dependencies
+- change backend service contracts
+
+If a required inventory capability does not exist:
+
+1. Document it.
+2. Do not fabricate it.
+3. Do not modify backend.
+4. Build only supported frontend functionality.
+5. Record the limitation in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Backend modifications MUST remain ZERO.
+
+==================================================
+1. OBJECTIVE
+==================================================
+
+Build the production-grade AI-IOS Infrastructure Inventory experience.
+
+The module must allow authorized users to:
+
+- view infrastructure assets
+- search assets
+- filter assets
+- inspect asset details
+- understand asset relationships where V1 exposes them
+- inspect hardware/software information
+- identify asset state
+- navigate to Monitoring
+- navigate to Alerting
+- navigate to Automation
+- use AI Assistant for supported contextual investigation
+- understand asset metadata
+- manage assets only where V1 supports mutations
+
+The UX must be:
+
+- enterprise-grade
+- premium
+- operationally clear
+- scalable
+- information-dense
+- accessible
+- responsive
+- consistent
+
+Do not create a generic CRUD inventory application.
+
+==================================================
+2. INSPECT BACKEND V1 FIRST
+==================================================
+
+Inspect actual V1 inventory-related capabilities.
+
+Identify:
+
+- services
+- routes
+- request schemas
+- response schemas
+- asset types
+- lifecycle states
+- identifiers
+- relationships
+- metadata
+- pagination
+- sorting
+- search
+- filters
+- permissions
+- mutations
+- timestamps
+
+Use the repository as the source of truth.
+
+Do not infer fields.
+
+==================================================
+3. TERMINOLOGY
+==================================================
+
+Use established AI-IOS terminology.
+
+If the platform uses:
+
+Machine
+
+use Machine.
+
+If it uses:
+
+Asset
+
+use Asset.
+
+Do not introduce "Node" unless the actual V1 contract/product terminology requires it.
+
+Maintain terminology consistently across:
+
+- UI
+- routes
+- tables
+- details
+- breadcrumbs
+- documentation
+
+==================================================
+4. INFORMATION ARCHITECTURE
+==================================================
+
+Recommended:
+
+Infrastructure
+├── Overview
+├── Assets
+├── Machines
+├── Services
+└── Asset Detail
+
+Only expose sections backed by V1.
+
+Do not create empty navigation items for unsupported features.
+
+==================================================
+5. INFRASTRUCTURE OVERVIEW
+==================================================
+
+Create:
+
+/infrastructure
+
+The overview should answer:
+
+- What assets exist?
+- What types of assets exist?
+- What is active?
+- What is inactive?
+- What requires attention?
+- What changed recently?
+
+Use actual V1 data.
+
+Potential summary:
+
+Total Assets
+Machines
+Virtual Machines
+Services
+Unknown/Unclassified
+
+Only display supported categories.
+
+==================================================
+6. ASSET INVENTORY
+==================================================
+
+Create an enterprise asset table.
+
+Potential fields:
+
+- Asset
+- Type
+- Status
+- Health
+- Location
+- Environment
+- Identifier
+- Last Updated
+- Actions
+
+Only use fields confirmed by V1.
+
+Support:
+
+- search
+- filtering
+- sorting
+- pagination
+- column visibility where useful
+- row actions
+- loading
+- empty
+- error
+
+==================================================
+7. LARGE DATASET UX
+==================================================
+
+Inventory may contain many assets.
+
+Prefer:
+
+- server-side pagination
+- server-side filtering
+- server-side search
+- efficient sorting
+
+Do not load the complete inventory into the browser unnecessarily.
+
+==================================================
+8. ASSET TYPES
+==================================================
+
+Use actual V1 asset types.
+
+Potential categories may include:
+
+- Physical Machine
+- Virtual Machine
+- Host
+- Service
+- Application
+- Network resource
+- Storage
+- Other
+
+Do not assume these exist.
+
+Inspect Backend V1 first.
+
+==================================================
+9. ASSET DETAIL
+==================================================
+
+Create:
+
+/infrastructure/assets/[id]
+
+or the canonical route structure established by the repository.
+
+The detail page should support where V1 provides data:
+
+Identity
+↓
+Current State
+↓
+Health
+↓
+Configuration / Metadata
+↓
+Relationships
+↓
+Events
+↓
+Metrics
+↓
+Related Operations
+
+==================================================
+10. ASSET IDENTITY
+==================================================
+
+Show:
+
+- display name
+- unique identifier
+- type
+- status
+- environment
+- location
+- created/updated timestamps where available
+
+Do not expose internal IDs unnecessarily.
+
+If an ID is operationally useful:
+
+provide copy functionality.
+
+==================================================
+11. ASSET HEALTH
+==================================================
+
+Integrate with Prompt 006 Monitoring.
+
+Do not duplicate health logic.
+
+Asset detail should consume reusable Monitoring health components/data where possible.
+
+Show:
+
+- current health
+- last update
+- active issues
+- relevant metrics
+
+Only if supported by V1.
+
+==================================================
+12. RELATED ALERTS
+==================================================
+
+If V1 exposes relationships:
+
+show related alerts.
+
+Example:
+
+Active Alerts: 3
+
+[View Alerts]
+
+Navigate to Alerting with appropriate filters/context.
+
+Do not invent relationships.
+
+==================================================
+13. RELATED AUTOMATION
+==================================================
+
+If V1 exposes automation relationships:
+
+show:
+
+- recent executions
+- available automation actions
+- execution status
+
+Use existing Automation components.
+
+Do not duplicate automation logic.
+
+==================================================
+14. AI CONTEXT
+==================================================
+
+If V1 supports contextual AI requests:
+
+provide:
+
+"Ask AI about this asset"
+
+The context must come from actual supported V1 identifiers.
+
+Do not send arbitrary hidden context.
+
+Do not fabricate AI capabilities.
+
+==================================================
+15. RELATIONSHIPS
+==================================================
+
+If V1 exposes asset relationships:
+
+visualize them in an understandable way.
+
+Potential:
+
+Asset
+├── Hosted Services
+├── Applications
+├── Related Machines
+└── Dependencies
+
+Only show actual relationships.
+
+Do not create a fake topology graph.
+
+If topology data is available but graph UX is not appropriate here:
+
+provide a structured relationship list and defer graph visualization to the appropriate future feature.
+
+==================================================
+16. CONFIGURATION / METADATA
+==================================================
+
+Create reusable metadata presentation.
+
+Support:
+
+- key/value fields
+- grouped sections
+- timestamps
+- identifiers
+- configuration state
+
+Do not expose secrets.
+
+Do not render sensitive fields blindly.
+
+==================================================
+17. SENSITIVE INFORMATION
+==================================================
+
+Never display:
+
+- passwords
+- API keys
+- private keys
+- tokens
+- secret values
+
+If the backend returns sensitive metadata:
+
+mask it according to the established frontend security rules.
+
+Do not persist sensitive values in client state unnecessarily.
+
+==================================================
+18. SEARCH
+==================================================
+
+Implement search using actual V1 capabilities.
+
+Possible fields:
+
+- name
+- identifier
+- type
+- hostname
+- address
+
+Only expose confirmed searchable fields.
+
+Search should be:
+
+- debounced where appropriate
+- keyboard accessible
+- URL-state compatible where practical
+
+==================================================
+19. FILTERS
+==================================================
+
+Implement supported filters.
+
+Potential:
+
+- asset type
+- status
+- health
+- environment
+- location
+- service
+
+Only expose real V1 filters.
+
+Provide:
+
+- active filter count
+- reset
+- clear individual filter
+- accessible controls
+
+==================================================
+20. SORTING
+==================================================
+
+Use server-side sorting where supported.
+
+Only expose valid sort fields.
+
+Do not silently sort by a client-generated value if the user expects server ordering.
+
+==================================================
+21. ASSET MUTATIONS
+==================================================
+
+If V1 supports asset mutations:
+
+implement only those actual operations.
+
+Potential:
+
+- create
+- update
+- delete
+- enable
+- disable
+- assign
+
+Do not implement CRUD automatically just because this is an inventory module.
+
+Inventory may be read-only in V1.
+
+==================================================
+22. MUTATION SAFETY
+==================================================
+
+For any state-changing operation:
+
+show:
+
+- what will change
+- target asset
+- current state
+- expected result
+
+Require confirmation for destructive actions.
+
+Do not use optimistic updates for high-impact infrastructure changes.
+
+Wait for backend confirmation.
+
+==================================================
+23. CONCURRENCY
+==================================================
+
+If V1 exposes version/optimistic-lock information:
+
+respect it.
+
+If the backend returns a conflict:
+
+show an understandable message.
+
+Example:
+
+"This asset was changed elsewhere. Refresh before making further changes."
+
+Do not silently overwrite newer data.
+
+==================================================
+24. BULK ACTIONS
+==================================================
+
+Only implement bulk actions if V1 explicitly supports them.
+
+If supported:
+
+- selection
+- selected count
+- action
+- confirmation
+- progress
+- result
+
+Do not create frontend-only bulk mutations.
+
+==================================================
+25. EXPORT
+==================================================
+
+If V1 supports inventory export:
+
+integrate it.
+
+If not:
+
+do not create a fake CSV export that only exports the currently loaded page unless explicitly intended and clearly labelled.
+
+==================================================
+26. IMPORT
+==================================================
+
+Do not implement asset import unless V1 supports it.
+
+If unsupported:
+
+document the limitation.
+
+==================================================
+27. ASSET STATUS
+==================================================
+
+Use canonical V1 states.
+
+Do not create a second asset-status system.
+
+Map backend values into existing design-system semantic tokens.
+
+==================================================
+28. TIMESTAMPS
+==================================================
+
+Use consistent timestamp formatting.
+
+Support:
+
+- exact timestamp
+- relative timestamp where appropriate
+- timezone handling
+
+Do not alter source timestamps.
+
+==================================================
+29. PAGINATION
+==================================================
+
+Use backend pagination.
+
+Support:
+
+- page navigation
+- page size where V1 supports it
+- total count where available
+- loading
+- empty
+
+Do not fake total counts.
+
+==================================================
+30. API ARCHITECTURE
+==================================================
+
+Use:
+
+Infrastructure Page
+↓
+Infrastructure Hooks
+↓
+Infrastructure API Module
+↓
+Shared API Client
+↓
+Backend V1
+
+Never call HTTP directly from components.
+
+==================================================
+31. TYPES
+==================================================
+
+Use strict TypeScript.
+
+Structure:
+
+API Types
+↓
+Adapter
+↓
+Domain Model
+↓
+View Model
+
+Do not use:
+
+any
+
+to bypass backend mismatches.
+
+==================================================
+32. QUERY ARCHITECTURE
+==================================================
+
+Use TanStack Query.
+
+Queries:
+
+- infrastructure summary
+- asset list
+- asset detail
+- relationships
+- related alerts
+- related automation
+- metrics
+
+Only create queries for actual V1 endpoints.
+
+==================================================
+33. CACHE INVALIDATION
+==================================================
+
+After mutations:
+
+- invalidate affected asset
+- invalidate list
+- invalidate overview
+- refresh related modules where appropriate
+
+Avoid stale state.
+
+==================================================
+34. DASHBOARD INTEGRATION
+==================================================
+
+Where Dashboard displays infrastructure metrics:
+
+Dashboard
+→ Infrastructure
+
+Do not duplicate inventory queries inside Dashboard.
+
+==================================================
+35. MONITORING INTEGRATION
+==================================================
+
+Infrastructure:
+
+Asset
+→ Monitoring
+
+Monitoring:
+
+Asset
+→ Infrastructure Detail
+
+Use shared identifiers.
+
+Only implement if V1 supports the relationship.
+
+==================================================
+36. ALERTING INTEGRATION
+==================================================
+
+Infrastructure:
+
+Asset
+→ Related Alerts
+
+Alert:
+
+Alert
+→ Asset Detail
+
+Only when actual V1 identifiers exist.
+
+==================================================
+37. AUTOMATION INTEGRATION
+==================================================
+
+Infrastructure:
+
+Asset
+→ Available Automation
+
+Only when V1 provides supported target relationships.
+
+==================================================
+38. AI INTEGRATION
+==================================================
+
+Where V1 supports context:
+
+Asset
+→ Ask AI
+
+The AI request must use actual asset context.
+
+Do not expose internal IDs unnecessarily.
+
+==================================================
+39. LOADING STATES
+==================================================
+
+Use existing design-system primitives.
+
+Support:
+
+- summary
+- table
+- detail
+- relationships
+- metadata
+- mutations
+
+Avoid full-page blocking when only a section is loading.
+
+==================================================
+40. EMPTY STATES
+==================================================
+
+Examples:
+
+"No assets found."
+
+"No assets match your filters."
+
+"No related alerts."
+
+"No relationships available."
+
+"No configuration data available."
+
+Messages must be contextual.
+
+==================================================
+41. ERROR STATES
+==================================================
+
+Support:
+
+- API failure
+- timeout
+- permission denied
+- asset not found
+- invalid ID
+- partial failure
+- mutation failure
+
+Do not expose backend internals.
+
+==================================================
+42. PARTIAL FAILURE
+==================================================
+
+Example:
+
+Asset information available
+Metrics unavailable
+Alerts unavailable
+
+The detail page should still render available information.
+
+Each section gets its own error/retry state.
+
+==================================================
+43. RESPONSIVE DESIGN
+==================================================
+
+Desktop:
+
+Data-dense inventory.
+
+Tablet:
+
+Reduced columns.
+
+Mobile:
+
+Card/list representation.
+
+Asset detail:
+
+Stack sections vertically.
+
+Do not force a desktop table into a tiny screen.
+
+==================================================
+44. ACCESSIBILITY
+==================================================
+
+Target WCAG 2.2 AA.
+
+Ensure:
+
+- table accessibility
+- filter accessibility
+- keyboard navigation
+- accessible status
+- accessible detail sections
+- accessible dialogs
+- focus management
+- screen-reader labels
+
+==================================================
+45. PERFORMANCE
+==================================================
+
+Optimize for large inventories.
+
+Use:
+
+- server pagination
+- debounced search
+- query caching
+- virtualization only where justified
+- lazy loading heavy relationship views
+
+Do not load unnecessary data.
+
+==================================================
+46. DESIGN SYSTEM
+==================================================
+
+Use Prompt 002.
+
+Reuse patterns from:
+
+- Monitoring
+- Alerting
+- Automation
+- Reporting
+
+Do not create another visual language.
+
+==================================================
+47. USER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/user-guide/infrastructure-inventory.md
+
+Document:
+
+- Infrastructure Overview
+- Assets
+- Search
+- Filters
+- Asset details
+- Relationships
+- Related alerts
+- Monitoring integration
+- Automation integration
+- AI context
+- supported mutations
+- troubleshooting
+
+Only document implemented capabilities.
+
+==================================================
+48. DEVELOPER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/developer-guide/infrastructure-inventory.md
+
+Document:
+
+- feature architecture
+- API integration
+- asset models
+- adapters
+- query architecture
+- pagination
+- filters
+- detail architecture
+- cross-module integration
+- permissions
+- performance
+
+==================================================
+49. RFI / RFP DOCUMENTATION
+==================================================
+
+Create:
+
+docs/frontend/rfi/infrastructure-inventory.md
+
+Document:
+
+- enterprise asset inventory
+- scalable asset discovery
+- metadata presentation
+- operational visibility
+- permission-aware access
+- responsive UX
+- accessibility
+- extensibility
+- cross-module integration
+
+Clearly distinguish:
+
+Implemented V1
+
+from:
+
+Unavailable/planned.
+
+==================================================
+50. BACKEND V1 LIMITATIONS
+==================================================
+
+Record unsupported inventory capabilities in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Include:
+
+- requested capability
+- V1 availability
+- frontend impact
+- current UX handling
+
+Do not modify backend.
+
+==================================================
+51. TESTING
+==================================================
+
+Create tests for:
+
+### Overview
+
+- render
+- metrics
+- loading
+- empty
+- error
+
+### Inventory
+
+- list
+- search
+- filter
+- sort
+- pagination
+- empty
+- error
+
+### Detail
+
+- identity
+- metadata
+- health
+- relationships
+- related alerts
+- related automation
+
+### Mutations
+
+Only if supported:
+
+- create
+- update
+- delete
+- enable/disable
+
+### Permissions
+
+- view
+- edit
+- delete
+- other actual permissions
+
+### Accessibility
+
+- keyboard
+- focus
+- tables
+- dialogs
+- status
+
+==================================================
+52. E2E
+==================================================
+
+Where environment permits:
+
+- open Infrastructure
+- search asset
+- filter
+- open asset detail
+- inspect related data
+- navigate to Monitoring
+- navigate to Alerting
+- navigate to Automation
+- invoke AI context where supported
+
+Do not perform destructive production mutations.
+
+Use only approved test data.
+
+Do not modify backend.
+
+==================================================
+53. DEPENDENCY SAFETY
+==================================================
+
+Use existing dependencies.
+
+Do not add topology/graph libraries unless the actual feature requires them and V1 provides topology data.
+
+If a dependency is necessary:
+
+- explain why
+- minimize bundle size
+- inspect lockfile
+- validate
+
+==================================================
+54. BACKEND FREEZE VERIFICATION
+==================================================
+
+Before completion:
+
+[ ] Backend source changes = 0
+[ ] Backend API changes = 0
+[ ] Database changes = 0
+[ ] Migration changes = 0
+[ ] Backend config changes = 0
+[ ] Backend dependency changes = 0
+
+==================================================
+55. VALIDATION
+==================================================
+
+Run:
+
+- typecheck
+- lint
+- unit tests
+- production build
+- applicable E2E
+
+Do not claim success without execution.
+
+==================================================
+56. GIT SAFETY
+==================================================
+
+Before commit:
+
+- inspect git status
+- inspect changed files
+- verify no secrets
+- verify no .env
+- verify no credentials
+- verify no backend modifications
+- inspect dependency changes
+- inspect lockfile changes
+
+==================================================
+57. COMMIT
+==================================================
+
+If validation passes:
+
+feat(frontend): implement enterprise infrastructure inventory
+
+Push according to repository workflow.
+
+==================================================
+58. DEFINITION OF DONE
+==================================================
+
+[ ] Infrastructure Overview implemented.
+[ ] Asset inventory implemented.
+[ ] Actual V1 APIs consumed.
+[ ] Search implemented where supported.
+[ ] Filters implemented where supported.
+[ ] Sorting implemented where supported.
+[ ] Pagination implemented.
+[ ] Asset detail implemented.
+[ ] Metadata implemented.
+[ ] Health integration implemented.
+[ ] Relationships implemented where supported.
+[ ] Related alerts implemented where supported.
+[ ] Related automation implemented where supported.
+[ ] AI context implemented where supported.
+[ ] Mutations implemented only where V1 supports them.
+[ ] Bulk operations implemented only where V1 supports them.
+[ ] Loading states implemented.
+[ ] Empty states implemented.
+[ ] Error states implemented.
+[ ] Partial failures handled.
+[ ] Responsive UX implemented.
+[ ] Accessibility requirements met.
+[ ] Dashboard integration works.
+[ ] Monitoring integration works where supported.
+[ ] Alerting integration works where supported.
+[ ] Automation integration works where supported.
+[ ] User guide created.
+[ ] Developer guide created.
+[ ] RFI documentation created.
+[ ] Backend V1 untouched.
+[ ] No backend API changes.
+[ ] No database changes.
+[ ] No unnecessary dependencies.
+[ ] Typecheck passes.
+[ ] Lint passes.
+[ ] Tests pass.
+[ ] Production build passes.
+[ ] Applicable E2E passes.
+[ ] Git state clean except explicitly pre-existing files.
+
+==================================================
+59. FINAL REPORT
+==================================================
+
+Provide:
+
+1. Infrastructure implementation summary
+2. Actual V1 APIs consumed
+3. Routes created
+4. Components created
+5. Asset types discovered
+6. Search/filter implementation
+7. Pagination implementation
+8. Asset detail
+9. Relationships
+10. Monitoring integration
+11. Alerting integration
+12. Automation integration
+13. AI integration
+14. Permission handling
+15. Loading/empty/error handling
+16. Accessibility
+17. Responsive behaviour
+18. User guide
+19. Developer guide
+20. RFI documentation
+21. Tests
+22. E2E
+23. Typecheck
+24. Lint
+25. Production build
+26. Dependency changes
+27. Lockfile changes
+28. Backend files changed — MUST BE ZERO
+29. Backend V1 limitations
+30. Git commit
+31. Known limitations
+32. Recommended next frontend prompt
+
+Do not modify the backend.
+
+Do not fabricate inventory capabilities.
+
+Proceed with implementation.

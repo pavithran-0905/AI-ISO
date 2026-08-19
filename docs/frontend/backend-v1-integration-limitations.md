@@ -202,7 +202,9 @@ asset-level scope it can't back with real data.
 
 ## `inventory-service` has no category/class/location name-resolution endpoint
 
-**Discovered**: Prompt 006.
+**Discovered**: Prompt 006. **Reconfirmed**: Prompt 011, which also
+found `owner_id` in the same situation (`app/services/owner.py` exists,
+unrouted) — Asset Detail shows all four as raw ids for the same reason.
 
 `AssetResponse.category_id`/`.class_id`/`.location_id` are bare UUIDs.
 The underlying category/asset-class/location service and repository
@@ -876,3 +878,113 @@ gated by the coarse role capability model (§25) — generate/ingest →
 the administrative check, the mutating-tools toggle → `execute` — a
 UX convenience only, consistent with every prior prompt's identical
 finding.
+
+## `inventory-service` applies no tenant filter on any by-id route, and no cross-check on any list route — the worst instance of this pattern found all session
+
+**Discovered**: Prompt 011.
+
+Every by-id route — `GET/PATCH/DELETE /inventory/assets/{id}`,
+`GET/DELETE /inventory/relationships/{id}`,
+`GET /inventory/groups/{id}/members`, `GET /inventory/topology`,
+`GET/POST /inventory/import/{id}`, `GET /inventory/export/{id}` —
+resolves purely by primary key, with **no `organization_id` parameter
+of any kind** (confirmed by reading every route handler directly).
+`shared_core.database.tenant.enforce_tenant_match` exists specifically
+for this "defense in depth for an entity fetched by id" scenario — its
+own docstring describes this exact case — but is never called anywhere
+in this service. Separately, every *list* route
+(`GET /inventory/assets`, `/search`, `/statistics`, `/analytics`,
+`/groups`) takes `organization_id` as a client-supplied parameter with
+zero cross-check against the caller's actual identity, and every
+`AssetRepository`/`AssetRelationshipRepository`/etc. construction in
+`app/api/deps.py` passes `tenant_scope=None` — `BaseRepository`'s own
+automatic tenant-scoping mechanism (used correctly elsewhere in the
+platform) is never engaged. Net effect: any authenticated user from
+any organization can read or mutate any other organization's assets,
+relationships, groups, or import/export jobs by id. This is a superset
+of every prior "caller-supplied, unchecked `organization_id`" finding
+this session (Reporting, Automation, AI Assistant) — this service adds
+the by-id routes having no tenant parameter at all.
+
+**Frontend behavior**: `features/infrastructure` always sends the
+real, currently-selected `organization_id` on every list call (the one
+place a filter is genuinely applied server-side) and fabricates no
+client-side tenant check for the by-id routes the backend itself
+doesn't enforce.
+
+## `inventory-service` has full group-delete and membership-editing service methods with zero routes
+
+**Discovered**: Prompt 011.
+
+`AssetGroupService.delete`/`.add_member`/`.remove_member`
+(`app/services/group.py` L98-119) are real, implemented methods — but
+`app/api/group.py` only ever calls `list_for_org`, `create`, and
+`resolve_members`. No `DELETE /inventory/groups/{id}` and no
+add/remove-member route exist. The same "fully-implemented-but-unrouted"
+pattern found repeatedly this session (categories/classes/locations/
+owners in this same service; parameters/targets/schedules in
+`automation-service`; memory-expiry/multi-agent-attribution in
+`ai-assistant-service`).
+
+**Frontend behavior**: `features/infrastructure/pages/groups-list-page.tsx`
+offers create and list-with-membership-view only — no delete button,
+no member-editing UI, since neither has anywhere to send a request.
+
+## `inventory-service` silently builds a full asset history/audit/version trail with no route to read any of it
+
+**Discovered**: Prompt 011.
+
+`AssetHistoryService`, `AssetStatusHistoryService`,
+`AssetHealthHistoryService`, `AssetLifecycleHistoryService`,
+`AssetVersionService`, and `InventoryAuditService` are all real,
+populated as side effects of every `AssetService.create`/`.update`
+call (`app/services/asset.py` L226-378) — every status change, health
+change, lifecycle transition, and version bump is durably recorded.
+**Confirmed absent**: no route anywhere in this service reads any of
+it back — no `/inventory/assets/{id}/history`, `.../status-history`,
+`.../health-history`, `.../lifecycle-history`, `.../versions`, or
+`/inventory/audit`. The backend is quietly building a complete audit
+trail that is currently unreachable over HTTP.
+
+**Frontend behavior**: Asset Detail shows only the current
+`current_version` number (a plain integer, §21/§23's "respect
+version/optimistic-lock information") and the current `updatedAt`
+timestamp — no history/timeline view was built, since there is no
+endpoint to build one against. `AssetResponse` also has no
+`is_active`/`deleted_at` field, so a soft-deleted asset simply stops
+appearing everywhere — there is no way for the frontend to distinguish
+"never existed" from "deleted" via any response this service returns.
+
+## No bulk-mutation route on any `inventory-service` router
+
+**Discovered**: Prompt 011.
+
+`shared_core.database.repository.BaseRepository.bulk_create`/
+`.bulk_update`/`.bulk_delete` exist generically in the framework, but
+`AssetService`/`AssetRepository` never call them, and no route (on
+`asset.py`, `search.py`, or any other router) exposes a bulk-mutation
+endpoint — no `PATCH /inventory/assets/bulk`, no bulk-enable/disable/
+delete route of any kind.
+
+**Frontend behavior**: no bulk-selection UI was built on the Assets
+table (§24: "only implement bulk actions if V1 explicitly supports
+them") — every mutation in this feature acts on exactly one asset at a
+time, via its own real single-item route.
+
+## `ImportJobResponse` has no `created_asset_ids` field, despite the backend model tracking them for rollback
+
+**Discovered**: Prompt 011.
+
+`app/models/asset_import_job.py`'s `AssetImportJob.created_asset_ids`
+is a real column the rollback logic reads internally, but
+`ImportJobResponse` (`app/schemas/import_export.py`) never exposes it.
+A completed, non-preview import can be rolled back by job id (a real
+route, `POST /inventory/import/{id}/rollback`), but there is no way
+for a caller to see in advance *which* assets a given import job
+actually created.
+
+**Frontend behavior**: `ImportDialog` offers the real rollback action
+after a completed, non-preview import, but never lists the specific
+assets that would be undone — only the job's own row counts
+(processed/succeeded/failed/duplicate), which is all the response
+schema provides.

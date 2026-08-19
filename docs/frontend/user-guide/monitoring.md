@@ -1,9 +1,14 @@
 # Monitoring
 
-Where to check whether AI-IOS's infrastructure is healthy, inspect a
-specific asset, and see what's changed recently. Only documents what's
-actually implemented — there's no metrics/charting page yet (see Known
-limitations).
+Where to check whether AI-IOS's infrastructure is healthy and see
+what's changed recently. Only documents what's actually implemented —
+there's no metrics/charting page yet (see Known limitations).
+
+Full asset browsing, search, detail, and management now lives in
+**Infrastructure** (`/infrastructure`) — see
+`docs/frontend/user-guide/infrastructure-inventory.md`. This page still
+covers the two things that remain genuinely Monitoring's own: an
+at-a-glance health rollup and platform-level service/event visibility.
 
 ## Monitoring Overview
 
@@ -14,41 +19,12 @@ you won't be asked again.
 - **Health summary** — how many of your assets are healthy, in
   warning, critical, and so on, plus the total count.
 - **Critical issues** — assets currently critical or unreachable, most
-  recent first. If nothing's critical, it says so.
+  recent first, each linking to its full detail page in Infrastructure.
+  If nothing's critical, it says so.
 - **Service health** — a short preview of platform service health (see
   Services below).
 - **Recent events** — a short preview of what's happened recently (see
   Events below).
-
-## Assets
-
-Open **Assets** from the tab bar under Monitoring, or `/monitoring/assets`.
-This is the full, searchable list of every asset registered for your
-organization.
-
-- **Search** — matches name, hostname, IP, serial number, and similar
-  fields.
-- **Filters** — narrow by Status or Type. Active filters show a count
-  next to the Reset button.
-- **Sort** — click any column header to sort by it; click again to
-  reverse the direction.
-- **Density** — the two icons on the right switch between comfortable
-  and compact row spacing. Your choice is remembered.
-- The exact search/filter/sort/page you're looking at is reflected in
-  the page's URL, so you can bookmark or share it.
-
-Click any asset's name to open its detail page.
-
-## Asset detail
-
-Shows everything AI-IOS knows about one asset: its identity
-(hostname, IP, vendor, OS, ...), its current health and status, any
-tags and metadata, and any related assets recorded for it (with a
-link to jump to each one).
-
-Some technical identifiers (category, class, location, and owner) are
-shown as raw IDs rather than names — AI-IOS doesn't yet have a way to
-look up what those IDs correspond to.
 
 ## Services
 
@@ -64,9 +40,9 @@ configuration, and other events, most recent first.
 
 ## Search
 
-Use the Assets page's own search box (above) — it's real, server-side
-search across your organization's assets. There's no separate global
-monitoring search beyond that.
+Asset search moved to Infrastructure's own Assets page — see
+`docs/frontend/user-guide/infrastructure-inventory.md`. There's no
+separate global monitoring search.
 
 ## Time range
 
@@ -93,8 +69,6 @@ dependency relationships rather than individual machines.
 - **A section shows an error with a Retry button.** That data is
   temporarily unavailable; the rest of the page keeps working
   normally. Try Retry, or use the page's own refresh button.
-- **An asset shows raw IDs instead of names for category/class/location/owner.**
-  This is expected today — see Asset detail, above.
 
 ## Known limitations
 
@@ -106,5 +80,4 @@ dependency relationships rather than individual machines.
   doesn't currently record which asset (if any) an event relates to.
 - **"Critical issues" scans a bounded set of assets**, not your
   organization's entire inventory, if you have a very large number of
-  assets — use the full Assets page's search to find something
-  specific.
+  assets — use Infrastructure's own Assets page to search all of them.

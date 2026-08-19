@@ -10,20 +10,20 @@ vi.mock("next/navigation", () => ({
 
 describe("MonitoringSubNav", () => {
   it("marks the current section as the current page", () => {
-    mockPathname.current = "/monitoring/assets";
+    mockPathname.current = "/monitoring/services";
     render(<MonitoringSubNav />);
 
-    expect(screen.getByRole("link", { name: "Assets" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "Services" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Overview" })).not.toHaveAttribute("aria-current");
   });
 
-  it("links to every real monitoring section", () => {
+  it("links to every real monitoring section — Assets moved to Infrastructure (Prompt 011)", () => {
     mockPathname.current = "/monitoring";
     render(<MonitoringSubNav />);
 
     expect(screen.getByRole("link", { name: "Overview" })).toHaveAttribute("href", "/monitoring");
-    expect(screen.getByRole("link", { name: "Assets" })).toHaveAttribute("href", "/monitoring/assets");
     expect(screen.getByRole("link", { name: "Services" })).toHaveAttribute("href", "/monitoring/services");
     expect(screen.getByRole("link", { name: "Events" })).toHaveAttribute("href", "/monitoring/events");
+    expect(screen.queryByRole("link", { name: "Assets" })).not.toBeInTheDocument();
   });
 });

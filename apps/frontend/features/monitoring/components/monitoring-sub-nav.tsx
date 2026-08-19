@@ -7,7 +7,6 @@ import { cn } from "@/utils/cn";
 
 const ITEMS = [
   { href: "/monitoring", label: "Overview" },
-  { href: "/monitoring/assets", label: "Assets" },
   { href: "/monitoring/services", label: "Services" },
   { href: "/monitoring/events", label: "Events" },
 ];

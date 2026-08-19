@@ -6,10 +6,18 @@ experience. Nothing here claims future functionality as currently
 available. See `../rfi/README.md` and `../rfi/dashboard.md` for the
 foundation this builds on.
 
-## Monitoring UX — IMPLEMENTED
+**Superseded by Prompt 011**: every Assets/Asset Detail claim below
+describes what this prompt originally built — that ownership has since
+moved to `features/infrastructure`, which now also adds real CRUD,
+groups, topology, and import/export this prompt never had. See
+`../rfi/infrastructure-inventory.md` for the current, authoritative
+Assets capability list; this file keeps its original text for
+historical accuracy where it doesn't materially mislead.
 
-A five-page experience (Overview, Assets, Asset Detail, Services,
-Events) covering the operator workflow §1 sets out: understand
+## Monitoring UX — IMPLEMENTED (Assets/Asset Detail moved to Infrastructure, Prompt 011)
+
+Originally a five-page experience (Overview, Assets, Asset Detail,
+Services, Events) covering the operator workflow §1 sets out: understand
 infrastructure health, inspect assets, identify degraded/failed
 resources, move from summary to detail, filter/search large datasets,
 and understand recent changes. Every data point traces to a specific,

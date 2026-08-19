@@ -4,7 +4,7 @@ import { RefreshCw } from "lucide-react";
 
 import { NoOrganizationAccessState, OrganizationPicker } from "@/features/dashboard/components/organization-picker";
 import { SectionState } from "@/features/dashboard/components/section-state";
-import { CriticalIssuesSection } from "@/features/monitoring/components/critical-issues-section";
+import { CriticalIssuesSection } from "@/features/infrastructure/components/critical-issues-section";
 import { EventTimeline } from "@/features/monitoring/components/event-timeline";
 import { HealthSummary } from "@/features/monitoring/components/health-summary";
 import { MonitoringSubNav } from "@/features/monitoring/components/monitoring-sub-nav";

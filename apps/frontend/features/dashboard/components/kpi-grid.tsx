@@ -25,7 +25,7 @@ export function KpiGrid({ organizationId }: { organizationId: string }) {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           <MetricCard label="Users" value={query.data.userCount} />
           <MetricCard label="Projects" value={query.data.projectCount} />
-          <MetricCard label="Assets" value={query.data.assetCount} href="/monitoring/assets" />
+          <MetricCard label="Assets" value={query.data.assetCount} href="/infrastructure/assets" />
           <MetricCard label="Workflows" value={query.data.workflowCount} />
           <MetricCard label="Automations" value={query.data.automationCount} href="/automation/automations" />
           <MetricCard label="Validations" value={query.data.validationCount} />

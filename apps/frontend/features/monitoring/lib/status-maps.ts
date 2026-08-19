@@ -1,18 +1,5 @@
 import type { StatusState } from "@/lib/status";
-import type { AssetHealthValue, EventSeverityValue, ServiceNodeHealthValue } from "@/features/monitoring/types";
-
-/** `AssetHealthValue` (inventory-service) → the canonical status
- * taxonomy. Distinct enum from `ServiceNodeHealthValue` below despite
- * both being called "health" — see `features/monitoring/types`'s own
- * module docstring. */
-export const ASSET_HEALTH_TO_STATUS: Record<AssetHealthValue, StatusState> = {
-  healthy: "healthy",
-  warning: "warning",
-  critical: "critical",
-  unknown: "unknown",
-  offline: "stopped",
-  unreachable: "failed",
-};
+import type { EventSeverityValue, ServiceNodeHealthValue } from "@/features/monitoring/types";
 
 /** `ServiceNodeHealthValue` (observability-platform-service topology)
  * → the canonical status taxonomy. */

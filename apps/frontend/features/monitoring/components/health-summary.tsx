@@ -4,15 +4,16 @@ import { Card, CardContent } from "@/components/data-display/card";
 import { StatusIndicator } from "@/components/data-display/status-indicator";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { SectionState } from "@/features/dashboard/components/section-state";
-import { useInventoryStatistics } from "@/features/monitoring/hooks/use-inventory-statistics";
-import { ASSET_HEALTH_STATUSES, type AssetHealthValue } from "@/features/monitoring/types";
-import { ASSET_HEALTH_TO_STATUS } from "@/features/monitoring/lib/status-maps";
+import { useInventoryStatistics } from "@/features/infrastructure/hooks/use-statistics";
+import { ASSET_HEALTH_STATUSES, type AssetHealthValue } from "@/features/infrastructure/types";
+import { ASSET_HEALTH_TO_STATUS } from "@/features/infrastructure/lib/status-maps";
 
 /**
  * Health Summary (§5, Overview Level 1) — `GET /inventory/statistics`'s
  * `health_distribution`, a real backend-computed count per health
  * value, not derived by fetching and counting the full asset list
- * client-side.
+ * client-side. Reads through `features/infrastructure` (Prompt 011),
+ * which now owns all inventory statistics.
  */
 export function HealthSummary({ organizationId }: { organizationId: string }) {
   const query = useInventoryStatistics(organizationId);

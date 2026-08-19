@@ -22,7 +22,7 @@
  */
 
 import type { LucideIcon } from "lucide-react";
-import { Activity, Bot, FileBarChart, Gauge, LayoutDashboard, MessageSquare, Server, ShieldCheck, Siren, Sparkles, Users, Workflow } from "lucide-react";
+import { Activity, Bot, FileBarChart, Gauge, HardDrive, LayoutDashboard, MessageSquare, Server, ShieldCheck, Siren, Sparkles, Users, Workflow } from "lucide-react";
 
 import type { Role } from "@/auth/types";
 
@@ -152,20 +152,6 @@ export const ROUTE_REGISTRY: readonly RouteMeta[] = [
     roles: null,
     feature: "monitoring",
     layout: "main",
-  }),
-  implemented({
-    id: "monitoring-assets",
-    path: "/monitoring/assets",
-    title: "Assets",
-    description: "Searchable, filterable inventory of every managed asset and its health.",
-    breadcrumb: "Assets",
-    navGroup: "operations",
-    navLabel: null,
-    icon: null,
-    roles: null,
-    feature: "monitoring",
-    layout: "main",
-    showInNav: false,
   }),
   implemented({
     id: "monitoring-services",
@@ -733,16 +719,46 @@ export const ROUTE_REGISTRY: readonly RouteMeta[] = [
   }),
 
   // ---- Platform -----------------------------------------------------------------------
-  planned({
-    id: "inventory",
-    title: "Inventory",
+  implemented({
+    id: "infrastructure",
+    path: "/infrastructure",
+    title: "Infrastructure",
     description: "Authoritative CMDB: every discovered asset, relationships, topology.",
-    breadcrumb: "Inventory",
+    breadcrumb: "Infrastructure",
+    navGroup: "platform",
+    navLabel: null,
+    icon: HardDrive,
+    roles: null,
+    feature: "inventory",
+    layout: "main",
+  }),
+  implemented({
+    id: "infrastructure-assets",
+    path: "/infrastructure/assets",
+    title: "Assets",
+    description: "Searchable, filterable inventory of every registered asset, with full CRUD where V1 supports it.",
+    breadcrumb: "Assets",
     navGroup: "platform",
     navLabel: null,
     icon: null,
     roles: null,
     feature: "inventory",
+    layout: "main",
+    showInNav: false,
+  }),
+  implemented({
+    id: "infrastructure-groups",
+    path: "/infrastructure/groups",
+    title: "Groups",
+    description: "Static, dynamic, and rule-based asset groups and their resolved membership.",
+    breadcrumb: "Groups",
+    navGroup: "platform",
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "inventory",
+    layout: "main",
+    showInNav: false,
   }),
   planned({
     id: "discovery",
