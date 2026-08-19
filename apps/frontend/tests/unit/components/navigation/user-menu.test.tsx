@@ -94,4 +94,30 @@ describe("UserMenu", () => {
     await waitFor(() => expect(useAuthStore.getState().status).toBe("unauthenticated"));
     expect(push).toHaveBeenCalledWith("/login");
   });
+
+  it("navigates to /settings when Preferences is selected", async () => {
+    useAuthStore.setState({ status: "authenticated", userId: "u1", role: "operator", organizationId: "org1" });
+    mockFetchOnce(200, {
+      success: true,
+      message: "ok",
+      data: {
+        id: "u1",
+        email: "sarun@example.com",
+        display_name: "Sarun",
+        is_email_verified: true,
+        mfa_enabled: false,
+        last_login_at: null,
+        created_at: "2026-01-01T00:00:00Z",
+      },
+      meta: {},
+    });
+
+    renderMenu();
+    fireEvent.click(screen.getByRole("button", { name: /account menu/i }));
+    await waitFor(() => expect(screen.getByRole("menuitem", { name: "Preferences" })).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "Preferences" }));
+
+    expect(push).toHaveBeenCalledWith("/settings");
+  });
 });

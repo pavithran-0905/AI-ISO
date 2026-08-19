@@ -1,0 +1,1078 @@
+# FRONTEND PROMPT 013
+# Enterprise Configuration, Settings & Administration Experience
+
+## ROLE
+
+Act as a Principal Product Designer, Enterprise Configuration UX Architect, Frontend Architect, Senior Next.js/React Engineer, Accessibility Engineer, Security UX Specialist, and Enterprise SaaS Platform Engineer.
+
+Frontend Prompts 001–012 are COMPLETE.
+
+Use the existing:
+
+- application shell
+- design system
+- authentication
+- permissions
+- routing
+- API client
+- Dashboard
+- Monitoring
+- Alerting
+- Reporting
+- Automation
+- AI Assistant
+- Infrastructure
+- Topology
+- query/state architecture
+- documentation architecture
+
+Do not create competing architecture.
+
+==================================================
+CRITICAL BACKEND V1 FREEZE
+==================================================
+
+AI-IOS Backend V1 is COMPLETE and FROZEN.
+
+THIS IS A FRONTEND-ONLY PROMPT.
+
+DO NOT:
+
+- modify backend source code
+- modify configuration services
+- modify backend APIs
+- add backend endpoints
+- modify database schemas
+- modify migrations
+- modify authentication
+- modify RBAC
+- modify backend business logic
+- modify backend configuration
+- modify backend dependencies
+- change backend contracts
+
+If a configuration capability is unavailable:
+
+1. Document it.
+2. Do not fabricate it.
+3. Do not modify backend.
+4. Build only supported frontend functionality.
+5. Record the limitation in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Backend modifications MUST remain ZERO.
+
+==================================================
+1. OBJECTIVE
+==================================================
+
+Build the enterprise AI-IOS Settings and Configuration experience.
+
+The frontend should provide a consistent place for users and authorized administrators to manage configuration capabilities already exposed by Backend V1.
+
+Potential areas:
+
+- User Preferences
+- Organization Settings
+- Platform Settings
+- Environment Configuration
+- Integration Configuration
+- Notification Preferences
+- AI Preferences
+- Display Preferences
+- Security-related preferences
+- Operational configuration
+
+Only expose capabilities actually supported by V1.
+
+Do not create fake settings.
+
+==================================================
+2. INSPECT BACKEND V1 FIRST
+==================================================
+
+Inspect actual V1 APIs for configuration and settings.
+
+Identify:
+
+- user preference APIs
+- organization APIs
+- project configuration
+- environment configuration
+- integration configuration
+- notification settings
+- AI settings
+- security settings
+- feature configuration
+- permissions
+- validation
+- mutation semantics
+- version/concurrency handling
+
+Use actual backend source as the source of truth.
+
+==================================================
+3. INFORMATION ARCHITECTURE
+==================================================
+
+Recommended:
+
+Settings
+├── My Preferences
+├── Organization
+├── Projects
+├── Integrations
+├── Notifications
+├── AI
+└── System
+
+Only expose sections supported by V1 and authorized for the current user.
+
+==================================================
+4. SETTINGS ROUTE
+==================================================
+
+Use the centralized route registry.
+
+Recommended:
+
+/settings
+
+Use the existing Settings Layout from Prompt 001.
+
+Do not create another settings shell.
+
+==================================================
+5. SETTINGS NAVIGATION
+==================================================
+
+Use a clean enterprise settings navigation.
+
+Desktop:
+
+Sidebar
++
+Content
+
+Mobile:
+
+Settings category selector
++
+Content
+
+Show only sections the user can access.
+
+Do not show unauthorized configuration areas as if they were available.
+
+==================================================
+6. USER PREFERENCES
+==================================================
+
+Where V1 supports them, provide:
+
+- language
+- timezone
+- date/time format
+- theme
+- table density
+- notification preferences
+- dashboard preferences
+
+Use existing frontend settings infrastructure where available.
+
+Do not create duplicate settings storage.
+
+==================================================
+7. ORGANIZATION SETTINGS
+==================================================
+
+Only if V1 supports organization-level settings.
+
+Potential:
+
+- organization identity
+- defaults
+- branding
+- timezone
+- operational settings
+
+Do not expose organization administration to ordinary users.
+
+Use permissions from the existing authorization model.
+
+==================================================
+8. PROJECT SETTINGS
+==================================================
+
+If V1 supports project-level configuration:
+
+provide project settings.
+
+Possible:
+
+- project name
+- description
+- environment
+- defaults
+- integrations
+- operational configuration
+
+Only expose actual fields.
+
+==================================================
+9. ENVIRONMENT SETTINGS
+==================================================
+
+If V1 provides environment configuration:
+
+show environment settings.
+
+Potential:
+
+- environment name
+- status
+- region/location
+- defaults
+- operational settings
+
+Do not expose server-side secrets.
+
+==================================================
+10. INTEGRATIONS
+==================================================
+
+If V1 exposes integration configuration:
+
+create an enterprise integrations page.
+
+Potential integrations may include:
+
+- Ansible
+- Redfish
+- Kubernetes/OpenShift
+- monitoring providers
+- notification channels
+- AI providers
+
+These are examples only.
+
+Verify actual V1 support before implementation.
+
+==================================================
+11. INTEGRATION STATUS
+==================================================
+
+For each supported integration show:
+
+- name
+- status
+- configured/not configured
+- last verified where available
+- environment
+- actions
+
+Do not claim connectivity unless backend confirms it.
+
+==================================================
+12. INTEGRATION DETAILS
+==================================================
+
+If V1 supports configuration:
+
+provide a clear form.
+
+Group fields logically.
+
+Example:
+
+Connection
+Authentication
+Options
+Validation
+Status
+
+Never display secrets in plain text.
+
+==================================================
+13. CONNECTION TEST
+==================================================
+
+If Backend V1 supports connection testing:
+
+provide:
+
+Test Connection
+
+The UI must show:
+
+Testing
+Success
+Failure
+
+Do not claim success before backend confirmation.
+
+==================================================
+14. SECRET HANDLING
+==================================================
+
+Never display:
+
+- passwords
+- API keys
+- tokens
+- private keys
+- credentials
+
+For secret fields:
+
+- use masked inputs
+- never log values
+- never place values in URLs
+- do not persist unnecessarily
+- clear temporary state when appropriate
+
+If backend only returns masked values:
+
+preserve the masked representation.
+
+==================================================
+15. NOTIFICATION SETTINGS
+==================================================
+
+If V1 supports notification preferences:
+
+provide:
+
+- channel preferences
+- severity preferences
+- alert preferences
+- report preferences
+- AI notification preferences
+
+Only use actual V1 capabilities.
+
+Do not create notification infrastructure.
+
+==================================================
+16. AI SETTINGS
+==================================================
+
+If V1 exposes user/admin AI settings:
+
+provide the appropriate UI.
+
+Potential:
+
+- assistant preferences
+- memory preferences
+- available capabilities
+- AI usage settings
+
+Do not expose:
+
+- system prompts
+- provider credentials
+- internal guardrails
+- hidden agent instructions
+
+==================================================
+17. THEME
+==================================================
+
+Use the existing application appearance settings.
+
+Do not implement a second theme system.
+
+Use the existing user settings mechanism.
+
+==================================================
+18. FORM ARCHITECTURE
+==================================================
+
+Use the existing form architecture.
+
+Prefer:
+
+React Hook Form
++
+Zod
+
+only where already established by the frontend foundation.
+
+Forms must support:
+
+- initial values
+- validation
+- dirty state
+- save
+- cancel
+- reset
+- server errors
+- loading
+- success
+
+==================================================
+19. UNSAVED CHANGES
+==================================================
+
+If a settings form is dirty:
+
+warn before navigating away.
+
+Use an accessible confirmation dialog.
+
+Do not lose user-entered configuration accidentally.
+
+==================================================
+20. SAVE UX
+==================================================
+
+Save buttons must:
+
+- show saving state
+- prevent duplicate submission
+- show backend-confirmed success
+- show errors
+- preserve entered values after failure
+
+Do not optimistically claim configuration was saved.
+
+==================================================
+21. VALIDATION
+==================================================
+
+Use backend-compatible validation.
+
+Where the backend provides schema constraints:
+
+mirror them in frontend validation.
+
+Backend remains authoritative.
+
+Do not invent validation rules that conflict with V1.
+
+==================================================
+22. CONCURRENCY
+==================================================
+
+If V1 uses versioning/optimistic locking:
+
+respect it.
+
+On conflict:
+
+show an understandable message.
+
+Example:
+
+"This configuration changed elsewhere. Reload the latest version before saving."
+
+Never silently overwrite.
+
+==================================================
+23. PERMISSIONS
+==================================================
+
+Settings may contain sensitive administrative operations.
+
+Use the existing permission architecture.
+
+Possible permissions:
+
+- view settings
+- edit settings
+- manage integrations
+- manage organization
+- manage system settings
+
+Only use permissions actually defined by V1.
+
+Frontend checks improve UX.
+
+Backend authorization remains authoritative.
+
+==================================================
+24. READ-ONLY MODE
+==================================================
+
+Users with view-only permissions should see:
+
+- configuration values where safe
+- status
+- metadata
+
+but not editable controls.
+
+Do not simply disable every control without explaining the restriction.
+
+==================================================
+25. DANGEROUS SETTINGS
+==================================================
+
+For high-impact settings:
+
+provide:
+
+- warning
+- current value
+- proposed value
+- expected impact
+- confirmation
+
+Use explicit action labels.
+
+Never use ambiguous:
+
+"Apply"
+
+when:
+
+"Disable Integration"
+
+or:
+
+"Remove Configuration"
+
+is more accurate.
+
+==================================================
+26. DELETE / REMOVE
+==================================================
+
+If V1 supports destructive configuration actions:
+
+require confirmation.
+
+Show:
+
+What will be removed
+What will be affected
+
+Do not invent cascading consequences.
+
+Only state confirmed backend behaviour.
+
+==================================================
+27. DEFAULTS
+==================================================
+
+If V1 supports defaults:
+
+make the distinction clear between:
+
+System Default
+Organization Default
+Project Default
+User Override
+
+Only use these concepts if the backend supports them.
+
+==================================================
+28. API ARCHITECTURE
+==================================================
+
+Use:
+
+Settings Page
+↓
+Settings Hooks
+↓
+Settings API Module
+↓
+Shared API Client
+↓
+Backend V1
+
+Components must not call HTTP directly.
+
+==================================================
+29. TYPES
+==================================================
+
+Use strict TypeScript.
+
+Separate:
+
+API Types
+↓
+Adapters
+↓
+Settings Domain Models
+↓
+UI Models
+
+Do not use `any`.
+
+==================================================
+30. QUERY ARCHITECTURE
+==================================================
+
+Use TanStack Query for server configuration.
+
+Use client state only for genuine local UI state.
+
+Avoid duplicating settings in Zustand.
+
+==================================================
+31. CACHE INVALIDATION
+==================================================
+
+After a successful mutation:
+
+- invalidate settings query
+- update dependent UI where appropriate
+- refresh integration status if necessary
+
+Do not leave stale configuration visible.
+
+==================================================
+32. CROSS-MODULE EFFECTS
+==================================================
+
+Where settings affect other modules:
+
+reflect confirmed state.
+
+Examples:
+
+Notification preference
+→ Alerting
+
+Theme preference
+→ Application shell
+
+AI preference
+→ AI Assistant
+
+Do not duplicate configuration logic.
+
+==================================================
+33. LOADING STATES
+==================================================
+
+Support:
+
+- page loading
+- section loading
+- integration loading
+- form loading
+- connection testing
+- save state
+
+Avoid unnecessary full-page blocking.
+
+==================================================
+34. EMPTY STATES
+==================================================
+
+Examples:
+
+"No integrations configured."
+
+"No organization settings available."
+
+"No notification preferences configured."
+
+Use contextual messaging.
+
+==================================================
+35. ERROR STATES
+==================================================
+
+Support:
+
+- API unavailable
+- permission denied
+- validation error
+- save failure
+- connection test failure
+- conflict
+- timeout
+
+Do not expose backend stack traces.
+
+==================================================
+36. PARTIAL FAILURE
+==================================================
+
+One settings section failing must not blank the entire settings area.
+
+Example:
+
+Organization settings loaded.
+Integration settings unavailable.
+
+Keep the available section usable.
+
+==================================================
+37. ACCESSIBILITY
+==================================================
+
+Target WCAG 2.2 AA.
+
+Ensure:
+
+- labels
+- descriptions
+- form errors
+- keyboard navigation
+- focus management
+- dialogs
+- status messages
+- read-only state
+- sensitive field handling
+
+==================================================
+38. RESPONSIVE DESIGN
+==================================================
+
+Desktop:
+
+Settings sidebar + content.
+
+Tablet:
+
+Collapsible settings navigation.
+
+Mobile:
+
+Category selector + content.
+
+Forms must remain readable.
+
+==================================================
+39. SECURITY UX
+==================================================
+
+Review all browser-visible configuration.
+
+Ensure:
+
+- secrets never rendered
+- sensitive values never logged
+- sensitive query parameters avoided
+- unauthorized settings hidden
+- destructive actions protected
+
+==================================================
+40. USER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/user-guide/settings.md
+
+Document:
+
+- Settings navigation
+- User Preferences
+- Organization settings
+- Project settings
+- Integrations
+- Notifications
+- AI settings
+- Saving changes
+- Unsaved changes
+- Permissions
+- Troubleshooting
+
+Only document implemented V1 capabilities.
+
+==================================================
+41. DEVELOPER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/developer-guide/settings.md
+
+Document:
+
+- settings architecture
+- route structure
+- form architecture
+- API integration
+- validation
+- permissions
+- secrets handling
+- concurrency
+- cache invalidation
+- cross-module effects
+
+==================================================
+42. RFI / RFP DOCUMENTATION
+==================================================
+
+Create:
+
+docs/frontend/rfi/settings.md
+
+Document:
+
+- enterprise configuration management
+- permission-aware settings
+- integration management
+- secure configuration UX
+- validation
+- concurrency handling
+- accessibility
+- responsive design
+- maintainability
+
+Clearly separate:
+
+Implemented V1
+
+from:
+
+Unavailable/planned.
+
+==================================================
+43. BACKEND V1 LIMITATIONS
+==================================================
+
+Record unsupported settings capabilities in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Include:
+
+- capability
+- V1 availability
+- frontend impact
+- current UX handling
+
+Do not modify backend.
+
+==================================================
+44. TESTING
+==================================================
+
+Create tests for:
+
+### Navigation
+
+- accessible settings categories
+- unauthorized categories hidden
+- correct routes
+
+### Forms
+
+- render
+- initial values
+- validation
+- dirty state
+- save
+- cancel
+- reset
+- server error
+
+### Permissions
+
+- read-only
+- editable
+- unauthorized
+
+### Integrations
+
+- status
+- connection test
+- save
+- failure
+
+### Security
+
+- secrets masked
+- secrets not rendered
+- no sensitive URL state
+
+### Accessibility
+
+- keyboard
+- focus
+- labels
+- errors
+- dialogs
+
+==================================================
+45. E2E
+==================================================
+
+Where environment permits:
+
+- open Settings
+- navigate categories
+- inspect preferences
+- edit safe setting where test environment allows
+- save
+- verify persisted result
+- test permission-restricted area
+- test unsaved-change protection
+
+Do not modify production configuration.
+
+Do not modify backend.
+
+==================================================
+46. DESIGN SYSTEM
+==================================================
+
+Use Prompt 002.
+
+Reuse:
+
+- Settings Layout
+- forms
+- dialogs
+- cards
+- status components
+- notification components
+
+Do not create another settings visual system.
+
+==================================================
+47. DEPENDENCY SAFETY
+==================================================
+
+Use existing dependencies.
+
+Do not add settings/form libraries if the frontend already has suitable primitives.
+
+==================================================
+48. BACKEND FREEZE VERIFICATION
+==================================================
+
+Before completion:
+
+[ ] Backend source changes = 0
+[ ] Backend API changes = 0
+[ ] Database changes = 0
+[ ] Migration changes = 0
+[ ] Backend configuration changes = 0
+[ ] Backend dependencies = 0
+
+==================================================
+49. VALIDATION
+==================================================
+
+Run:
+
+- typecheck
+- lint
+- unit tests
+- production build
+- applicable E2E
+
+Do not claim success without execution.
+
+==================================================
+50. GIT SAFETY
+==================================================
+
+Before commit:
+
+- inspect git status
+- inspect changed files
+- verify no secrets
+- verify no .env
+- verify no credentials
+- verify no backend changes
+- inspect dependency changes
+- inspect lockfile
+
+==================================================
+51. COMMIT
+==================================================
+
+If validation passes:
+
+feat(frontend): implement enterprise settings experience
+
+Push according to repository workflow.
+
+==================================================
+52. DEFINITION OF DONE
+==================================================
+
+[ ] Settings route implemented.
+[ ] Existing Settings Layout reused.
+[ ] Actual V1 settings APIs consumed.
+[ ] User preferences implemented where supported.
+[ ] Organization settings implemented where supported.
+[ ] Project settings implemented where supported.
+[ ] Integration settings implemented where supported.
+[ ] Notification settings implemented where supported.
+[ ] AI settings implemented where supported.
+[ ] Forms implemented.
+[ ] Validation implemented.
+[ ] Dirty-state protection implemented.
+[ ] Save/cancel/reset implemented.
+[ ] Permission handling implemented.
+[ ] Read-only mode implemented.
+[ ] Sensitive data protected.
+[ ] Connection testing implemented where supported.
+[ ] Dangerous actions protected.
+[ ] Concurrency handled where applicable.
+[ ] Loading states implemented.
+[ ] Empty states implemented.
+[ ] Error states implemented.
+[ ] Partial failures handled.
+[ ] Responsive design implemented.
+[ ] Accessibility requirements met.
+[ ] Cross-module effects handled.
+[ ] User guide created.
+[ ] Developer guide created.
+[ ] RFI documentation created.
+[ ] Backend V1 untouched.
+[ ] No backend API changes.
+[ ] No database changes.
+[ ] No unnecessary dependencies.
+[ ] Typecheck passes.
+[ ] Lint passes.
+[ ] Tests pass.
+[ ] Production build passes.
+[ ] Applicable E2E passes.
+[ ] Git state clean except explicitly pre-existing files.
+
+==================================================
+53. FINAL REPORT
+==================================================
+
+Provide:
+
+1. Settings implementation summary
+2. Actual V1 APIs consumed
+3. Routes created
+4. Settings categories discovered
+5. Forms created
+6. Validation
+7. Permissions
+8. Integration settings
+9. Secret handling
+10. Concurrency handling
+11. Cross-module effects
+12. Loading/empty/error states
+13. Accessibility
+14. Responsive behaviour
+15. User guide
+16. Developer guide
+17. RFI documentation
+18. Tests
+19. E2E
+20. Typecheck
+21. Lint
+22. Production build
+23. Dependency changes
+24. Lockfile changes
+25. Backend files changed — MUST BE ZERO
+26. Backend V1 limitations
+27. Git commit
+28. Known limitations
+29. Recommended next frontend prompt
+
+Do not modify the backend.
+
+Do not fabricate configuration capabilities.
+
+Proceed with implementation.

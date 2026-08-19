@@ -1104,3 +1104,181 @@ via each section's own manual retry action. The backend's own 5-minute
 server-side cache (`app/services/topology.py`'s `_CACHE_TTL`) is the
 only "freshness" mechanism in play; no client-side polling was added
 on top of it.
+
+## No optimistic locking on any Settings mutation, despite every table having a real `version` column
+
+**Discovered**: Prompt 013.
+
+Confirmed by direct inspection of `OrganizationService.update`,
+`OrganizationSettingsService.update`, `OrganizationBrandingService.update`,
+`OrganizationLicenseService.update`, `OrganizationQuotaService.update`
+(`organization-service`), `ProjectService.update`/`.patch`,
+`ProjectSettingsService.update` (`project-service`), and
+`UserPreferencesService.update`/`UserSettingsService.update`
+(`user-management-service`): every one of these mutates the
+SQLAlchemy-tracked entity's attributes directly and relies on the
+session's own autoflush/commit — none calls
+`shared_core.database.repository.BaseRepository.update(entity,
+expected_version=...)`, the one method in the shared framework that
+actually checks/increments the `version` column every one of these
+tables carries via `BaseEntityMixin`/`VersionMixin`. No request schema
+in any of these services even exposes a `version` field to the client.
+Two concurrent saves to the same resource silently last-write-wins,
+with no conflict ever detected.
+
+**Frontend behavior**: no "this changed elsewhere, reload before
+saving" UX was built (§22 of Prompt 013 explicitly asks for one) —
+there is no signal to detect the conflict with, and fabricating one
+client-side (e.g. comparing timestamps) would be exactly the kind of
+invented safety net this session has consistently refused to build.
+Documented as the largest concurrency gap found this session.
+
+## `PATCH /users/{id}` has no ownership check
+
+**Discovered**: Prompt 013.
+
+`services/user-management-service/app/api/user.py`'s `PATCH`/`PUT
+/users/{user_id}` handlers accept `_caller: CurrentUserId` but never
+compare it to the `{user_id}` path parameter — any authenticated
+caller can in principle edit any other user's `displayName`/
+`firstName`/`lastName`/`phoneNumber`/`timezone`/`language`/`locale`/
+`status` by id.
+
+**Frontend behavior**: `features/settings/api/preferences-api.ts#patchIdentity`
+is called exclusively with `userId` sourced from `useSession()` (the
+real, current caller's own id) — never a value a user could type into
+a field. The gap is documented, not exploited or fixed client-side (a
+frontend can't add a server-side authorization check).
+
+## Three incompatible, client-unverifiable authorization shapes across the Settings backend surface
+
+**Discovered**: Prompt 013.
+
+Confirmed by direct source inspection across the seven services this
+prompt integrates: `organization-service`/`project-service` gate
+writes on a real *per-resource membership role* looked up from the
+database per request (`require_admin`/`require_project_admin`), never
+from the JWT; `administration-portal-service` gates writes on a JWT
+`roles` **array** claim (`{admin, administrator, platform_admin,
+super_admin}`) that this platform's login flow never populates
+(`POST /auth/login` issues tokens with no `extra_claims` — the
+existing documented Prompt 001 gap, now shown to make every System
+mutation 403 unconditionally); `user-management-service`,
+`authentication-service`, `integration-hub-service`, and
+`notification-center-service`'s user-preference routes require only a
+valid JWT, no check at all.
+
+**Frontend behavior**: every edit control gated by the existing coarse
+`isAdministrative` role heuristic (`@/permissions/hooks`), documented
+explicitly as a UX convenience with no security value — the real 403
+each backend returns on a mismatch is always shown as a real error.
+
+## `administration-portal-service`'s own docs claim capabilities that have zero HTTP route
+
+**Discovered**: Prompt 013.
+
+Confirmed by full read of `app/api/admin.py` (16 routes total) and a
+grep of every service class against it: `SystemConfigurationService`
+(richer runtime config than the plain key/value `PlatformSetting`
+`/admin/settings` actually exposes), `OrganizationService` (create/
+transition an organization — meaning `POST /admin/tenants` depends on
+an organization that must already exist in this service's own
+database, with no route in this service to put one there),
+`SecuritySettingService`/`SecurityEventService` (the docs' own
+"security admin" claim — zero route), `MaintenanceService`/
+`AnnouncementService`, `ApiKeyService` (administrative API key
+issuance, distinct from `authentication-service`'s own user-facing
+one), `AdminSessionService`/`AdminActionService`, and — worth flagging
+specifically — `AuditService`: wired as an optional constructor
+argument on `TenantService` but `get_tenant_service` in `app/api/deps.py`
+never actually passes it, so **no audit row is ever written for any
+tenant provision/transition/delete performed through this service's
+real, live HTTP API**, despite the class's own docstring describing it
+as the platform's audit trail.
+
+**Frontend behavior**: none of the above was built or implied
+available. `/admin/tenants*` itself was deliberately not built against
+at all (real and RBAC-enforced, but cross-organization operator
+tooling dependent on an org that must be seeded out-of-band — see
+`../developer-guide/settings.md`).
+
+## `notification-center-service` echoes organization channel config back completely unmasked
+
+**Discovered**: Prompt 013.
+
+`GET/PUT /notifications/channels/{channel}`'s `config` field
+(`ChannelConfigResponse`) is stored and returned verbatim
+(`app/services/channel.py`'s `set_config` does `dict(config or {})`,
+no redaction) — a Slack webhook URL or SMTP password placed in this
+dict comes back in plain text on every subsequent read, unlike every
+other secret-shaped field in this feature's backend surface (API keys
+and integration-hub credentials are both genuinely never re-exposed).
+
+**Frontend behavior**: `NotificationChannelsSection` warns explicitly
+in its own UI copy ("Values here are echoed back unmasked by the
+backend") rather than silently displaying whatever's stored, since
+this field is edited as raw JSON, not enumerable key/value rows (where
+Prompt 011's `maskMetadataValue` heuristic could apply row-by-row, as
+it does in `ConnectorConfigForm` for `integration-hub-service`'s own
+free-form connector `config`).
+
+## `configuration-management-service` is almost entirely unrouted — including a real Ansible/Kubernetes service in the wrong place
+
+**Discovered**: Prompt 013.
+
+Full service-layer implementations exist for environment/variable/
+policy/baseline/approval/change-set/TOSCA management, and — notably —
+`ConfigurationAnsibleService` (real Ansible inventory-bundle
+validation, `app/ansible/validator.py`) and
+`ConfigurationKubernetesService` (real Kubernetes manifest/Helm/
+Kustomize validation) — the two capabilities a Settings "Integrations"
+page would most expect to find. **None of the eleven have a route**:
+confirmed by grepping every `*Svc` dependency-injection name in
+`app/api/deps.py` against every router file in `app/api/`. This
+service's only *routed* purpose is configuration-profile/version/
+drift/compliance/GitOps management for managed assets (a
+`managed_asset_id` field with no real foreign-key relationship, only
+an opaque UUID). `GET /configurations/reports` also has a real, worth-
+flagging anomaly: it generates and persists a new report as a side
+effect of a GET request (`report.py`'s `generate(...)` call), unlike
+the identically-named, properly-idempotent GET/POST report pair in
+every other service in this feature's surface.
+
+**Frontend behavior**: nothing was built against this service.
+Integrations (§10) is built entirely against `integration-hub-service`'s
+own generic connector framework instead — real, but with no dedicated
+Ansible/Kubernetes form, since the service that actually validates
+those doesn't expose one.
+
+## `OrganizationPreferences`/`ProjectPreferences` remain fully unrouted (reconfirmed from a new angle)
+
+**Discovered**: Prompt 011 (organization-service's own settings
+sub-resources); reconfirmed and extended in Prompt 013 from the
+Settings-page angle.
+
+Both services' own `docs/033`/`docs/034`-derived test suites
+(`test_services_no_rest_surface.py`) explicitly document this as
+intentional: `dashboard_layout`/`notification_preferences`/
+`ui_preferences` exist as full model/service/repository layers, per
+organization and per project, with zero route reaching either.
+
+**Frontend behavior**: this feature's own "Organization"/"Projects"
+settings pages never reference either — they're built entirely
+against the real, routed `organization_settings`/`project_settings`
+sub-resources instead, which are a different (and real) set of fields.
+
+## No route lists a connector's already-assigned credentials, and no credential revoke route exists
+
+**Discovered**: Prompt 013.
+
+`integration-hub-service`'s `CredentialService.list_for_connector`
+(`app/services/credential.py`) has zero route reaching it (confirmed
+by grep of `app/api/credentials.py`, which only exposes create/get/
+rotate). `CredentialStatus.REVOKED` exists as a real enum value, but
+no route ever sets a credential to it.
+
+**Frontend behavior**: `ConnectorCredentialSection` can only track a
+credential it assigned within the current browser session — it
+explicitly tells the user this rather than implying a full credential
+history exists. No "revoke credential" action was built, since no
+route performs one.
