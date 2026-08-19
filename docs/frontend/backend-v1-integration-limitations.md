@@ -988,3 +988,119 @@ after a completed, non-preview import, but never lists the specific
 assets that would be undone — only the job's own row counts
 (processed/succeeded/failed/duplicate), which is all the response
 schema provides.
+
+## `dependencies`/`impact` topology queries return no parent linkage — a multi-hop graph can't be reconstructed
+
+**Discovered**: Prompt 012.
+
+`GET /inventory/topology?query_kind=dependencies|impact` is real and
+backed by a genuine Neo4j traversal (`app/topology/graph.py`'s
+`get_dependency_graph`/`get_impact_analysis`), but each Cypher query's
+own `RETURN` clause only ever selects `id`, `name`, `asset_type`, and
+`length(path) AS distance` — no relationship type, no direction, and
+no reference to any intermediate node on the path. The response is a
+flat, deduplicated, distance-tagged node list; nothing in it says
+which node connects to which beyond the root. `query_kind=neighbors`
+is the only kind that returns real edge data (`type(r)`/
+`startNode(r).id = a.id AS outgoing`), and it is hard-capped at 1 hop.
+
+**Frontend behavior**: the interactive graph canvas
+(`TopologyGraphCanvas`) only ever renders a `neighbors` result (one
+root, real 1-hop directed edges). `dependencies`/`impact` are rendered
+as a distance-grouped structured list (`TopologyListView`) instead —
+never a graph — since drawing a multi-hop edge would mean inventing
+one the backend never actually computed.
+
+## `query_kind=neighbors` silently ignores the `depth` query parameter
+
+**Discovered**: Prompt 012.
+
+`GET /inventory/topology` accepts `depth` (validated `1..5` by
+FastAPI) for every `query_kind`, but `app/api/topology.py#get_topology`
+only ever forwards it to `TopologyService.get_dependency_graph`/
+`.get_impact_analysis` — the `neighbors` branch calls
+`topology.get_neighbors(asset_id, organization_id=...)` with no depth
+argument at all, and `get_neighbors`'s own Cypher (`app/topology/graph.py`)
+has no depth/hop-count concept, only a single `-[r]-` (exactly one
+edge). A caller can pass any `depth` value alongside
+`query_kind=neighbors` and the backend will silently return the same
+1-hop result regardless.
+
+**Frontend behavior**: the depth selector is hidden entirely on the
+Neighbors tab of `TopologyListView`, with a note explaining depth
+doesn't apply there, rather than shown and silently no-op'd.
+
+## No source→target topology path-query endpoint exists
+
+**Discovered**: Prompt 012.
+
+`inventory-service`'s topology router exposes exactly one route
+(`GET /inventory/topology`, three `query_kind` values, all rooted at a
+single asset). No endpoint accepts two asset ids and returns the path
+or relationship chain between them.
+
+**Frontend behavior**: no path/dependency-chain-between-two-assets UI
+was built — documented as unavailable rather than approximated with a
+client-side graph-traversal algorithm layered on top of repeated
+`neighbors` calls, which would silently duplicate logic this backend
+is supposed to own.
+
+## `GET /inventory/topology` accepts no filter parameters of any kind
+
+**Discovered**: Prompt 012.
+
+Confirmed by source inspection of `app/api/topology.py#get_topology`'s
+full parameter list (`asset_id`, `query_kind`, `depth` only) — no node
+type, relationship type, status, health, environment, or site filter
+exists on this route.
+
+**Frontend behavior**: `TopologyFilters`' "Show relationship types"
+control is a client-side display toggle over the already-loaded,
+single-root/1-hop response only, explicitly not presented as a backend
+capability.
+
+## `automation-service` has a real asset-linking field with zero route that ever reaches it
+
+**Discovered**: Prompt 012 (refines the Prompt 011 finding that no
+Alerting/Automation cross-link exists, which checked only from the
+Asset side).
+
+`app/schemas/target.py`'s `AutomationTargetCreateRequest`/
+`AutomationTargetResponse` both have a real `inventory_asset_id: UUID
+| None` field, and `app/models/automation_target.py` persists it — but
+`app/api/__init__.py` never registers a router for targets at all
+(confirmed: no `targets.py` exists under `app/api/`, and neither
+`AutomationTargetResponse` nor `AutomationTargetCreateRequest` is
+referenced anywhere under `app/api/`). The service/model layer fully
+supports asset-to-automation-target linking; there is no way to
+create, list, or query a target by asset id over HTTP.
+
+**Frontend behavior**: no Topology→Automation or Automation→Topology
+cross-link was built, in either direction — reconfirms Prompt 011's
+"Automation integration: N/A" finding for Infrastructure, and extends
+it with the more precise root cause (a real field, but an entirely
+unrouted service) rather than "no relationship exists at all."
+
+## No topology-specific export route exists
+
+**Discovered**: Prompt 012.
+
+`inventory-service` has real `export.py`/`import_.py` routers (Prompt
+011), but neither accepts a topology/graph-shaped payload — export is
+scoped to asset records, not a graph traversal result.
+
+**Frontend behavior**: no "export this graph" action was built on
+Topology. Prompt 011's asset export remains the only real export
+capability in this feature area.
+
+## No real-time/push mechanism for topology (or any) data
+
+**Discovered**: Prompt 012 (consistent with every prior prompt this
+session — no WebSocket/SSE/push mechanism was found anywhere in this
+platform).
+
+**Frontend behavior**: Topology re-queries on every focus change and
+via each section's own manual retry action. The backend's own 5-minute
+server-side cache (`app/services/topology.py`'s `_CACHE_TTL`) is the
+only "freshness" mechanism in play; no client-side polling was added
+on top of it.

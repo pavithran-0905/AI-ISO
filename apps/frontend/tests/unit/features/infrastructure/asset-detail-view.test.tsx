@@ -78,5 +78,7 @@ describe("AssetDetailView", () => {
     expect(screen.getByText("us-east-1")).toBeInTheDocument();
     expect(screen.getByText("••••••••")).toBeInTheDocument();
     expect(screen.queryByText(/sk-should-not-render-raw/)).not.toBeInTheDocument();
+
+    expect(screen.getByRole("link", { name: "View in Topology" })).toHaveAttribute("href", "/infrastructure/topology?focus=a1");
   });
 });

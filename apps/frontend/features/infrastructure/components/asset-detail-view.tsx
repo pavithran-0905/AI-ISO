@@ -1,11 +1,13 @@
 "use client";
 
-import { Copy } from "lucide-react";
+import { Copy, Share2 } from "lucide-react";
+import Link from "next/link";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/data-display/card";
 import { StatusBadge } from "@/components/feedback/status-badge";
 import { StatusIndicator } from "@/components/data-display/status-indicator";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { AskAiButton } from "@/features/ai-assistant/components/ask-ai-button";
 import { AssetActions } from "@/features/infrastructure/components/asset-actions";
@@ -26,7 +28,8 @@ import { toast } from "@/state/toast-store";
  * pre-existing documented gaps, not omissions. No Monitoring or
  * Alerting or Automation cross-link: confirmed absent, no real
  * relationship exists in `inventory-service` to either service (see
- * the developer guide) — only "Ask AI" is real (§14/§38).
+ * the developer guide) — only "Ask AI" and "View in Topology" (Prompt
+ * 012, §35) are real.
  */
 export function AssetDetailView({ asset }: { asset: Asset }) {
   function copyId() {
@@ -36,7 +39,11 @@ export function AssetDetailView({ asset }: { asset: Asset }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Link href={`/infrastructure/topology?focus=${asset.id}`} className={buttonVariants("outline", "gap-1.5")}>
+          <Share2 className="size-4" aria-hidden="true" />
+          View in Topology
+        </Link>
         <AskAiButton draft={`Tell me about the asset "${asset.name}" (id: ${asset.id}).`} />
       </div>
 

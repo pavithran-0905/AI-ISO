@@ -449,3 +449,67 @@ export interface CreateImportInput {
   sourceFormat?: ImportFormatValue;
   previewOnly?: boolean;
 }
+
+/**
+ * Topology graph model (§31) — deliberately a *different* shape from
+ * `TopologyNode` above (the raw `GET /inventory/topology` response
+ * node). `lib/topology-graph-adapter.ts` is the one place that
+ * converts one into the other (§30's "Graph Adapter"), so the renderer
+ * never depends on the backend response shape directly. `health` is
+ * joined in from `useAllAssets` — the topology endpoint itself carries
+ * no health field on any node.
+ */
+export interface TopologyGraphNode {
+  id: string;
+  name: string;
+  assetType: string;
+  health: AssetHealthValue | null;
+  isRoot: boolean;
+}
+
+/** A synthetic id (`${source}::${relationshipType}::${target}`) — the
+ * topology endpoint gives no edge id of its own (unlike
+ * `AssetRelationship`, which does, and which
+ * `topology-detail-panel.tsx` cross-references for edge metadata when
+ * one real relationship matches). */
+export interface TopologyEdge {
+  id: string;
+  source: string;
+  target: string;
+  relationshipType: string;
+}
+
+/**
+ * Only ever built from `query_kind=neighbors` (always exactly 1 hop —
+ * confirmed by source inspection of `app/topology/graph.py`:
+ * `get_dependency_graph`/`get_impact_analysis` return a flat,
+ * distance-tagged node list with no parent/path linkage at all, so
+ * there is no honest way to know which node connects to which beyond
+ * the root for `dependencies`/`impact`. Drawing an edge would mean
+ * inventing one. Those two query kinds stay a distance-grouped list
+ * (`TopologyListView`), never a canvas.
+ */
+export interface TopologyGraph {
+  rootId: string;
+  nodes: TopologyGraphNode[];
+  edges: TopologyEdge[];
+}
+
+/** A client-side *display* toggle over the already-loaded,
+ * depth-bounded graph response — never a backend query param.
+ * `GET /inventory/topology` accepts none (confirmed absent by source
+ * inspection); this only hides/shows nodes already in memory. */
+export interface TopologyFilter {
+  visibleAssetTypes: ReadonlySet<string> | null;
+}
+
+export type TopologySelection = { kind: "node"; id: string } | { kind: "edge"; id: string } | null;
+
+/** Exactly one real layout. The graph this feature renders is always
+ * root-plus-immediate-neighbors (see `TopologyGraph`'s own docstring)
+ * — a shape already fully determined by construction, so a
+ * hierarchical/force-directed/left-to-right layout choice would be
+ * premature complexity with nothing left to lay out differently. §20
+ * explicitly says not to add multiple layouts unless they materially
+ * improve usability; here, none would. */
+export type TopologyLayoutValue = "radial";

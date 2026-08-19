@@ -8,6 +8,7 @@ import { cn } from "@/utils/cn";
 const ITEMS = [
   { href: "/infrastructure", label: "Overview" },
   { href: "/infrastructure/assets", label: "Assets" },
+  { href: "/infrastructure/topology", label: "Topology" },
   { href: "/infrastructure/groups", label: "Groups" },
 ];
 

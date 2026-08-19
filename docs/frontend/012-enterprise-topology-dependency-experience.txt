@@ -1,0 +1,1179 @@
+# FRONTEND PROMPT 012
+# Enterprise Infrastructure Topology & Dependency Visualization
+
+## ROLE
+
+Act as a Principal Product Designer, Enterprise Infrastructure Visualization Architect, Topology UX Specialist, Frontend Architect, Senior Next.js/React Engineer, Data Visualization Engineer, Accessibility Engineer, and Infrastructure Operations UX Specialist.
+
+Frontend Prompts 001–011 are COMPLETE.
+
+Use the existing frontend architecture and design system.
+
+==================================================
+CRITICAL BACKEND V1 FREEZE
+==================================================
+
+AI-IOS Backend V1 is COMPLETE and FROZEN.
+
+THIS IS A FRONTEND-ONLY PROMPT.
+
+DO NOT:
+
+- modify backend source code
+- modify Neo4j
+- modify topology services
+- add backend endpoints
+- modify backend APIs
+- modify database schemas
+- modify migrations
+- modify authentication
+- modify RBAC
+- modify backend business logic
+- modify backend configuration
+- modify backend dependencies
+
+If topology/dependency data is unavailable:
+
+1. Document it.
+2. Do not fabricate relationships.
+3. Do not create fake topology data.
+4. Do not modify backend.
+5. Build only the supported frontend experience.
+6. Record the limitation in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Backend modifications MUST remain ZERO.
+
+==================================================
+1. OBJECTIVE
+==================================================
+
+Build the enterprise AI-IOS Topology experience.
+
+The topology experience should help operators understand:
+
+- infrastructure relationships
+- machine relationships
+- VM relationships
+- service dependencies
+- application dependencies
+- network relationships where available
+- upstream/downstream dependencies
+- health propagation
+- affected resources
+- operational impact
+
+The experience must be:
+
+- premium
+- highly readable
+- technically accurate
+- scalable
+- interactive
+- accessible
+- responsive
+- operationally useful
+
+Do not create a decorative graph.
+
+The topology must help answer:
+
+"What depends on what?"
+
+"What is affected?"
+
+"Where is the problem?"
+
+==================================================
+2. INSPECT BACKEND V1 FIRST
+==================================================
+
+Inspect actual V1 topology/relationship capabilities.
+
+Check:
+
+- Neo4j-related APIs
+- world-model APIs
+- inventory relationships
+- topology endpoints
+- asset relationship endpoints
+- dependency endpoints
+- graph traversal APIs
+- relationship types
+- node/asset types
+- filtering
+- permissions
+
+Do not assume that because Neo4j exists, a frontend topology API exists.
+
+Only use confirmed V1 contracts.
+
+==================================================
+3. TOPOLOGY INFORMATION ARCHITECTURE
+==================================================
+
+Recommended:
+
+Infrastructure
+├── Overview
+├── Assets
+├── Topology
+└── Asset Detail
+
+Route:
+
+/infrastructure/topology
+
+Use the centralized route registry.
+
+==================================================
+4. TOPOLOGY OVERVIEW
+==================================================
+
+Create a dedicated topology workspace.
+
+Recommended structure:
+
+┌──────────────────────────────────────────────────┐
+│ Topology     Search     Filters     Layout       │
+├───────────────────────┬──────────────────────────┤
+│                       │                          │
+│                       │      Graph Canvas        │
+│                       │                          │
+│   Filters / Context   │                          │
+│                       │                          │
+├───────────────────────┴──────────────────────────┤
+│ Selection / Details / Legend                     │
+└──────────────────────────────────────────────────┘
+
+Adapt the structure to the existing application shell.
+
+==================================================
+5. GRAPH DATA MODEL
+==================================================
+
+Represent:
+
+Node
+- id
+- type
+- name
+- status
+- metadata where safe
+
+Relationship
+- id where available
+- type
+- source
+- target
+- metadata where available
+
+Do not invent graph properties.
+
+==================================================
+6. TOPOLOGY NODE TYPES
+==================================================
+
+Use actual V1 node/asset types.
+
+Potential examples:
+
+- Site
+- Physical Machine
+- VM Host
+- Virtual Machine
+- Engine
+- Service
+- Application
+- OPC-UA
+- IO Channel
+- Tag
+- Alarm
+
+These are examples only.
+
+Verify actual V1 model before implementation.
+
+Do not create nodes for unsupported entities.
+
+==================================================
+7. RELATIONSHIP TYPES
+==================================================
+
+Use actual V1 relationship types.
+
+Potential examples:
+
+- HOSTS
+- RUNS
+- DEPENDS_ON
+- CONNECTED_TO
+- CONTAINS
+- SERVES
+- MONITORS
+
+These are examples only.
+
+Never fabricate relationship semantics.
+
+==================================================
+8. VISUAL HIERARCHY
+==================================================
+
+The graph must visually distinguish node categories.
+
+Use the existing design tokens.
+
+Each node should communicate:
+
+- type
+- name
+- state
+
+Do not use dozens of unrelated colours.
+
+Use:
+
+shape
+icon
+label
+semantic state
+
+in combination.
+
+==================================================
+9. HEALTH OVERLAY
+==================================================
+
+If health data is available:
+
+overlay Monitoring status on topology nodes.
+
+Example:
+
+Healthy
+Warning
+Critical
+Unknown
+
+Use the canonical Prompt 002 status system.
+
+Do not calculate health propagation in the frontend unless V1 explicitly provides the necessary semantics.
+
+==================================================
+10. ALERT OVERLAY
+==================================================
+
+If V1 provides alert relationships:
+
+show alert indicators on affected nodes.
+
+Example:
+
+Machine
+● 3 active alerts
+
+Click:
+
+→ Alerting detail/filter
+
+Do not invent alert relationships.
+
+==================================================
+11. SELECTION
+==================================================
+
+Clicking a node should open a contextual detail panel.
+
+Show:
+
+- identity
+- type
+- status
+- health
+- relationships
+- alerts
+- metrics
+- automation
+- AI actions
+
+Only show sections supported by V1.
+
+==================================================
+12. DETAIL PANEL
+==================================================
+
+Use a drawer or side panel rather than navigating away immediately.
+
+Recommended:
+
+Node selected
+↓
+Quick Details
+↓
+Relationships
+↓
+Health
+↓
+Actions
+
+Provide:
+
+"Open full asset detail"
+
+for deeper investigation.
+
+==================================================
+13. EDGE SELECTION
+==================================================
+
+If V1 exposes relationship metadata:
+
+allow edge selection.
+
+Show:
+
+- relationship type
+- source
+- target
+- metadata
+
+Do not create fake relationship descriptions.
+
+==================================================
+14. SEARCH
+==================================================
+
+Implement topology search using actual V1 capabilities.
+
+Potential:
+
+- asset name
+- identifier
+- type
+
+Search results should focus/highlight the matching node.
+
+Do not search only the currently loaded graph if the backend supports server-side search.
+
+==================================================
+15. FILTERS
+==================================================
+
+Where V1 supports it:
+
+- node type
+- relationship type
+- status
+- health
+- environment
+- site
+
+Only implement actual backend-supported filtering.
+
+==================================================
+16. DEPTH CONTROL
+==================================================
+
+If the V1 topology API supports traversal depth:
+
+provide:
+
+1 hop
+2 hops
+3 hops
+etc.
+
+Only expose supported values.
+
+If V1 does not expose depth:
+
+do not invent frontend traversal.
+
+==================================================
+17. FOCUS MODE
+==================================================
+
+If supported:
+
+allow users to focus on one selected asset and its relationships.
+
+Example:
+
+Asset
+↓
+Immediate dependencies
+↓
+Upstream/downstream
+
+Do not calculate relationships client-side if the backend already owns graph semantics.
+
+==================================================
+18. PATH / DEPENDENCY ANALYSIS
+==================================================
+
+If V1 provides path queries:
+
+support:
+
+Source
+→ Target
+
+and display the relationship path.
+
+If unsupported:
+
+do not implement a fake graph traversal algorithm.
+
+Document the limitation.
+
+==================================================
+19. IMPACT ANALYSIS
+==================================================
+
+If V1 provides dependency impact information:
+
+show:
+
+Affected resources
+Potential downstream impact
+Affected services/applications
+
+Only use backend-confirmed relationships.
+
+Do not infer operational impact solely from graph connectivity.
+
+==================================================
+20. LAYOUTS
+==================================================
+
+If a graph library already exists or V1 experience requires it, support appropriate layouts.
+
+Potential:
+
+- Hierarchical
+- Force-directed
+- Left-to-right
+- Top-to-bottom
+
+Do not add multiple layouts unless they materially improve usability.
+
+Default layout should prioritize operational readability.
+
+==================================================
+21. LARGE GRAPH HANDLING
+==================================================
+
+Topology graphs can become extremely large.
+
+Do not render thousands of nodes immediately.
+
+Use:
+
+- scoped queries
+- filters
+- focus mode
+- pagination where supported
+- lazy expansion where supported
+- virtualization/canvas rendering
+
+Do not download the entire Neo4j graph into the browser.
+
+==================================================
+22. GRAPH PERFORMANCE
+==================================================
+
+Optimize:
+
+- node rendering
+- edge rendering
+- selection
+- zoom
+- pan
+- filtering
+- graph updates
+
+Avoid React re-rendering the entire graph on every interaction.
+
+Keep graph rendering isolated from ordinary page state.
+
+==================================================
+23. ZOOM / PAN
+==================================================
+
+Support:
+
+- zoom in
+- zoom out
+- fit to screen
+- reset
+- pan
+
+Controls must be keyboard accessible where possible.
+
+==================================================
+24. MINIMAP
+==================================================
+
+Only add a minimap if it improves large-graph navigation.
+
+Do not add decorative controls.
+
+==================================================
+25. LEGEND
+==================================================
+
+Create an accessible legend.
+
+Explain:
+
+- node types
+- relationship types where needed
+- health states
+- selected state
+
+Do not rely on colour alone.
+
+==================================================
+26. FULLSCREEN
+==================================================
+
+If the existing layout system supports fullscreen:
+
+allow topology to enter fullscreen mode.
+
+Preserve:
+
+- filters
+- selection
+- zoom
+- current context
+
+Do not lose graph state unexpectedly.
+
+==================================================
+27. URL STATE
+==================================================
+
+Where appropriate, preserve:
+
+- selected asset
+- filters
+- focus asset
+- layout
+- view mode
+
+Do not put large graph datasets into the URL.
+
+==================================================
+28. EXPORT
+==================================================
+
+Only implement topology export if V1 supports it.
+
+Potential:
+
+- image
+- JSON
+- graph data
+
+Do not create an export that implies backend graph semantics not provided by V1.
+
+==================================================
+29. API ARCHITECTURE
+==================================================
+
+Use:
+
+Topology Page
+↓
+Topology Hooks
+↓
+Topology API Module
+↓
+Shared API Client
+↓
+Backend V1
+
+Components must never directly call HTTP.
+
+==================================================
+30. GRAPH ADAPTER
+==================================================
+
+Create a dedicated adapter:
+
+Backend Graph Response
+↓
+Topology Graph Model
+↓
+Graph Renderer
+
+Do not make the graph renderer depend directly on backend response shape.
+
+==================================================
+31. TYPES
+==================================================
+
+Use strict TypeScript.
+
+Create types for:
+
+- TopologyNode
+- TopologyEdge
+- TopologyGraph
+- TopologyFilter
+- TopologySelection
+- TopologyLayout
+
+Only include fields backed by V1.
+
+Do not use `any`.
+
+==================================================
+32. QUERY ARCHITECTURE
+==================================================
+
+Use TanStack Query.
+
+Potential queries:
+
+- topology overview
+- topology graph
+- node detail
+- relationship detail
+- paths
+- impact analysis
+
+Only implement confirmed endpoints.
+
+==================================================
+33. CACHE
+==================================================
+
+Cache appropriately.
+
+Avoid caching highly dynamic health information for long periods.
+
+Respect existing query conventions.
+
+==================================================
+34. REAL-TIME
+==================================================
+
+If V1 provides real-time topology updates:
+
+consume the existing mechanism.
+
+Otherwise:
+
+do not fake real-time graph updates.
+
+Use manual refresh or supported polling.
+
+==================================================
+35. MONITORING INTEGRATION
+==================================================
+
+Topology node:
+
+→ Monitoring detail
+
+Monitoring:
+
+→ Topology focused on asset
+
+Only when supported by shared identifiers.
+
+==================================================
+36. ALERTING INTEGRATION
+==================================================
+
+Topology:
+
+→ Related Alerts
+
+Alert:
+
+→ Topology focused on affected asset
+
+Only when V1 provides the relationship.
+
+==================================================
+37. AUTOMATION INTEGRATION
+==================================================
+
+Topology:
+
+→ Automation
+
+Only where target relationships exist.
+
+==================================================
+38. AI INTEGRATION
+==================================================
+
+Provide:
+
+"Ask AI about this topology"
+
+only if V1 supports contextual topology/asset requests.
+
+Do not send fabricated graph context.
+
+==================================================
+39. LOADING STATES
+==================================================
+
+Support:
+
+- initial graph loading
+- expanding graph
+- node detail loading
+- relationship loading
+- impact-analysis loading
+
+Do not block the entire workspace when one panel is loading.
+
+==================================================
+40. EMPTY STATES
+==================================================
+
+Examples:
+
+"No topology data available."
+
+"No relationships found."
+
+"No resources match your filters."
+
+"Topology data is unavailable."
+
+Provide meaningful next actions.
+
+==================================================
+41. ERROR STATES
+==================================================
+
+Support:
+
+- API failure
+- graph loading failure
+- permission denied
+- invalid node
+- relationship failure
+- partial graph failure
+
+Do not expose backend internals.
+
+==================================================
+42. PARTIAL FAILURE
+==================================================
+
+Example:
+
+Graph loaded
+Node metrics unavailable
+
+Keep graph visible.
+
+Show a localized error in the detail panel.
+
+==================================================
+43. ACCESSIBILITY
+==================================================
+
+Target WCAG 2.2 AA.
+
+A graph is difficult for screen readers.
+
+Therefore provide an alternative structured representation.
+
+Example:
+
+Topology List View
+
+Asset A
+→ Hosts
+→ Service B
+
+Service B
+→ Depends on
+→ Database C
+
+The graph must NOT be the only way to understand relationships.
+
+==================================================
+44. LIST VIEW
+==================================================
+
+Provide an alternate:
+
+Graph
+| List
+
+view where useful.
+
+List view must support:
+
+- search
+- filters
+- relationships
+- keyboard navigation
+
+This is required for accessibility and operational fallback.
+
+==================================================
+45. RESPONSIVE DESIGN
+==================================================
+
+Desktop:
+
+Full graph workspace.
+
+Tablet:
+
+Graph + collapsible details.
+
+Mobile:
+
+Use:
+
+Asset list
+→ Asset detail
+→ Relationship list
+
+Do not attempt to squeeze the complete desktop graph into mobile.
+
+==================================================
+46. DESIGN SYSTEM
+==================================================
+
+Use Prompt 002.
+
+Reuse:
+
+- asset cards
+- status tokens
+- drawers
+- PageHeader
+- filters
+- search
+- command controls
+
+Do not introduce another design language.
+
+==================================================
+47. USER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/user-guide/topology.md
+
+Document:
+
+- opening Topology
+- graph navigation
+- zoom/pan
+- search
+- filters
+- selecting nodes
+- relationship details
+- focus mode
+- health overlay
+- alert integration
+- Monitoring integration
+- AI context
+- list view
+- troubleshooting
+
+Only document implemented functionality.
+
+==================================================
+48. DEVELOPER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/developer-guide/topology.md
+
+Document:
+
+- graph data model
+- API adapter
+- graph renderer
+- node/edge mapping
+- query architecture
+- performance
+- state management
+- accessibility
+- cross-module integration
+
+==================================================
+49. RFI / RFP DOCUMENTATION
+==================================================
+
+Create:
+
+docs/frontend/rfi/topology.md
+
+Document:
+
+- infrastructure topology visualization
+- dependency visibility
+- operational impact analysis where supported
+- scalability
+- accessibility
+- responsive UX
+- integration with Monitoring/Alerting
+- maintainability
+
+Clearly distinguish:
+
+Implemented V1
+
+from:
+
+Unavailable/planned.
+
+==================================================
+50. BACKEND V1 LIMITATIONS
+==================================================
+
+Record unsupported topology capabilities in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Include:
+
+- capability
+- V1 availability
+- frontend impact
+- current handling
+
+Do not modify backend.
+
+==================================================
+51. TESTING
+==================================================
+
+Create tests for:
+
+### Graph
+
+- render
+- node mapping
+- edge mapping
+- selection
+- zoom controls
+- filtering
+
+### Search
+
+- search
+- focus matching node
+- empty
+- error
+
+### Detail
+
+- node detail
+- relationships
+- loading
+- error
+
+### Integration
+
+- Monitoring navigation
+- Alerting navigation
+- Infrastructure navigation
+- AI context where supported
+
+### Accessibility
+
+- keyboard
+- list view
+- labels
+- focus
+
+==================================================
+52. E2E
+==================================================
+
+Where environment permits:
+
+- open Topology
+- load graph
+- search asset
+- select node
+- inspect detail
+- navigate to Monitoring
+- navigate to Alerting
+- switch Graph/List view
+
+Do not perform destructive infrastructure operations.
+
+Do not modify backend.
+
+==================================================
+53. DEPENDENCY SAFETY
+==================================================
+
+Before adding a graph library:
+
+1. Inspect package.json.
+2. Check whether a graph library already exists.
+3. Reuse it if suitable.
+4. Only add a new dependency if genuinely required.
+5. Minimize bundle impact.
+6. Inspect lockfile changes.
+7. Validate build.
+
+Do not introduce multiple graph libraries.
+
+==================================================
+54. BACKEND FREEZE VERIFICATION
+==================================================
+
+Before completion:
+
+[ ] Backend source changes = 0
+[ ] Backend API changes = 0
+[ ] Neo4j changes = 0
+[ ] Database changes = 0
+[ ] Migration changes = 0
+[ ] Backend config changes = 0
+[ ] Backend dependency changes = 0
+
+==================================================
+55. VALIDATION
+==================================================
+
+Run:
+
+- typecheck
+- lint
+- unit tests
+- production build
+- applicable E2E
+
+Do not claim success without execution.
+
+==================================================
+56. GIT SAFETY
+==================================================
+
+Before commit:
+
+- inspect git status
+- inspect changed files
+- verify no secrets
+- verify no .env
+- verify no credentials
+- verify no backend changes
+- inspect dependency changes
+- inspect lockfile changes
+
+==================================================
+57. COMMIT
+==================================================
+
+If validation passes:
+
+feat(frontend): implement enterprise topology experience
+
+Push according to repository workflow.
+
+==================================================
+58. DEFINITION OF DONE
+==================================================
+
+[ ] Topology route implemented.
+[ ] Actual V1 topology APIs consumed.
+[ ] No fabricated graph data.
+[ ] Graph renderer implemented where topology data exists.
+[ ] Node types mapped.
+[ ] Relationship types mapped.
+[ ] Search implemented where supported.
+[ ] Filters implemented where supported.
+[ ] Node selection implemented.
+[ ] Detail panel implemented.
+[ ] Health overlay implemented where supported.
+[ ] Alert overlay implemented where supported.
+[ ] Dependency/path view implemented where supported.
+[ ] Impact analysis implemented where supported.
+[ ] Graph/List alternative implemented.
+[ ] Zoom/pan implemented.
+[ ] Large graph performance handled.
+[ ] Loading states implemented.
+[ ] Empty states implemented.
+[ ] Error states implemented.
+[ ] Partial failure handled.
+[ ] Accessibility requirements met.
+[ ] Responsive UX implemented.
+[ ] Monitoring integration works where supported.
+[ ] Alerting integration works where supported.
+[ ] Automation integration works where supported.
+[ ] AI integration works where supported.
+[ ] User guide created.
+[ ] Developer guide created.
+[ ] RFI documentation created.
+[ ] Backend V1 untouched.
+[ ] No Neo4j changes.
+[ ] No database changes.
+[ ] No unnecessary dependencies.
+[ ] Typecheck passes.
+[ ] Lint passes.
+[ ] Tests pass.
+[ ] Production build passes.
+[ ] Applicable E2E passes.
+[ ] Git state clean except explicitly pre-existing files.
+
+==================================================
+59. FINAL REPORT
+==================================================
+
+Provide:
+
+1. Topology implementation summary
+2. Actual V1 APIs consumed
+3. Routes created
+4. Components created
+5. Node types discovered
+6. Relationship types discovered
+7. Graph architecture
+8. Graph adapter
+9. Search/filter implementation
+10. Selection/detail experience
+11. Health overlay
+12. Alert integration
+13. Monitoring integration
+14. Automation integration
+15. AI integration
+16. Graph/List accessibility experience
+17. Performance strategy
+18. Responsive behaviour
+19. User guide
+20. Developer guide
+21. RFI documentation
+22. Tests
+23. E2E
+24. Typecheck
+25. Lint
+26. Production build
+27. Dependency changes
+28. Lockfile changes
+29. Backend files changed — MUST BE ZERO
+30. Neo4j files changed — MUST BE ZERO
+31. Backend V1 limitations
+32. Git commit
+33. Known limitations
+34. Recommended next frontend prompt
+
+Do not modify the backend.
+
+Do not fabricate topology relationships.
+
+Proceed with implementation.
