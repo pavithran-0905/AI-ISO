@@ -39,7 +39,7 @@ describe("Header", () => {
 
   it("renders the search/command-palette trigger with a keyboard hint", () => {
     renderHeader();
-    expect(screen.getByRole("button", { name: /search pages and commands/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^search…/i })).toBeInTheDocument();
     expect(screen.getByText("⌘K")).toBeInTheDocument();
   });
 

@@ -1,0 +1,1190 @@
+# FRONTEND PROMPT 017
+# Enterprise Global Search & Command Center Experience
+
+## ROLE
+
+Act as a Principal Product Designer, Enterprise Search UX Architect, Command Center UX Specialist, Frontend Architect, Senior Next.js/React Engineer, Accessibility Engineer, Information Architecture Specialist, and Enterprise Operations Platform Specialist.
+
+Frontend Prompts 001–016 are COMPLETE.
+
+Use the existing frontend architecture and design system.
+
+==================================================
+CRITICAL BACKEND V1 FREEZE
+==================================================
+
+AI-IOS Backend V1 is COMPLETE and FROZEN.
+
+THIS IS A FRONTEND-ONLY PROMPT.
+
+DO NOT:
+
+- modify backend source code
+- add backend APIs
+- modify existing APIs
+- modify database schemas
+- modify migrations
+- modify authentication
+- modify RBAC
+- modify search infrastructure
+- modify Neo4j
+- modify PostgreSQL
+- modify Redis
+- modify backend configuration
+- modify backend dependencies
+
+If a desired search capability is unavailable:
+
+1. Document it.
+2. Do not fabricate it.
+3. Do not modify backend.
+4. Use only confirmed V1 search/data APIs.
+5. Record the limitation in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Backend modifications MUST remain ZERO.
+
+==================================================
+1. OBJECTIVE
+==================================================
+
+Build the enterprise-wide Global Search and Command Center experience.
+
+The user should be able to quickly find and navigate to relevant platform resources from anywhere.
+
+Potential searchable resources:
+
+- Machines
+- Assets
+- Virtual Machines
+- Services
+- Applications
+- Alerts
+- Automations
+- Executions
+- Reports
+- Users
+- Audit events
+- Notifications
+- Topology resources
+- AI conversations
+- Projects
+- Organizations
+
+These are examples only.
+
+Use only resource types actually supported by V1 APIs.
+
+==================================================
+2. PRODUCT PRINCIPLE
+==================================================
+
+Global Search must answer:
+
+"What am I looking for?"
+
+and:
+
+"What can I do next?"
+
+It must not become a generic text-search page.
+
+Search should prioritize:
+
+1. Exact matches
+2. Relevant resources
+3. Operational context
+4. Recent items
+5. Safe actions
+
+==================================================
+3. INSPECT BACKEND V1 FIRST
+==================================================
+
+Before implementation inspect:
+
+- existing search endpoints
+- resource-specific search APIs
+- autocomplete APIs
+- inventory search
+- alert search
+- automation search
+- reporting search
+- user search
+- audit search
+- notification search
+- AI search
+- project/organization search
+
+Determine:
+
+- supported resource types
+- searchable fields
+- pagination
+- filtering
+- sorting
+- relevance
+- identifiers
+- permissions
+- response shapes
+
+Do not invent a universal backend search API.
+
+==================================================
+4. SEARCH ARCHITECTURE
+==================================================
+
+If V1 has a true global search API:
+
+consume it.
+
+If V1 does NOT have global search:
+
+compose existing supported frontend API queries carefully.
+
+Do NOT add a backend search endpoint.
+
+Do not pretend multiple client-side API calls are a single backend search capability.
+
+Document the architecture clearly.
+
+==================================================
+5. GLOBAL SEARCH ENTRY
+==================================================
+
+Integrate search into the existing application shell.
+
+Recommended:
+
+Search
+
+with keyboard shortcut:
+
+Ctrl/Cmd + K
+
+Only implement the shortcut if it does not conflict with existing application/browser behaviour.
+
+Provide an accessible button as the primary mechanism.
+
+==================================================
+6. SEARCH OVERLAY
+==================================================
+
+Create a premium command/search overlay.
+
+Structure:
+
+┌─────────────────────────────────────────────┐
+│ Search AI-IOS...                            │
+├─────────────────────────────────────────────┤
+│                                             │
+│ Recent / Results                            │
+│                                             │
+│ Asset                                       │
+│ Machine edge-01                             │
+│                                             │
+│ Alert                                       │
+│ High CPU alert                              │
+│                                             │
+│ Automation                                  │
+│ Deploy application                          │
+│                                             │
+├─────────────────────────────────────────────┤
+│ ↑↓ Navigate     Enter Open     Esc Close    │
+└─────────────────────────────────────────────┘
+
+Do not overload the overlay.
+
+==================================================
+7. SEARCH STATES
+==================================================
+
+Support:
+
+- idle
+- focused
+- typing
+- loading
+- results
+- no results
+- error
+- offline/unavailable where applicable
+
+==================================================
+8. AUTOCOMPLETE
+==================================================
+
+If V1 supports autocomplete:
+
+use it.
+
+If not:
+
+do not fabricate server-side autocomplete.
+
+Client-side suggestions may use:
+
+- recent searches
+- recent resources
+- static navigation
+
+only where appropriate.
+
+==================================================
+9. RECENT ITEMS
+==================================================
+
+If no query is entered:
+
+show useful recent navigation.
+
+Potential:
+
+- recent assets
+- recent alerts
+- recent automations
+- recent reports
+
+Only use data available to the current user.
+
+Do not expose other users' private activity.
+
+==================================================
+10. SEARCH RESULT GROUPING
+==================================================
+
+Group results by resource type.
+
+Example:
+
+Assets
+  edge-01
+  edge-02
+
+Alerts
+  CPU threshold exceeded
+
+Automations
+  Deploy service
+
+Reports
+  Weekly infrastructure report
+
+Only show groups that have results.
+
+==================================================
+11. RESULT DESIGN
+==================================================
+
+Each result should show:
+
+- icon
+- resource type
+- name/title
+- short context
+- status where useful
+- secondary metadata
+- keyboard shortcut indicator where applicable
+
+Do not show unnecessary internal IDs.
+
+==================================================
+12. RESULT RANKING
+==================================================
+
+Use backend ranking if V1 provides it.
+
+If composing multiple API results:
+
+define a transparent frontend ranking strategy based only on available fields.
+
+Prioritize:
+
+1. exact name
+2. exact identifier
+3. prefix match
+4. partial match
+5. recency where appropriate
+
+Document the client ranking if used.
+
+Do not claim semantic relevance if it is not provided by V1.
+
+==================================================
+13. SEARCH SCOPE
+==================================================
+
+Allow scope selection only if supported.
+
+Potential:
+
+All
+Assets
+Alerts
+Automations
+Reports
+Users
+
+These are examples only.
+
+Do not create scope filters that the underlying APIs cannot support.
+
+==================================================
+14. FILTERS
+==================================================
+
+If V1 supports advanced search filters:
+
+provide them.
+
+Potential:
+
+- resource type
+- status
+- environment
+- project
+- date
+- owner
+
+Only implement confirmed filters.
+
+==================================================
+15. SEARCH RESULTS PAGE
+==================================================
+
+Create a dedicated route where useful:
+
+/search
+
+The results page should support:
+
+- search query
+- result groups
+- filters
+- pagination
+- sorting where supported
+- empty states
+- errors
+
+Do not duplicate the entire application navigation.
+
+==================================================
+16. URL STATE
+==================================================
+
+Search query should be URL-addressable.
+
+Example:
+
+/search?q=edge-01
+
+Preserve supported filters in URL state.
+
+Do not put complete API responses into URLs.
+
+==================================================
+17. KEYBOARD NAVIGATION
+==================================================
+
+Support:
+
+Ctrl/Cmd + K
+↑
+↓
+Enter
+Escape
+
+Search results must be fully keyboard accessible.
+
+Do not rely on mouse interaction.
+
+==================================================
+18. FOCUS MANAGEMENT
+==================================================
+
+When search opens:
+
+focus the search input.
+
+When it closes:
+
+return focus to the trigger.
+
+When navigating results:
+
+maintain visible focus.
+
+==================================================
+19. COMMAND ACTIONS
+==================================================
+
+Command Center may expose navigation/action commands.
+
+Examples:
+
+Go to Dashboard
+Open Monitoring
+Open Alerts
+Create Report
+Open Automation
+
+Only expose actions already implemented in the frontend and allowed for the user.
+
+==================================================
+20. ACTION SAFETY
+==================================================
+
+Do NOT place destructive infrastructure actions directly into global search.
+
+Global search should primarily:
+
+Find
+Navigate
+Inspect
+
+If an action can modify infrastructure:
+
+navigate to the appropriate module and use its existing confirmation workflow.
+
+==================================================
+21. RECENT SEARCHES
+==================================================
+
+If implementing local recent searches:
+
+- keep a small bounded history
+- do not store sensitive query content unnecessarily
+- allow clear history
+- do not send local search history to backend unless V1 explicitly supports it
+
+==================================================
+22. SEARCH PRIVACY
+==================================================
+
+Do not expose:
+
+- credentials
+- secrets
+- private tokens
+- unauthorized resources
+- another user's private conversations
+- sensitive audit payloads
+
+Backend authorization remains authoritative.
+
+==================================================
+23. PERMISSIONS
+==================================================
+
+Search results must respect existing permission-aware API responses.
+
+Do not attempt to discover unauthorized resources through client-side filtering.
+
+If a resource API denies access:
+
+handle it gracefully.
+
+Do not display hidden resource names in error messages.
+
+==================================================
+24. MULTI-TENANCY
+==================================================
+
+If the application supports:
+
+Organization
+Project
+Environment
+
+ensure search operates within the current authorized scope.
+
+Do not allow the client to bypass scope restrictions.
+
+==================================================
+25. CROSS-MODULE NAVIGATION
+==================================================
+
+Implement navigation to existing modules.
+
+Examples:
+
+Asset
+→ Infrastructure
+
+Machine
+→ Monitoring
+
+Alert
+→ Alerting
+
+Automation
+→ Automation
+
+Execution
+→ Execution detail
+
+Report
+→ Reporting
+
+User
+→ Administration
+
+Audit Event
+→ Audit
+
+Notification
+→ Notifications
+
+Only use routes that actually exist.
+
+==================================================
+26. CONTEXTUAL ACTIONS
+==================================================
+
+Search results may provide safe contextual actions.
+
+Example:
+
+Asset
+[Open]
+
+Alert
+[Open]
+
+Report
+[View]
+
+Do not expose arbitrary mutation actions.
+
+==================================================
+27. AI ASSISTANT INTEGRATION
+==================================================
+
+Provide an optional:
+
+"Ask AI"
+
+entry only where Prompt 010 and Backend V1 support it.
+
+Example:
+
+Search:
+"Why is edge-01 unhealthy?"
+
+→ AI Assistant
+
+Do not fabricate an AI search capability.
+
+==================================================
+28. SEARCH + AI DISTINCTION
+==================================================
+
+Clearly distinguish:
+
+Search
+
+from:
+
+Ask AI
+
+Search returns platform resources/data.
+
+AI provides generated analysis.
+
+Never present AI-generated content as a search result.
+
+==================================================
+29. NOTIFICATION INTEGRATION
+==================================================
+
+Do not search notifications through global search unless V1 supports it.
+
+If supported:
+
+group separately as:
+
+Notifications
+
+==================================================
+30. AUDIT INTEGRATION
+==================================================
+
+Audit data may be sensitive.
+
+Only include Audit search if:
+
+- V1 supports it
+- user has permission
+- data is appropriate for global search
+
+Do not expose sensitive metadata in result previews.
+
+==================================================
+31. PERFORMANCE
+==================================================
+
+Search must feel fast.
+
+Use:
+
+- debounce
+- request cancellation
+- query caching
+- minimal result payloads
+- lazy result groups
+- server-side pagination where available
+
+Do not trigger an API request on every keystroke.
+
+Recommended debounce:
+
+150–300ms
+
+Only where appropriate.
+
+==================================================
+32. REQUEST CANCELLATION
+==================================================
+
+When query changes rapidly:
+
+cancel or ignore stale requests.
+
+Never display results from an older query after a newer query has completed.
+
+==================================================
+33. ERROR HANDLING
+==================================================
+
+Handle:
+
+- search unavailable
+- individual resource API failure
+- permission denied
+- timeout
+- network error
+- partial search failure
+
+If one resource type fails but others succeed:
+
+show successful groups and clearly indicate partial availability.
+
+==================================================
+34. PARTIAL SEARCH FAILURE
+==================================================
+
+Example:
+
+Assets
+✓ available
+
+Alerts
+✓ available
+
+Reports
+⚠ temporarily unavailable
+
+Do not blank all search results because one service failed.
+
+==================================================
+35. EMPTY STATES
+==================================================
+
+Examples:
+
+"No results for 'edge-01'."
+
+"Try a different name, identifier, or resource type."
+
+Do not simply display:
+
+"No data."
+
+==================================================
+36. OFFLINE / NETWORK
+==================================================
+
+If network failure occurs:
+
+show a concise error.
+
+Do not claim the resource does not exist.
+
+Distinguish:
+
+No results
+
+from:
+
+Search unavailable.
+
+==================================================
+37. ACCESSIBILITY
+==================================================
+
+Target WCAG 2.2 AA.
+
+Implement:
+
+- combobox semantics
+- listbox semantics
+- active descendant/focus
+- keyboard navigation
+- accessible result groups
+- live loading announcement
+- accessible empty state
+- accessible errors
+
+Do not rely on visual highlighting alone.
+
+==================================================
+38. RESPONSIVE DESIGN
+==================================================
+
+Desktop:
+
+Centered command palette.
+
+Tablet:
+
+Responsive search overlay.
+
+Mobile:
+
+Full-screen search experience.
+
+Do not constrain mobile search into a tiny dialog.
+
+==================================================
+39. DESIGN SYSTEM
+==================================================
+
+Use Prompt 002.
+
+Reuse:
+
+- Dialog
+- Command
+- Search input
+- badges
+- status indicators
+- navigation patterns
+- typography
+- spacing
+- icons
+
+If an existing command component exists, reuse it.
+
+Do not add a second command-palette library.
+
+==================================================
+40. API ARCHITECTURE
+==================================================
+
+Use:
+
+Search UI
+↓
+Search Hooks
+↓
+Search Adapters
+↓
+Existing Feature API Modules
+↓
+Shared API Client
+↓
+Backend V1
+
+Do not create direct HTTP calls from the command palette.
+
+==================================================
+41. SEARCH ADAPTER
+==================================================
+
+Create a normalized search result model.
+
+Example concept:
+
+SearchResult
+
+- id
+- type
+- title
+- description
+- status
+- metadata
+- href
+- actions
+
+Map backend responses into this model.
+
+Do not make UI components depend on every backend response shape.
+
+==================================================
+42. TYPES
+==================================================
+
+Use strict TypeScript.
+
+Do not use:
+
+any
+
+Create discriminated unions for supported result types where useful.
+
+==================================================
+43. QUERY ARCHITECTURE
+==================================================
+
+Use TanStack Query where appropriate.
+
+For transient search:
+
+avoid unnecessary global cache persistence.
+
+For stable resource lookups:
+
+reuse existing feature queries when possible.
+
+Do not duplicate API implementations.
+
+==================================================
+44. ROUTING
+==================================================
+
+Use the centralized route registry.
+
+Every result navigation must use canonical routes.
+
+Do not hardcode inconsistent URLs throughout components.
+
+==================================================
+45. ANALYTICS
+==================================================
+
+Do not add analytics tracking unless the existing application already has an approved frontend analytics architecture.
+
+If analytics exists:
+
+reuse it.
+
+Do not introduce a new analytics provider.
+
+==================================================
+46. USER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/user-guide/global-search.md
+
+Document:
+
+- opening search
+- keyboard shortcut
+- searching
+- result groups
+- filters
+- navigating results
+- command actions
+- AI integration
+- troubleshooting
+
+Only document implemented functionality.
+
+==================================================
+47. DEVELOPER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/developer-guide/global-search.md
+
+Document:
+
+- search architecture
+- adapters
+- result model
+- API composition
+- ranking
+- debounce
+- cancellation
+- caching
+- permissions
+- navigation
+- accessibility
+
+==================================================
+48. RFI / RFP DOCUMENTATION
+==================================================
+
+Create:
+
+docs/frontend/rfi/global-search.md
+
+Document:
+
+- enterprise resource discovery
+- centralized navigation
+- multi-module search
+- permission-aware results
+- keyboard accessibility
+- scalable architecture
+- responsive UX
+- extensibility
+
+Clearly distinguish:
+
+Implemented V1
+
+from:
+
+Unavailable/planned.
+
+==================================================
+49. BACKEND V1 LIMITATIONS
+==================================================
+
+Record unsupported global-search capabilities in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Include:
+
+- desired search capability
+- V1 support
+- frontend approach
+- limitation
+- future option if applicable
+
+Do not modify backend.
+
+==================================================
+50. TESTING
+==================================================
+
+Create tests for:
+
+### Search
+
+- open
+- type
+- debounce
+- loading
+- results
+- empty
+- error
+
+### Results
+
+- grouping
+- rendering
+- navigation
+- status
+- metadata
+
+### Keyboard
+
+- Ctrl/Cmd + K
+- arrows
+- Enter
+- Escape
+
+### Request safety
+
+- stale result protection
+- request cancellation
+- duplicate prevention
+
+### Permissions
+
+- authorized result
+- unauthorized result
+- partial failure
+
+### Accessibility
+
+- combobox
+- listbox
+- focus
+- announcements
+
+==================================================
+51. E2E
+==================================================
+
+Where environment permits:
+
+- open global search
+- search for a known safe asset
+- navigate to result
+- search for alert
+- navigate to Alerting
+- search automation
+- navigate to Automation
+- open Search page
+- use keyboard navigation
+
+Use safe test data.
+
+Do not execute destructive actions.
+
+Do not modify backend.
+
+==================================================
+52. DEPENDENCY SAFETY
+==================================================
+
+Before adding any dependency:
+
+1. Inspect existing package.json.
+2. Reuse existing command/search components.
+3. Avoid duplicate command-palette libraries.
+4. Avoid unnecessary bundle growth.
+5. Inspect lockfile.
+6. Validate build.
+
+==================================================
+53. BACKEND FREEZE VERIFICATION
+==================================================
+
+Before completion:
+
+[ ] Backend source changes = 0
+[ ] API changes = 0
+[ ] Database changes = 0
+[ ] Migration changes = 0
+[ ] Authentication changes = 0
+[ ] RBAC changes = 0
+[ ] Backend configuration changes = 0
+[ ] Backend dependencies = 0
+
+==================================================
+54. VALIDATION
+==================================================
+
+Run:
+
+- typecheck
+- lint
+- unit tests
+- production build
+- applicable E2E
+
+Do not claim success without execution.
+
+==================================================
+55. GIT SAFETY
+==================================================
+
+Before commit:
+
+- inspect git status
+- inspect changed files
+- verify no secrets
+- verify no .env
+- verify no credentials
+- verify no backend modifications
+- inspect dependency changes
+- inspect lockfile
+
+==================================================
+56. COMMIT
+==================================================
+
+If validation passes:
+
+feat(frontend): implement enterprise global search
+
+Push according to repository workflow.
+
+==================================================
+57. DEFINITION OF DONE
+==================================================
+
+[ ] Global search entry implemented.
+[ ] Search overlay implemented.
+[ ] Search page implemented where appropriate.
+[ ] Actual V1 APIs consumed.
+[ ] No fabricated global search endpoint.
+[ ] Result normalization implemented.
+[ ] Resource grouping implemented.
+[ ] Search debounce implemented.
+[ ] Stale request protection implemented.
+[ ] Search cancellation implemented where appropriate.
+[ ] Result navigation implemented.
+[ ] Keyboard navigation implemented.
+[ ] Command actions implemented where supported.
+[ ] Permission-aware results implemented.
+[ ] Multi-tenant scope respected.
+[ ] AI integration implemented where supported.
+[ ] Notification integration implemented where supported.
+[ ] Audit integration implemented where supported.
+[ ] Loading states implemented.
+[ ] Empty states implemented.
+[ ] Error states implemented.
+[ ] Partial failures handled.
+[ ] Responsive UX implemented.
+[ ] Accessibility requirements met.
+[ ] User guide created.
+[ ] Developer guide created.
+[ ] RFI documentation created.
+[ ] Backend V1 untouched.
+[ ] No backend API changes.
+[ ] No database changes.
+[ ] No unnecessary dependencies.
+[ ] Typecheck passes.
+[ ] Lint passes.
+[ ] Tests pass.
+[ ] Production build passes.
+[ ] Applicable E2E passes.
+[ ] Git state clean except explicitly pre-existing files.
+
+==================================================
+58. FINAL REPORT
+==================================================
+
+Provide:
+
+1. Global Search implementation summary
+2. Actual V1 APIs consumed
+3. Search architecture
+4. Search result model
+5. Resource types supported
+6. Search ranking strategy
+7. Debounce/cancellation strategy
+8. Result grouping
+9. Keyboard UX
+10. Command actions
+11. Navigation integration
+12. Permission handling
+13. Multi-tenant handling
+14. AI integration
+15. Notification integration
+16. Audit integration
+17. Loading/empty/error handling
+18. Accessibility
+19. Responsive behaviour
+20. Performance
+21. User guide
+22. Developer guide
+23. RFI documentation
+24. Tests
+25. E2E
+26. Typecheck
+27. Lint
+28. Production build
+29. Dependency changes
+30. Lockfile changes
+31. Backend files changed — MUST BE ZERO
+32. Backend V1 limitations
+33. Git commit
+34. Known limitations
+35. Recommended next frontend prompt
+
+Do not modify the backend.
+
+Do not fabricate search capabilities.
+
+Proceed with implementation.

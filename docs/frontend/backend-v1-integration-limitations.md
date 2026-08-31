@@ -1719,3 +1719,49 @@ only; there is no client-facing channel a browser could open.
 TanStack Query `refetchInterval` (60s) against the real list
 endpoint — genuine periodic polling, never a fabricated push
 mechanism, per §11's own instruction.
+
+## No free-text search parameter exists on almost any resource's list route — reconfirmed platform-wide
+
+**Discovered**: Prompt 003 (no unified search endpoint). **Extended,
+resource by resource**: Prompt 017.
+
+Checked every candidate resource type's real list route: only
+`inventory-service`'s `GET /inventory/search` (`query`) and
+`user-management-service`'s `POST /users/search` (`query`) accept a
+free-text parameter. `alerting-service`'s `GET /alerts`,
+`automation-service`'s `GET /automation/jobs`, `reporting-service`'s
+`GET /reports`, and `ai-assistant-service`'s `GET /ai/conversations`
+all support only `organization_id` plus a few exact-match filters — no
+`query`/`q`/`search` parameter exists on any of them (each already
+independently confirmed absent by the prompt that originally built
+each one; re-confirmed here specifically for this prompt's own
+composition strategy). Audit events and notifications were already
+confirmed to have no free-text field either (Prompts 015/016).
+
+**Frontend behavior**: Assets/Users get real, debounced, server-side
+search. Alerts/Automations/Reports/AI Conversations get client-side
+filtering over an already-fetched, organization-scoped list, fetched
+once per palette session rather than per keystroke — the same pattern
+`features/reporting/pages/reports-list-page.tsx` already established
+for its own search box. Audit events and notifications are excluded
+from live resource search entirely; both remain reachable only as
+navigation commands to their own real pages.
+
+## The command palette showed every implemented route regardless of the session's role — a real, pre-existing gap, now fixed
+
+**Discovered**: Prompt 003 (built this way). **Fixed**: Prompt 017.
+
+`components/navigation/command-palette.tsx`'s `NAVIGATION_COMMANDS`
+list was never filtered by role, unlike `PrimaryNavigation`'s sidebar,
+which has applied `route.roles === null || (role !== null &&
+route.roles.includes(role))` since Prompt 003. This meant a
+role-restricted route (e.g. Users, admin-only since Prompt 014) was
+reachable through Ctrl+K by any session, even one the sidebar itself
+hides it from.
+
+**Frontend behavior**: the palette now applies the identical role
+check before listing a route. This is a frontend-only tightening, not
+a fix for any one backend service's own authorization gap — several of
+those (`user-management-service` chief among them) remain confirmed to
+enforce no server-side check at all, documented in their own separate
+entries above.

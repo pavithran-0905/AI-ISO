@@ -159,6 +159,22 @@ export const ROUTE_REGISTRY: readonly RouteMeta[] = [
     layout: "main",
     showInNav: false,
   }),
+  // Prompt 017 — reached via the command palette's "View all results"
+  // link and Ctrl/Cmd+K itself, not the primary sidebar.
+  implemented({
+    id: "search",
+    path: "/search",
+    title: "Search",
+    description: "Find and navigate to resources across AI-IOS.",
+    breadcrumb: "Search",
+    navGroup: null,
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: null,
+    layout: "main",
+    showInNav: false,
+  }),
 
   // ---- Settings (Prompt 013) — reached from the account menu, not the
   // primary sidebar taxonomy; spans user-management/authentication/

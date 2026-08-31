@@ -51,7 +51,7 @@ export function Header() {
         className="text-muted-foreground hover:border-muted-foreground/50 border-border bg-input flex h-8 w-full max-w-sm items-center gap-2 rounded-md border px-3 text-sm transition-colors"
       >
         <Search className="size-4" aria-hidden="true" />
-        <span className="flex-1 text-left">Search pages and commands…</span>
+        <span className="flex-1 text-left">Search…</span>
         <kbd className="border-border bg-surface rounded border px-1.5 py-0.5 font-mono text-[10px]">⌘K</kbd>
       </button>
 
