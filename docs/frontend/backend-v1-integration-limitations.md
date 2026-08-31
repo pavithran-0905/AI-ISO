@@ -55,17 +55,24 @@ Full detail: `architecture/authentication.md`.
 
 ## No confirmed `notification-center-service` read/list REST contract
 
-**Discovered**: Prompt 003.
+**Discovered**: Prompt 003. **Resolved**: Prompt 016.
 
 The service's existence and general capability are documented in
 `backend-feature-matrix.md`, but its exact per-notification
 read/list/mark-read route shapes weren't confirmed during that prompt.
 
-**Frontend behavior**: `components/navigation/notification-area.tsx`
-implements the full UI (unread badge, panel, loading/error states) but
-never triggers a fetch — the panel always shows its honest empty
-state. Wire `features/notifications` to a real API function once the
-contract is confirmed.
+**Frontend behavior (Prompt 003)**: `components/navigation/notification-area.tsx`
+implemented the full UI (unread badge, panel, loading/error states) but
+never triggered a fetch — the panel always showed its honest empty
+state.
+
+**Resolution (Prompt 016)**: the contract is now confirmed
+(`GET /notifications`, `GET /notifications/{id}`,
+`POST /notifications/{id}/read`, `.../acknowledge`,
+`GET /notifications/{id}/deliveries` — `services/notification-center-service/app/api/notifications.py`)
+and `NotificationArea` now calls it for real. See
+`docs/frontend/developer-guide/notifications.md` for the full
+architecture and the severe permission finding this route set carries.
 
 ## No unified global-search backend endpoint
 
@@ -1559,11 +1566,26 @@ report-generation pipeline, but it belongs entirely to
 `compliance-service`'s own `ReportService`/`ComplianceReport` model —
 unrelated to `reporting-service`'s `Report`/`ReportExecution` models
 that back Prompt 008's Reporting feature, despite both being called
-"reports." `integration-hub-service` and `notification-center-service`
-have no report-generation or export route of any kind. The exported
-row is also narrower than the live `/compliance/audit` response —
-`_audit()` (`compliance-service/app/services/reporting.py`) confirmed
-to omit `id`, `entity_id`, `actor_type`, `changes`, and `context`.
+"reports." The exported row is also narrower than the live
+`/compliance/audit` response — `_audit()`
+(`compliance-service/app/services/reporting.py`) confirmed to omit
+`id`, `entity_id`, `actor_type`, `changes`, and `context`.
+
+**Correction (Prompt 016)**: this entry originally also claimed
+`integration-hub-service` and `notification-center-service` have no
+report-generation or export route of any kind. Prompt 016's own
+research into `notification-center-service` found this incorrect for
+that service: a real `POST/GET /notifications/reports`,
+`GET /notifications/reports/{id}`, `GET
+/notifications/reports/{id}/download` pipeline exists
+(`app/api/analytics.py`, backed by a real `NotificationReport` model)
+— either added after Prompt 015 shipped or simply missed during that
+prompt's own research pass. `integration-hub-service` was not
+re-checked during Prompt 016 and this entry makes no claim about it
+either way. Prompt 015's Activity page was not retroactively updated
+to add a `notifications`-source export control — that remains a
+candidate for a small, separate follow-up, not done as part of this
+correction (see `docs/frontend/developer-guide/notifications.md`).
 
 **Frontend behavior**: export is offered only for the `compliance`
 source, calling this pipeline directly rather than routing through
@@ -1592,3 +1614,108 @@ risks silently pointing at the wrong account, which is worse than
 showing no link at all. Documented as a confirmed impossibility rather
 than an unbuilt convenience, so a future prompt doesn't re-attempt it
 without first confirming the identity spaces are unified.
+
+## `notification-center-service`'s notification list/detail/read/acknowledge routes require no authentication at all
+
+**Discovered**: Prompt 016.
+
+`GET /notifications`, `GET /notifications/{id}`,
+`POST /notifications/{id}/read`, `POST /notifications/{id}/acknowledge`,
+and `GET /notifications/{id}/deliveries`
+(`services/notification-center-service/app/api/notifications.py`) do
+not declare `CurrentUserId` (or any caller-identity dependency) as a
+route parameter — FastAPI enforces no authentication on them at all.
+More severe than every prior finding on this axis (Prompt 014's
+`user-management-service`, Prompt 015's two unauthenticated audit
+routes on this same service): here the unauthenticated routes include
+state-mutating ones, not only reads. `organization_id` and `user_id`
+are both plain, caller-supplied query parameters on `GET /notifications`,
+never derived from or cross-checked against the JWT.
+
+**Frontend behavior**: a permanent, high-severity (`danger`-tone, not
+`warning`) `Alert` on the Notification Center page states this
+plainly. The feature still sends the real, currently-signed-in user's
+own id (`useSession().userId`) as `user_id` — the only honest choice
+available — documented everywhere as a convenience, never a fix.
+
+## No unread-count route exists; a real repository method for it is simply never called
+
+**Discovered**: Prompt 016.
+
+`NotificationRepository.count_unread(organization_id, user_id) -> int`
+(`app/repositories/notification.py`) is a real, working method — a
+genuine `WHERE read_at IS NULL` count, not a placeholder — but is
+never invoked from any service class, route, or test in the entire
+service (confirmed by grep). No `/notifications/unread-count` route
+exists, and no list response carries a total/count field (the
+`SuccessResponse` envelope has none).
+
+**Frontend behavior**: the notification bell never renders a number —
+only a plain indicator dot derived from whether any item in a small,
+bounded, already-fetched page (the same data shown in the popover) has
+`readAt === null`, per §10's own explicit prohibition on computing a
+total from paginated client data.
+
+## `Notification` has no structured deep-link field to another service's entity
+
+**Discovered**: Prompt 016.
+
+Confirmed absent on both `Notification` and `NotificationAnnouncement`:
+no `entity_type`/`entity_id` pair, no typed foreign key to an alert,
+automation execution, report, or asset. Only free-text
+`source_service`/`source_event_type`/`correlation_id` hints and an
+unstructured `notification_metadata`/`tags` JSON blob with no
+documented schema (`app/models/notification.py`).
+
+**Frontend behavior**: §16's "Notification → Alert detail / Automation
+execution / Report / Asset / Audit event" deep links are not built.
+Source information is shown as plain text; clicking a notification
+only ever opens its own real detail page.
+
+## "Mark as unread" and "mark all read" are both confirmed absent
+
+**Discovered**: Prompt 016.
+
+No `mark_unread` method exists anywhere in `NotificationService`
+(confirmed by grep), and no bulk-read route exists on
+`app/api/notifications.py` — only the real, per-id `POST /{id}/read`.
+
+**Frontend behavior**: neither is offered. "Mark all read" was
+deliberately not composed from N individual `/read` calls — a
+fragile pseudo-bulk operation would misrepresent a batch capability
+the backend doesn't actually support as a single atomic one.
+
+## `alerting-service` never creates a `notification-center-service` notification — "Alert → Notification" is not real
+
+**Discovered**: Prompt 016.
+
+Grepping `alerting-service`, `automation-service`, and
+`reporting-service` for any call into `notification-center-service`
+(by name or its port) returns zero matches. `alerting-service`
+dispatches through its own, entirely separate
+`AlertNotificationService`/`AlertNotification` model
+(`services/alerting-service/app/notifications/alert_notifications.py`),
+never `notification-center-service`'s API. `notification-center-service`
+itself only publishes its own domain events for other services to
+optionally consume — it consumes nothing inbound (no message-queue
+consumer registered anywhere in `app/core/factory.py`).
+
+**Frontend behavior**: §29's "Alert → Notification" integration is not
+built — it would misrepresent a relationship that doesn't exist on
+this backend. Documented as a confirmed impossibility, not an
+oversight, so a future prompt doesn't re-attempt it without a real
+backend change first.
+
+## No real-time or push delivery mechanism exists for notifications
+
+**Discovered**: Prompt 016.
+
+Grepped the entire `notification-center-service` tree for
+WebSocket/SSE/push route registrations — none exist. The service
+publishes domain events to RabbitMQ for inter-service consumption
+only; there is no client-facing channel a browser could open.
+
+**Frontend behavior**: the notification bell uses a real, working
+TanStack Query `refetchInterval` (60s) against the real list
+endpoint — genuine periodic polling, never a fabricated push
+mechanism, per §11's own instruction.

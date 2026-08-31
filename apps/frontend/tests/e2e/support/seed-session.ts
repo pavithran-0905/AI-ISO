@@ -118,6 +118,18 @@ export async function seedAuthenticatedSession(context: BrowserContext): Promise
   await context.route("http://localhost:8027/automation/executions*", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: envelope([]) }),
   );
+  // The notification bell (`components/navigation/notification-area.tsx`,
+  // Prompt 016) renders in the shell header on every authenticated
+  // page, so every spec — not just `notifications.spec.ts` — triggers
+  // this call. Scoped to the real API origin for the same reason as
+  // `/alerts*`/`/automation/executions*` above: `/notifications` is
+  // also a real frontend page path a bare glob would intercept.
+  // Without this, an unstubbed request on every page load was slowing
+  // unrelated specs under parallel workers — a real, confirmed
+  // regression, not a coincidence.
+  await context.route("http://localhost:8027/notifications?*", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: envelope([]) }),
+  );
   // The gateway's own unauthenticated liveness check (`GatewayLivenessCard`)
   // — stubbed too, since the real endpoint's `service` field is the real
   // deployment's own name ("ai-ios"), not the fixed "gateway" these specs

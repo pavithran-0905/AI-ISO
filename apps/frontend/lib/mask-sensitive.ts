@@ -1,10 +1,12 @@
 /**
- * §24: audit payloads (`changes`, `context`) are opaque
- * `Record<string, unknown>` bags this frontend never controls the
- * shape of — none of the three services' schemas declare what keys
- * can appear. Masking by key name is the only defensible approach
- * without a backend-confirmed field allowlist; it errs toward masking
- * more than necessary rather than risking a leaked secret.
+ * Shared by every feature that renders an opaque, backend-defined
+ * `Record<string, unknown>` payload this frontend doesn't control the
+ * shape of (Prompt 015's audit `changes`/`context`, Prompt 016's
+ * notification `metadata`) — masking by key name is the only
+ * defensible approach without a backend-confirmed field allowlist; it
+ * errs toward masking more than strictly necessary rather than risking
+ * a leaked secret. Promoted here from `features/audit/lib/mask-sensitive.ts`
+ * once a second feature needed the identical logic.
  */
 const SENSITIVE_KEY_PATTERN = /password|token|secret|api[_-]?key|private[_-]?key|credential/i;
 

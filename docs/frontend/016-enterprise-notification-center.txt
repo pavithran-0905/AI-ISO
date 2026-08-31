@@ -1,0 +1,1233 @@
+# FRONTEND PROMPT 016
+# Enterprise Notifications & Notification Center Experience
+
+## ROLE
+
+Act as a Principal Product Designer, Enterprise Notification UX Architect, Frontend Architect, Senior Next.js/React Engineer, Accessibility Engineer, and Enterprise Operations UX Specialist.
+
+Frontend Prompts 001–015 are COMPLETE.
+
+Use the existing:
+
+- application shell
+- design system
+- authentication
+- permissions
+- routing
+- API client
+- Dashboard
+- Monitoring
+- Alerting
+- Reporting
+- Automation
+- AI Assistant
+- Infrastructure
+- Topology
+- Settings
+- User Management
+- Audit
+- query/state architecture
+- documentation architecture
+
+Do not create competing architecture.
+
+==================================================
+CRITICAL BACKEND V1 FREEZE
+==================================================
+
+AI-IOS Backend V1 is COMPLETE and FROZEN.
+
+THIS IS A FRONTEND-ONLY PROMPT.
+
+DO NOT:
+
+- modify backend source code
+- modify notification services
+- modify alerting services
+- modify authentication
+- modify RBAC
+- add backend endpoints
+- modify backend APIs
+- modify database schemas
+- modify migrations
+- modify backend business logic
+- modify backend configuration
+- modify backend dependencies
+
+If a notification capability is unavailable:
+
+1. Document it.
+2. Do not fabricate it.
+3. Do not modify backend.
+4. Build only supported frontend functionality.
+5. Record the limitation in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Backend modifications MUST remain ZERO.
+
+==================================================
+1. OBJECTIVE
+==================================================
+
+Build a premium enterprise Notification Center.
+
+The notification experience must allow users to understand:
+
+- what requires attention
+- what changed
+- what completed
+- what failed
+- what was assigned
+- what is informational
+- what is unread
+- what requires navigation to another module
+
+Potential capabilities:
+
+- notification bell
+- unread count
+- notification center
+- notification list
+- notification detail
+- read/unread
+- mark all read where supported
+- notification categories
+- filtering
+- navigation
+- preferences
+- notification history
+
+Only implement capabilities actually supported by Backend V1.
+
+Do not create fake notification events.
+
+==================================================
+2. INSPECT BACKEND V1 FIRST
+==================================================
+
+Inspect actual V1 capabilities for:
+
+- notification APIs
+- notification service
+- alerting notification integration
+- user notification preferences
+- notification categories
+- channels
+- delivery state
+- read/unread state
+- pagination
+- filtering
+- event types
+- deep-link metadata
+- timestamps
+- permissions
+
+Verify the actual API contracts.
+
+Do not infer notification behaviour from Alerting alone.
+
+==================================================
+3. NOTIFICATION TERMINOLOGY
+==================================================
+
+Clearly distinguish:
+
+Alert
+Notification
+Activity
+Audit Event
+
+Use:
+
+Alert = operational condition
+
+Notification = user-facing message
+
+Audit Event = historical record
+
+Do not merge these concepts visually or technically.
+
+==================================================
+4. INFORMATION ARCHITECTURE
+==================================================
+
+Recommended:
+
+Notifications
+├── All
+├── Unread
+├── Important
+└── Preferences
+
+Only create categories supported by V1.
+
+==================================================
+5. GLOBAL NOTIFICATION BELL
+==================================================
+
+Integrate into the existing application shell.
+
+The notification control should show:
+
+- notification icon
+- unread count where supported
+- accessible label
+
+Example:
+
+Notifications
+3 unread
+
+Do not display fabricated counts.
+
+==================================================
+6. NOTIFICATION POPOVER
+==================================================
+
+Create a compact notification preview.
+
+Show:
+
+- recent notifications
+- unread state
+- timestamp
+- title
+- short description
+- category
+- navigation action
+
+Provide:
+
+View all notifications
+
+Do not overload the popover.
+
+==================================================
+7. NOTIFICATION CENTER
+==================================================
+
+Create:
+
+/notifications
+
+Use an enterprise list/table/card pattern appropriate to the data volume.
+
+Each notification should clearly show:
+
+- title
+- description
+- category
+- timestamp
+- unread/read
+- severity/priority where supported
+- source
+- action where supported
+
+==================================================
+8. NOTIFICATION DETAIL
+==================================================
+
+If V1 provides notification detail:
+
+create:
+
+/notifications/[id]
+
+Show:
+
+- title
+- message
+- timestamp
+- source
+- category
+- status
+- related resource
+- action
+
+Only show actual backend fields.
+
+==================================================
+9. READ / UNREAD
+==================================================
+
+If V1 supports read state:
+
+implement:
+
+- mark as read
+- mark as unread
+- mark all read where supported
+
+Do not claim read state changed until backend confirmation.
+
+==================================================
+10. UNREAD COUNT
+==================================================
+
+If V1 exposes unread counts:
+
+use the backend count.
+
+Do not calculate unread totals from a paginated client dataset.
+
+==================================================
+11. POLLING / REAL-TIME
+==================================================
+
+Inspect V1.
+
+If real-time notification delivery exists:
+
+consume the existing mechanism.
+
+If polling exists:
+
+use supported polling.
+
+If neither exists:
+
+provide manual refresh.
+
+Do NOT fake WebSocket/SSE behaviour.
+
+==================================================
+12. DUPLICATE PREVENTION
+==================================================
+
+If notifications are delivered through real-time or polling:
+
+avoid duplicate rendering.
+
+Use stable backend notification identifiers.
+
+Do not deduplicate solely by title/message.
+
+==================================================
+13. NOTIFICATION CATEGORIES
+==================================================
+
+Use actual V1 categories.
+
+Potential examples:
+
+- Alert
+- Automation
+- Report
+- Security
+- System
+- AI
+
+These are examples only.
+
+Do not hardcode categories until V1 is inspected.
+
+==================================================
+14. SEVERITY / PRIORITY
+==================================================
+
+If V1 provides severity or priority:
+
+use existing design-system semantic tokens.
+
+Do not create a second severity model.
+
+Do not confuse:
+
+Notification severity
+
+with:
+
+Alert severity
+
+unless the backend explicitly maps them.
+
+==================================================
+15. SOURCE
+==================================================
+
+Where V1 provides a source:
+
+show it.
+
+Examples:
+
+Monitoring
+Alerting
+Automation
+Reporting
+AI Assistant
+System
+
+Only use actual source values.
+
+==================================================
+16. DEEP LINKS
+==================================================
+
+If V1 provides resource/deep-link metadata:
+
+clicking notification should navigate to the correct module.
+
+Examples:
+
+Notification
+→ Alert detail
+
+Notification
+→ Automation execution
+
+Notification
+→ Report
+
+Notification
+→ Asset
+
+Notification
+→ Audit event
+
+Only use confirmed routes and identifiers.
+
+Do not fabricate deep links.
+
+==================================================
+17. CONTEXT PRESERVATION
+==================================================
+
+When navigating from a notification:
+
+preserve useful context where appropriate.
+
+Example:
+
+Notification
+→ Alerting
+→ filtered/selected alert
+
+Do not put large payloads into URL parameters.
+
+==================================================
+18. NOTIFICATION FILTERS
+==================================================
+
+Implement supported filters.
+
+Potential:
+
+- unread/read
+- category
+- source
+- severity
+- date
+
+Only use actual V1 filters.
+
+==================================================
+19. SEARCH
+==================================================
+
+If V1 supports notification search:
+
+implement server-side search.
+
+If not:
+
+do not pretend the browser can search the complete notification history.
+
+==================================================
+20. PAGINATION
+==================================================
+
+Use backend pagination.
+
+Support:
+
+- page
+- page size where supported
+- total where available
+
+Do not fabricate total counts.
+
+==================================================
+21. INFINITE SCROLL
+==================================================
+
+Use infinite scrolling only if it materially improves the notification UX and fits existing query architecture.
+
+Do not introduce it merely because notifications are list-based.
+
+==================================================
+22. NOTIFICATION ACTIONS
+==================================================
+
+If V1 supports actions:
+
+provide explicit actions.
+
+Examples:
+
+View
+Acknowledge
+Open
+Review
+
+Only implement backend-supported actions.
+
+Do not create frontend-only acknowledgement state.
+
+==================================================
+23. ACKNOWLEDGEMENT
+==================================================
+
+Do not confuse:
+
+Read
+
+with:
+
+Acknowledged.
+
+If V1 supports acknowledgement:
+
+show it as a separate state.
+
+If V1 does not:
+
+do not create an acknowledgement button.
+
+==================================================
+24. NOTIFICATION PREFERENCES
+==================================================
+
+If V1 supports preferences:
+
+integrate with Settings.
+
+Do not create a separate configuration storage mechanism.
+
+Potential:
+
+- categories
+- channels
+- frequency
+- severity thresholds
+
+Only implement supported options.
+
+==================================================
+25. CHANNELS
+==================================================
+
+If V1 exposes notification channels:
+
+show supported channels.
+
+Potential:
+
+- In-app
+- Email
+- Webhook
+- Other
+
+These are examples only.
+
+Do not claim delivery channels that V1 does not support.
+
+==================================================
+26. CHANNEL STATUS
+==================================================
+
+If V1 provides channel status:
+
+show:
+
+Enabled
+Disabled
+Configured
+Unavailable
+
+Only use actual backend values.
+
+==================================================
+27. NOTIFICATION PREFERENCES UX
+==================================================
+
+Use clear grouping:
+
+Category
+Channel
+Preference
+
+Avoid extremely dense matrices unless the backend exposes many configurable combinations.
+
+==================================================
+28. SETTINGS INTEGRATION
+==================================================
+
+Notification preferences belong under:
+
+Settings
+→ Notifications
+
+The notification center belongs under:
+
+Notifications
+
+Do not duplicate preference controls in multiple locations.
+
+==================================================
+29. ALERTING INTEGRATION
+==================================================
+
+Alerting:
+
+Alert
+→ Notification
+
+Notification:
+
+Notification
+→ Alert
+
+Only if V1 exposes the relationship.
+
+Do not turn every alert into a notification automatically in the frontend.
+
+==================================================
+30. AUTOMATION INTEGRATION
+==================================================
+
+Where V1 supports:
+
+Automation execution
+→ Notification
+
+Notification
+→ Automation execution
+
+Use actual identifiers.
+
+==================================================
+31. REPORTING INTEGRATION
+==================================================
+
+Where supported:
+
+Report completion
+→ Notification
+
+Notification
+→ Report
+
+Only if backend V1 provides the relationship.
+
+==================================================
+32. AI INTEGRATION
+==================================================
+
+Where supported:
+
+AI recommendation
+→ Notification
+
+Notification
+→ AI Assistant
+
+Do not create artificial AI notifications.
+
+==================================================
+33. AUDIT INTEGRATION
+==================================================
+
+Do not treat notifications as audit records.
+
+Where V1 exposes both:
+
+Notification
+→ Audit Event
+
+Use separate experiences.
+
+==================================================
+34. API ARCHITECTURE
+==================================================
+
+Use:
+
+Notification UI
+↓
+Notification Hooks
+↓
+Notification API Module
+↓
+Shared API Client
+↓
+Backend V1
+
+Components must never call HTTP directly.
+
+==================================================
+35. TYPES
+==================================================
+
+Use strict TypeScript.
+
+Separate:
+
+API Types
+↓
+Notification Adapter
+↓
+Notification Domain Model
+↓
+UI Model
+
+Do not use:
+
+any
+
+==================================================
+36. QUERY ARCHITECTURE
+==================================================
+
+Use TanStack Query.
+
+Potential queries:
+
+- notification list
+- unread count
+- notification detail
+- preferences
+- categories
+- channels
+
+Only create queries backed by V1.
+
+==================================================
+37. MUTATIONS
+==================================================
+
+Where V1 supports them:
+
+- mark read
+- mark unread
+- mark all read
+- acknowledge
+- update preferences
+
+Use mutation APIs.
+
+Do not mutate notification state only locally.
+
+==================================================
+38. CACHE INVALIDATION
+==================================================
+
+After notification mutation:
+
+- update/invalidate notification list
+- update unread count
+- invalidate detail where required
+- update preferences
+
+Avoid stale badge counts.
+
+==================================================
+39. OPTIMISTIC UI
+==================================================
+
+Read/unread can use carefully controlled optimistic UX only if rollback is implemented.
+
+For higher-impact actions:
+
+wait for backend confirmation.
+
+Never silently swallow mutation failures.
+
+==================================================
+40. SECURITY
+==================================================
+
+Notifications may contain sensitive operational information.
+
+Never:
+
+- expose credentials
+- expose tokens
+- expose secrets
+- log notification payloads unnecessarily
+- expose unauthorized notification data
+
+Backend authorization remains authoritative.
+
+==================================================
+41. MULTI-TENANCY
+==================================================
+
+If V1 supports organizations/projects:
+
+ensure notification queries respect the active scope.
+
+Do not allow client-side switching to access another organization.
+
+Use existing authentication and RBAC context.
+
+==================================================
+42. LOADING STATES
+==================================================
+
+Support:
+
+- bell count loading
+- popover loading
+- notification list loading
+- detail loading
+- preference loading
+- mutation state
+
+Avoid blocking the whole application shell.
+
+==================================================
+43. EMPTY STATES
+==================================================
+
+Examples:
+
+"You're all caught up."
+
+"No notifications found."
+
+"No unread notifications."
+
+"No notification preferences available."
+
+Keep the tone professional.
+
+==================================================
+44. ERROR STATES
+==================================================
+
+Support:
+
+- notification service unavailable
+- permission denied
+- list failure
+- unread count failure
+- mutation failure
+- preference failure
+
+Do not expose backend stack traces.
+
+==================================================
+45. PARTIAL FAILURE
+==================================================
+
+If unread count fails:
+
+do not hide the notification bell.
+
+If notification list fails:
+
+show retry.
+
+If preferences fail:
+
+notification center should still work.
+
+==================================================
+46. ACCESSIBILITY
+==================================================
+
+Target WCAG 2.2 AA.
+
+Notification updates can be disruptive.
+
+Use:
+
+- accessible live regions where appropriate
+- meaningful announcements
+- keyboard navigation
+- focus management
+- accessible unread state
+- accessible timestamps
+- accessible notification actions
+
+Do not announce every notification aggressively.
+
+==================================================
+47. RESPONSIVE DESIGN
+==================================================
+
+Desktop:
+
+Popover + full notification center.
+
+Tablet:
+
+Responsive panel.
+
+Mobile:
+
+Dedicated notification screen.
+
+Do not create an unusable desktop popover on mobile.
+
+==================================================
+48. PERFORMANCE
+==================================================
+
+Optimize:
+
+- unread count
+- polling
+- list rendering
+- notification insertion
+- deduplication
+- cache updates
+
+Do not refetch the entire application on every notification.
+
+==================================================
+49. DESIGN SYSTEM
+==================================================
+
+Use Prompt 002.
+
+Reuse:
+
+- status tokens
+- badges
+- cards
+- drawers
+- list patterns
+- date/time formatting
+- permission components
+
+Do not create another notification visual language.
+
+==================================================
+50. USER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/user-guide/notifications.md
+
+Document:
+
+- notification bell
+- notification center
+- unread/read
+- filters
+- notification actions
+- deep links
+- notification preferences
+- supported channels
+- troubleshooting
+
+Only document implemented V1 functionality.
+
+==================================================
+51. DEVELOPER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/developer-guide/notifications.md
+
+Document:
+
+- notification architecture
+- API integration
+- query architecture
+- unread count
+- polling/real-time behaviour
+- deduplication
+- mutations
+- cache invalidation
+- preferences
+- deep links
+- security
+
+==================================================
+52. RFI / RFP DOCUMENTATION
+==================================================
+
+Create:
+
+docs/frontend/rfi/notifications.md
+
+Document:
+
+- centralized notification experience
+- operational awareness
+- user-specific notifications
+- permission-aware delivery
+- notification routing
+- configurable preferences
+- accessibility
+- responsive UX
+- extensibility
+
+Clearly distinguish:
+
+Implemented V1
+
+from:
+
+Unavailable/planned.
+
+==================================================
+53. BACKEND V1 LIMITATIONS
+==================================================
+
+Record unsupported notification capabilities in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Include:
+
+- requested capability
+- V1 availability
+- frontend impact
+- current UX handling
+
+Do not modify backend.
+
+==================================================
+54. TESTING
+==================================================
+
+Create tests for:
+
+### Bell
+
+- render
+- unread count
+- loading
+- error
+
+### Notification List
+
+- render
+- unread
+- read
+- filtering
+- pagination
+- empty
+- error
+
+### Notification Detail
+
+- render
+- metadata
+- deep link
+- actions
+
+### Read State
+
+- mark read
+- mark unread
+- mark all read where supported
+- failure rollback
+
+### Preferences
+
+- load
+- update
+- validation
+- failure
+
+### Integration
+
+- Alerting navigation
+- Automation navigation
+- Reporting navigation
+- AI navigation
+- Audit navigation
+
+Only where V1 supports them.
+
+==================================================
+55. E2E
+==================================================
+
+Where environment permits:
+
+- open notification bell
+- inspect unread count
+- open notification
+- navigate to related resource
+- mark notification read
+- open notification center
+- filter notifications
+- open preferences where supported
+
+Do not modify production settings.
+
+Do not modify backend.
+
+==================================================
+56. DEPENDENCY SAFETY
+==================================================
+
+Use existing dependencies.
+
+Do not add notification infrastructure or third-party notification systems.
+
+Backend V1 owns notification generation/delivery.
+
+==================================================
+57. BACKEND FREEZE VERIFICATION
+==================================================
+
+Before completion:
+
+[ ] Backend source changes = 0
+[ ] Notification service changes = 0
+[ ] Alerting changes = 0
+[ ] Authentication changes = 0
+[ ] RBAC changes = 0
+[ ] API changes = 0
+[ ] Database changes = 0
+[ ] Migration changes = 0
+[ ] Backend configuration changes = 0
+[ ] Backend dependencies = 0
+
+==================================================
+58. VALIDATION
+==================================================
+
+Run:
+
+- typecheck
+- lint
+- unit tests
+- production build
+- applicable E2E
+
+Do not claim success without execution.
+
+==================================================
+59. GIT SAFETY
+==================================================
+
+Before commit:
+
+- inspect git status
+- inspect changed files
+- verify no secrets
+- verify no .env
+- verify no credentials
+- verify no backend changes
+- inspect dependency changes
+- inspect lockfile changes
+
+==================================================
+60. COMMIT
+==================================================
+
+If validation passes:
+
+feat(frontend): implement enterprise notification center
+
+Push according to repository workflow.
+
+==================================================
+61. DEFINITION OF DONE
+==================================================
+
+[ ] Notification bell implemented.
+[ ] Unread count implemented where supported.
+[ ] Notification popover implemented.
+[ ] Notification center implemented.
+[ ] Notification detail implemented where supported.
+[ ] Read/unread implemented where supported.
+[ ] Mark-all-read implemented where supported.
+[ ] Notification filtering implemented where supported.
+[ ] Search implemented where supported.
+[ ] Pagination implemented.
+[ ] Deep links implemented where supported.
+[ ] Notification actions implemented where supported.
+[ ] Acknowledgement separated from read state where applicable.
+[ ] Notification preferences implemented where supported.
+[ ] Channel configuration implemented where supported.
+[ ] Alerting integration implemented where supported.
+[ ] Automation integration implemented where supported.
+[ ] Reporting integration implemented where supported.
+[ ] AI integration implemented where supported.
+[ ] Audit distinction maintained.
+[ ] Permission handling implemented.
+[ ] Multi-tenant scope respected.
+[ ] Security review completed.
+[ ] Loading states implemented.
+[ ] Empty states implemented.
+[ ] Error states implemented.
+[ ] Partial failure handled.
+[ ] Responsive UX implemented.
+[ ] Accessibility requirements met.
+[ ] User guide created.
+[ ] Developer guide created.
+[ ] RFI documentation created.
+[ ] Backend V1 untouched.
+[ ] No backend API changes.
+[ ] No database changes.
+[ ] No unnecessary dependencies.
+[ ] Typecheck passes.
+[ ] Lint passes.
+[ ] Tests pass.
+[ ] Production build passes.
+[ ] Applicable E2E passes.
+[ ] Git state clean except explicitly pre-existing files.
+
+==================================================
+62. FINAL REPORT
+==================================================
+
+Provide:
+
+1. Notification implementation summary
+2. Actual V1 APIs consumed
+3. Routes created
+4. Components created
+5. Notification model
+6. Unread-count implementation
+7. Read/unread behaviour
+8. Filtering/search
+9. Pagination
+10. Deep-link behaviour
+11. Notification actions
+12. Preference integration
+13. Channel support
+14. Alerting integration
+15. Automation integration
+16. Reporting integration
+17. AI integration
+18. Audit distinction
+19. Permission handling
+20. Security review
+21. Loading/empty/error handling
+22. Accessibility
+23. Responsive behaviour
+24. Performance
+25. User guide
+26. Developer guide
+27. RFI documentation
+28. Tests
+29. E2E
+30. Typecheck
+31. Lint
+32. Production build
+33. Dependency changes
+34. Lockfile changes
+35. Backend files changed — MUST BE ZERO
+36. Backend V1 limitations
+37. Git commit
+38. Known limitations
+39. Recommended next frontend prompt
+
+Do not modify the backend.
+
+Do not fabricate notification capabilities.
+
+Proceed with implementation.

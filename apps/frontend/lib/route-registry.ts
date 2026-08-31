@@ -138,6 +138,27 @@ export const ROUTE_REGISTRY: readonly RouteMeta[] = [
     layout: "main",
     showInNav: false,
   }),
+  // Prompt 016 — reached via the shell's own notification bell ("View
+  // all") and the command palette, the same convention Settings uses
+  // for account-scoped pages: not part of the primary sidebar
+  // taxonomy, since this is personal to the signed-in user, not an
+  // organizational concern. `notifications-admin` (below, still
+  // planned) is a distinct concept — notification-system
+  // authoring/configuration, not a recipient viewing their own inbox.
+  implemented({
+    id: "notifications",
+    path: "/notifications",
+    title: "Notifications",
+    description: "Notifications addressed to you across AI-IOS.",
+    breadcrumb: "Notifications",
+    navGroup: null,
+    navLabel: null,
+    icon: null,
+    roles: null,
+    feature: "notifications",
+    layout: "main",
+    showInNav: false,
+  }),
 
   // ---- Settings (Prompt 013) — reached from the account menu, not the
   // primary sidebar taxonomy; spans user-management/authentication/

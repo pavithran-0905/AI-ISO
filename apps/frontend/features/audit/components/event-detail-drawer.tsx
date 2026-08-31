@@ -3,7 +3,7 @@
 import { Drawer } from "@/components/overlays/drawer";
 import { StatusBadge } from "@/components/feedback/status-badge";
 import { formatActionLabel } from "@/features/audit/lib/format";
-import { maskSensitiveEntries } from "@/features/audit/lib/mask-sensitive";
+import { maskSensitiveEntries } from "@/lib/mask-sensitive";
 import { AUDIT_SOURCE_LABELS, type AuditEvent } from "@/features/audit/types";
 
 function Field({ label, value, mono = false }: { label: string; value: string | null; mono?: boolean }) {
