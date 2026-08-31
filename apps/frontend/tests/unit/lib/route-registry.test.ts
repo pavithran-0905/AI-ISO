@@ -62,6 +62,22 @@ describe("route-registry", () => {
     }
   });
 
+  it("Prompt 015 registers Audit & Activity as two real routes, restricted to administrators, distinct from the still-planned Compliance stub", () => {
+    expect(getRouteMeta("/audit")).toMatchObject({
+      id: "audit",
+      visibility: "implemented",
+      showInNav: true,
+      roles: ["super_admin", "organization_admin"],
+    });
+    expect(getRouteById("audit-activity")).toMatchObject({
+      path: "/audit/activity",
+      visibility: "implemented",
+      showInNav: false,
+      roles: ["super_admin", "organization_admin"],
+    });
+    expect(getRouteById("compliance")).toMatchObject({ visibility: "planned" });
+  });
+
   it("every route id is unique", () => {
     const ids = ROUTE_REGISTRY.map((route) => route.id);
     expect(new Set(ids).size).toBe(ids.length);

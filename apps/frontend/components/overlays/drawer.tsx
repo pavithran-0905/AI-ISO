@@ -39,7 +39,19 @@ export function Drawer({ open, onClose, title, children, footer, className }: Dr
       onCancel={onClose}
       aria-labelledby="drawer-title"
       className={cn(
-        "bg-surface-elevated text-foreground fixed inset-y-0 right-0 m-0 flex h-full max-h-none w-full max-w-md flex-col",
+        // A closed native `<dialog>` relies on the UA stylesheet's
+        // `dialog:not([open]) { display: none }` — but that's a
+        // *user-agent*-origin rule, which always loses to an
+        // author-origin rule of the same importance regardless of
+        // specificity. An unconditional `flex` utility here would
+        // therefore keep this fixed, full-height, right-anchored panel
+        // laid out (and intercepting clicks) even while closed —
+        // confirmed via a real Chromium E2E run, not just reasoning
+        // about the cascade. `hidden open:flex` is the standard fix:
+        // default closed (`display: none`, itself author-origin and
+        // so able to seat under the UA rule), `flex` only once the
+        // browser has actually set `[open]`.
+        "bg-surface-elevated text-foreground fixed inset-y-0 right-0 m-0 hidden h-full max-h-none w-full max-w-md flex-col open:flex",
         "border-l border-border p-0 shadow-elevation-3",
         "backdrop:bg-foreground/40",
         "motion-safe:open:animate-drawer-in",

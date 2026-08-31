@@ -1,0 +1,1256 @@
+# FRONTEND PROMPT 015
+# Enterprise Audit, Activity & Compliance Experience
+
+## ROLE
+
+Act as a Principal Product Designer, Enterprise Audit UX Architect, Security UX Specialist, Compliance Platform Architect, Frontend Architect, Senior Next.js/React Engineer, Accessibility Engineer, and Enterprise Operations Specialist.
+
+Frontend Prompts 001–014 are COMPLETE.
+
+Use the existing:
+
+- application shell
+- design system
+- authentication
+- permissions
+- routing
+- API client
+- Dashboard
+- Monitoring
+- Alerting
+- Reporting
+- Automation
+- AI Assistant
+- Infrastructure
+- Topology
+- Settings
+- User Management
+- query/state architecture
+- documentation architecture
+
+Do not create competing architecture.
+
+==================================================
+CRITICAL BACKEND V1 FREEZE
+==================================================
+
+AI-IOS Backend V1 is COMPLETE and FROZEN.
+
+THIS IS A FRONTEND-ONLY PROMPT.
+
+DO NOT:
+
+- modify backend source code
+- modify audit services
+- modify authentication services
+- modify RBAC services
+- modify reporting services
+- add backend endpoints
+- modify backend APIs
+- modify database schemas
+- modify migrations
+- modify authentication
+- modify RBAC
+- modify backend business logic
+- modify backend configuration
+- modify backend dependencies
+
+If an audit/compliance capability is unavailable:
+
+1. Document it.
+2. Do not fabricate it.
+3. Do not modify backend.
+4. Build only supported frontend functionality.
+5. Record the limitation in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Backend modifications MUST remain ZERO.
+
+==================================================
+1. OBJECTIVE
+==================================================
+
+Build the enterprise Audit & Activity experience.
+
+The experience must allow authorized users to understand:
+
+- what happened
+- when it happened
+- who initiated it
+- what resource was affected
+- what action occurred
+- whether it succeeded or failed
+- relevant context
+- related entity
+- available audit metadata
+
+Only use actual V1 audit/activity data.
+
+Do not fabricate compliance claims.
+
+The frontend should provide:
+
+- audit timeline
+- activity table
+- event details
+- filtering
+- search
+- date/time filtering
+- actor filtering
+- resource filtering
+- event/action filtering
+- status filtering where supported
+- export where supported
+- report integration where supported
+
+==================================================
+2. INSPECT BACKEND V1 FIRST
+==================================================
+
+Inspect the actual V1 implementation for:
+
+- audit logs
+- activity logs
+- authentication events
+- RBAC events
+- user-management events
+- automation events
+- configuration changes
+- infrastructure events
+- report events
+- AI events
+- API activity
+- event types
+- actors
+- timestamps
+- resources
+- statuses
+- metadata
+- pagination
+- filtering
+- sorting
+- export
+- retention information
+
+Do not assume an audit event exists because a backend operation exists.
+
+Only use events actually available from V1.
+
+==================================================
+3. TERMINOLOGY
+==================================================
+
+Use the canonical backend terminology.
+
+Possible concepts:
+
+Actor
+Action
+Resource
+Event
+Timestamp
+Status
+Source
+
+Do not introduce inconsistent terminology such as:
+
+"Transaction"
+
+if V1 calls it:
+
+"Event".
+
+==================================================
+4. INFORMATION ARCHITECTURE
+==================================================
+
+Recommended:
+
+Audit & Activity
+├── Overview
+├── Activity
+├── Audit Events
+└── Event Detail
+
+Only expose sections backed by V1.
+
+==================================================
+5. AUDIT ROUTE
+==================================================
+
+Recommended:
+
+/audit
+
+Use the centralized route registry.
+
+Use the existing application shell.
+
+==================================================
+6. AUDIT OVERVIEW
+==================================================
+
+Create an executive operational overview.
+
+Potential information:
+
+- Total Events
+- Recent Activity
+- Failed Actions
+- Configuration Changes
+- Access Changes
+- Automation Events
+
+Only display metrics that V1 actually provides.
+
+Do not invent counts.
+
+==================================================
+7. ACTIVITY TABLE
+==================================================
+
+Create an enterprise-grade activity table.
+
+Potential columns:
+
+- Time
+- Actor
+- Action
+- Resource
+- Resource Type
+- Status
+- Source
+- Details
+
+Only use actual backend fields.
+
+Support where V1 allows:
+
+- search
+- filters
+- sorting
+- pagination
+- date range
+- export
+
+==================================================
+8. EVENT DETAIL
+==================================================
+
+Create:
+
+/audit/events/[id]
+
+Show:
+
+Identity
+↓
+Actor
+↓
+Action
+↓
+Resource
+↓
+Timestamp
+↓
+Status
+↓
+Metadata
+↓
+Related entities
+
+Only render fields returned by V1.
+
+==================================================
+9. ACTOR
+==================================================
+
+If V1 exposes actor information:
+
+show:
+
+- name
+- email where authorized
+- actor type
+- identifier where operationally useful
+
+Potential actor types:
+
+User
+System
+Service
+Automation
+
+These are examples only.
+
+Use actual V1 values.
+
+==================================================
+10. RESOURCE
+==================================================
+
+If V1 identifies the affected resource:
+
+show:
+
+- resource name
+- resource type
+- identifier where appropriate
+- link to the resource detail
+
+Examples:
+
+User
+Machine
+Automation
+Report
+Configuration
+
+Only create links when actual frontend routes and identifiers exist.
+
+==================================================
+11. EVENT ACTION
+==================================================
+
+Display the canonical action.
+
+Examples may include:
+
+Created
+Updated
+Deleted
+Executed
+Logged In
+Role Changed
+Configuration Changed
+
+Do not invent action values.
+
+==================================================
+12. EVENT STATUS
+==================================================
+
+Use actual V1 statuses.
+
+Potential:
+
+Success
+Failure
+Denied
+
+These are examples only.
+
+Do not create a frontend-only status model.
+
+==================================================
+13. DATE/TIME FILTERING
+==================================================
+
+If V1 supports date filtering:
+
+provide:
+
+- Today
+- Last 24 hours
+- Last 7 days
+- Last 30 days
+- Custom range
+
+Only expose ranges compatible with backend behaviour.
+
+Respect timezone.
+
+==================================================
+14. ACTOR FILTER
+==================================================
+
+If supported:
+
+filter by actor.
+
+Provide searchable actor selection if V1 supports it.
+
+Do not load thousands of users unnecessarily.
+
+==================================================
+15. RESOURCE FILTER
+==================================================
+
+If supported:
+
+filter by:
+
+- resource type
+- resource
+- service
+
+Only use actual V1 filters.
+
+==================================================
+16. ACTION FILTER
+==================================================
+
+If supported:
+
+provide action/event type filtering.
+
+Use backend-supported values.
+
+Do not hardcode speculative event types.
+
+==================================================
+17. STATUS FILTER
+==================================================
+
+Only implement if V1 supports event status filtering.
+
+Use canonical status values.
+
+==================================================
+18. SEARCH
+==================================================
+
+Use server-side search where V1 supports it.
+
+Do not search only the currently loaded page.
+
+Search should be:
+
+- debounced where appropriate
+- keyboard accessible
+- clearable
+
+==================================================
+19. PAGINATION
+==================================================
+
+Use backend pagination.
+
+Support:
+
+- page navigation
+- page size where supported
+- total count where provided
+
+Do not fabricate total counts.
+
+==================================================
+20. SORTING
+==================================================
+
+Use backend-supported sort fields.
+
+Default:
+
+Newest first
+
+only if this matches the backend semantics.
+
+==================================================
+21. TIMELINE VIEW
+==================================================
+
+If useful and supported by the event data:
+
+provide an alternate timeline representation.
+
+Example:
+
+10:42
+User changed configuration
+Machine: edge-01
+
+10:39
+Automation completed
+Automation: deploy-service
+
+The timeline must use real event data.
+
+==================================================
+22. TABLE / TIMELINE SWITCH
+==================================================
+
+If both representations improve usability:
+
+provide:
+
+Table | Timeline
+
+The same backend dataset must drive both.
+
+Do not create separate data-fetching logic.
+
+==================================================
+23. EVENT CONTEXT
+==================================================
+
+Where V1 provides metadata:
+
+show contextual information.
+
+Examples:
+
+Before
+After
+
+or:
+
+Changed Field
+Previous Value
+New Value
+
+Only if the backend actually provides these values.
+
+Never infer changes by comparing unrelated frontend snapshots.
+
+==================================================
+24. SENSITIVE DATA
+==================================================
+
+Audit logs may contain sensitive information.
+
+Never expose:
+
+- passwords
+- tokens
+- API keys
+- private keys
+- credentials
+- secret values
+
+Mask sensitive metadata.
+
+Do not log audit payloads to browser console.
+
+==================================================
+25. PII
+==================================================
+
+Only show personally identifiable information when:
+
+- returned by V1
+- authorized
+- necessary for the audit workflow
+
+Do not expose unnecessary personal information.
+
+==================================================
+26. ACCESS CONTROL
+==================================================
+
+Audit data is sensitive.
+
+Use existing permission architecture.
+
+Potential permissions:
+
+- view audit
+- view activity
+- export audit
+- view sensitive details
+
+Only use actual V1 permissions.
+
+Frontend visibility is not a security boundary.
+
+Backend remains authoritative.
+
+==================================================
+27. READ-ONLY UX
+==================================================
+
+Audit is primarily informational.
+
+Do not expose mutation controls unless V1 explicitly supports audit-management operations.
+
+Do not allow users to edit audit events.
+
+==================================================
+28. IMMUTABILITY
+==================================================
+
+If V1 describes audit events as immutable:
+
+communicate that clearly.
+
+Do not build edit/delete controls.
+
+Do not claim immutability unless supported by V1.
+
+==================================================
+29. RETENTION
+==================================================
+
+If V1 exposes retention information:
+
+display:
+
+- retention period
+- archive status
+- available historical range
+
+Do not invent compliance retention guarantees.
+
+==================================================
+30. EXPORT
+==================================================
+
+If V1 supports export:
+
+provide:
+
+Export
+
+Supported formats only.
+
+Potential:
+
+CSV
+JSON
+PDF
+
+Do not assume these formats exist.
+
+If export is not supported:
+
+do not create a fake enterprise export workflow.
+
+==================================================
+31. REPORTING INTEGRATION
+==================================================
+
+Where V1 supports audit reports:
+
+Audit
+→ Reporting
+
+Reuse Prompt 008 Reporting infrastructure.
+
+Do not duplicate report generation.
+
+==================================================
+32. USER MANAGEMENT INTEGRATION
+==================================================
+
+From a user:
+
+User
+→ View Activity
+
+From an audit event:
+
+Event Actor
+→ User Detail
+
+Only where actual identifiers exist.
+
+==================================================
+33. AUTOMATION INTEGRATION
+==================================================
+
+From an automation execution:
+
+Execution
+→ Audit Event
+
+From an audit event:
+
+Automation
+→ Execution Detail
+
+Only where V1 provides the relationship.
+
+==================================================
+34. INFRASTRUCTURE INTEGRATION
+==================================================
+
+From an infrastructure asset:
+
+Asset
+→ Activity
+
+From an audit event:
+
+Resource
+→ Asset Detail
+
+Only when supported.
+
+==================================================
+35. AI INTEGRATION
+==================================================
+
+If V1 supports contextual AI analysis of audit data:
+
+provide:
+
+"Analyze with AI"
+
+Use actual event context.
+
+Do not expose raw sensitive audit payload unnecessarily.
+
+Do not fabricate AI audit-analysis capability.
+
+==================================================
+36. API ARCHITECTURE
+==================================================
+
+Use:
+
+Audit Page
+↓
+Audit Hooks
+↓
+Audit API Module
+↓
+Shared API Client
+↓
+Backend V1
+
+Components must not call HTTP directly.
+
+==================================================
+37. TYPES
+==================================================
+
+Use strict TypeScript.
+
+Separate:
+
+API Types
+↓
+Adapters
+↓
+Audit Domain Model
+↓
+UI View Model
+
+Do not use:
+
+any
+
+==================================================
+38. QUERY ARCHITECTURE
+==================================================
+
+Use TanStack Query.
+
+Potential:
+
+- audit summary
+- audit events
+- event detail
+- actor list
+- resource list
+- event types
+
+Only create actual V1 queries.
+
+==================================================
+39. FILTER STATE
+==================================================
+
+Keep filters consistent.
+
+Prefer URL state for:
+
+- date range
+- actor
+- resource
+- event type
+- status
+- search
+
+Do not place large event payloads into URLs.
+
+==================================================
+40. CACHE
+==================================================
+
+Audit data is historical.
+
+Use appropriate caching.
+
+Do not aggressively cache highly recent events if V1 requires near-real-time visibility.
+
+==================================================
+41. REAL-TIME
+==================================================
+
+If V1 provides real-time audit events:
+
+consume it.
+
+Otherwise:
+
+do not fake real-time updates.
+
+Provide manual refresh or supported polling.
+
+==================================================
+42. LOADING STATES
+==================================================
+
+Support:
+
+- overview loading
+- table loading
+- timeline loading
+- detail loading
+- filter loading
+- export loading
+
+Use existing primitives.
+
+==================================================
+43. EMPTY STATES
+==================================================
+
+Examples:
+
+"No audit events found."
+
+"No activity matches your filters."
+
+"No events are available for this period."
+
+Do not imply that no events means the system is inactive unless the backend confirms the complete dataset.
+
+==================================================
+44. ERROR STATES
+==================================================
+
+Support:
+
+- API unavailable
+- permission denied
+- event not found
+- timeout
+- export failure
+- filter failure
+
+Do not expose backend stack traces.
+
+==================================================
+45. PARTIAL FAILURE
+==================================================
+
+If overview metrics fail but event list succeeds:
+
+show event list.
+
+If event detail metadata fails:
+
+show available event information.
+
+Do not blank the whole page.
+
+==================================================
+46. ACCESSIBILITY
+==================================================
+
+Target WCAG 2.2 AA.
+
+Ensure:
+
+- tables accessible
+- timeline accessible
+- filter controls accessible
+- status accessible
+- dialogs accessible
+- keyboard navigation
+- focus management
+- screen-reader-friendly event descriptions
+
+The timeline MUST have an accessible structured equivalent.
+
+==================================================
+47. RESPONSIVE DESIGN
+==================================================
+
+Desktop:
+
+Dense audit table + filters.
+
+Tablet:
+
+Reduced columns.
+
+Mobile:
+
+Event cards/list.
+
+Event detail:
+
+Stack sections.
+
+Do not force a desktop table onto mobile.
+
+==================================================
+48. PERFORMANCE
+==================================================
+
+Audit datasets can become very large.
+
+Use:
+
+- server-side pagination
+- server-side filtering
+- server-side search
+- query caching
+- lazy detail loading
+
+Do not load the entire audit history into the browser.
+
+==================================================
+49. DESIGN SYSTEM
+==================================================
+
+Use Prompt 002.
+
+Reuse:
+
+- tables
+- filters
+- status tokens
+- drawers
+- detail layouts
+- date-range controls
+- export patterns
+- permissions
+
+Do not create another compliance visual language.
+
+==================================================
+50. USER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/user-guide/audit-activity.md
+
+Document:
+
+- Audit Overview
+- Activity
+- Search
+- Filters
+- Date ranges
+- Event details
+- Actor information
+- Resource navigation
+- Export
+- Timeline
+- Permissions
+- Troubleshooting
+
+Only document implemented V1 capabilities.
+
+==================================================
+51. DEVELOPER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/developer-guide/audit-activity.md
+
+Document:
+
+- feature architecture
+- API integration
+- event model
+- adapters
+- filters
+- pagination
+- query architecture
+- permissions
+- sensitive-data handling
+- cross-module navigation
+- performance
+
+==================================================
+52. RFI / RFP DOCUMENTATION
+==================================================
+
+Create:
+
+docs/frontend/rfi/audit-activity.md
+
+Document:
+
+- enterprise audit visibility
+- operational activity tracking
+- permission-aware access
+- event investigation
+- resource traceability
+- export where supported
+- accessibility
+- scalability
+- security UX
+
+Do NOT claim:
+
+- regulatory compliance
+- certification
+- immutable storage
+- retention guarantees
+
+unless those are explicitly supported by Backend V1.
+
+==================================================
+53. BACKEND V1 LIMITATIONS
+==================================================
+
+Record unsupported audit capabilities in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Include:
+
+- requested capability
+- V1 availability
+- frontend impact
+- current UX handling
+
+Do not modify backend.
+
+==================================================
+54. TESTING
+==================================================
+
+Create tests for:
+
+### Overview
+
+- render
+- metrics
+- loading
+- error
+
+### Audit List
+
+- search
+- filters
+- sorting
+- pagination
+- empty
+- error
+
+### Event Detail
+
+- actor
+- action
+- resource
+- status
+- metadata
+- sensitive-field masking
+
+### Timeline
+
+- rendering
+- accessibility
+- navigation
+
+### Permissions
+
+- authorized
+- unauthorized
+- restricted details
+
+### Export
+
+Only if V1 supports it.
+
+### Accessibility
+
+- keyboard
+- focus
+- table
+- timeline
+- filters
+- dialogs
+
+==================================================
+55. E2E
+==================================================
+
+Where environment permits:
+
+- open Audit
+- view events
+- search
+- filter
+- open event detail
+- navigate to related resource
+- switch Table/Timeline
+- export where safely supported
+
+Do not delete or modify audit records.
+
+Do not modify backend.
+
+==================================================
+56. DEPENDENCY SAFETY
+==================================================
+
+Use existing dependencies.
+
+Do not add a compliance/audit framework.
+
+==================================================
+57. BACKEND FREEZE VERIFICATION
+==================================================
+
+Before completion:
+
+[ ] Backend source changes = 0
+[ ] Audit service changes = 0
+[ ] Authentication changes = 0
+[ ] RBAC changes = 0
+[ ] API changes = 0
+[ ] Database changes = 0
+[ ] Migration changes = 0
+[ ] Backend configuration changes = 0
+[ ] Backend dependencies = 0
+
+==================================================
+58. VALIDATION
+==================================================
+
+Run:
+
+- typecheck
+- lint
+- unit tests
+- production build
+- applicable E2E
+
+Do not claim success without execution.
+
+==================================================
+59. GIT SAFETY
+==================================================
+
+Before commit:
+
+- inspect git status
+- inspect changed files
+- verify no secrets
+- verify no .env
+- verify no credentials
+- verify no backend changes
+- inspect dependency changes
+- inspect lockfile
+
+==================================================
+60. COMMIT
+==================================================
+
+If validation passes:
+
+feat(frontend): implement enterprise audit experience
+
+Push according to repository workflow.
+
+==================================================
+61. DEFINITION OF DONE
+==================================================
+
+[ ] Audit route implemented.
+[ ] Actual V1 audit/activity APIs consumed.
+[ ] Overview implemented where supported.
+[ ] Activity table implemented.
+[ ] Event detail implemented.
+[ ] Timeline implemented where useful.
+[ ] Table/Timeline switch implemented where appropriate.
+[ ] Search implemented where supported.
+[ ] Date filtering implemented where supported.
+[ ] Actor filtering implemented where supported.
+[ ] Resource filtering implemented where supported.
+[ ] Action filtering implemented where supported.
+[ ] Status filtering implemented where supported.
+[ ] Pagination implemented.
+[ ] Sorting implemented where supported.
+[ ] Export implemented only where supported.
+[ ] Sensitive data protected.
+[ ] PII handled appropriately.
+[ ] Permissions implemented.
+[ ] Resource navigation implemented where supported.
+[ ] User integration implemented where supported.
+[ ] Automation integration implemented where supported.
+[ ] Infrastructure integration implemented where supported.
+[ ] Reporting integration implemented where supported.
+[ ] AI integration implemented where supported.
+[ ] Loading states implemented.
+[ ] Empty states implemented.
+[ ] Error states implemented.
+[ ] Partial failures handled.
+[ ] Responsive UX implemented.
+[ ] Accessibility requirements met.
+[ ] User guide created.
+[ ] Developer guide created.
+[ ] RFI documentation created.
+[ ] Backend V1 untouched.
+[ ] No audit backend changes.
+[ ] No authentication changes.
+[ ] No RBAC changes.
+[ ] No database changes.
+[ ] No unnecessary dependencies.
+[ ] Typecheck passes.
+[ ] Lint passes.
+[ ] Tests pass.
+[ ] Production build passes.
+[ ] Applicable E2E passes.
+[ ] Git state clean except explicitly pre-existing files.
+
+==================================================
+62. FINAL REPORT
+==================================================
+
+Provide:
+
+1. Audit implementation summary
+2. Actual V1 APIs consumed
+3. Routes created
+4. Components created
+5. Event types discovered
+6. Actor model
+7. Resource model
+8. Filtering/search
+9. Pagination
+10. Event detail
+11. Timeline
+12. Permission handling
+13. Sensitive-data handling
+14. User integration
+15. Infrastructure integration
+16. Automation integration
+17. Reporting integration
+18. AI integration
+19. Loading/empty/error handling
+20. Accessibility
+21. Responsive behaviour
+22. Performance
+23. User guide
+24. Developer guide
+25. RFI documentation
+26. Tests
+27. E2E
+28. Typecheck
+29. Lint
+30. Production build
+31. Dependency changes
+32. Lockfile changes
+33. Backend files changed — MUST BE ZERO
+34. Backend V1 limitations
+35. Git commit
+36. Known limitations
+37. Recommended next frontend prompt
+
+Do not modify the backend.
+
+Do not fabricate audit/compliance capabilities.
+
+Proceed with implementation.

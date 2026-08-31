@@ -22,7 +22,7 @@
  */
 
 import type { LucideIcon } from "lucide-react";
-import { Activity, Bot, FileBarChart, Gauge, HardDrive, LayoutDashboard, MessageSquare, Server, ShieldCheck, Siren, Sparkles, Users, Workflow } from "lucide-react";
+import { Activity, Bot, FileBarChart, Gauge, HardDrive, History, LayoutDashboard, MessageSquare, Server, ShieldCheck, Siren, Sparkles, Users, Workflow } from "lucide-react";
 
 import type { Role } from "@/auth/types";
 
@@ -734,6 +734,47 @@ export const ROUTE_REGISTRY: readonly RouteMeta[] = [
     icon: null,
     roles: null,
     feature: "rbac",
+  }),
+  // Prompt 015's "Audit & Activity" is deliberately distinct from the
+  // "compliance" stub below: it covers only the real, general-purpose
+  // audit trails (compliance-service, integration-hub-service,
+  // notification-center-service) and a read-only compliance-posture
+  // signal — never the full GRC surface (frameworks/controls/
+  // assessments/risk register/remediation), which stays planned. Two
+  // real routes only, matching the session's own dataset: the
+  // recommended IA's "Activity"/"Audit Events"/"Event Detail" collapse
+  // into one Activity page (table/timeline switch over one shared
+  // dataset; detail is a drawer, since no service exposes a
+  // single-event-by-id GET). `roles` restricts the nav entry the same
+  // way Users does — a frontend convenience, not a fix for the two
+  // audit routes that require no authentication at all. See the
+  // developer guide.
+  implemented({
+    id: "audit",
+    path: "/audit",
+    title: "Audit & Activity",
+    description: "Cross-service audit trails and a compliance-posture summary.",
+    breadcrumb: "Audit & Activity",
+    navGroup: "governance",
+    navLabel: null,
+    icon: History,
+    roles: ["super_admin", "organization_admin"],
+    feature: "audit",
+    layout: "main",
+  }),
+  implemented({
+    id: "audit-activity",
+    path: "/audit/activity",
+    title: "Activity",
+    description: "Searchable, filterable audit events across compliance, integrations, and notifications.",
+    breadcrumb: "Activity",
+    navGroup: "governance",
+    navLabel: null,
+    icon: null,
+    roles: ["super_admin", "organization_admin"],
+    feature: "audit",
+    layout: "main",
+    showInNav: false,
   }),
   planned({
     id: "compliance",

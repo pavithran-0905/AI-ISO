@@ -1453,3 +1453,142 @@ would still show whatever `status` value it had before deletion.
 `UserStatusActions`' delete confirmation both describe this accurately
 — a removal, not a status change — rather than implying the two are
 the same operation.
+
+## No platform-wide audit log exists; six services have a real, populated audit table with zero route reaching it
+
+**Discovered**: Prompt 015.
+
+Confirmed by full source inspection across ten services. Only three
+expose a real, general-purpose, `AuditAction`-typed audit route:
+`compliance-service` (`GET /compliance/audit`+`/summary`),
+`integration-hub-service` (`GET /integrations/audit`),
+`notification-center-service` (`GET /notifications/audit`+`/summary`).
+Six more have a real, actively-written audit table with no route at
+all: `authentication-service` (`AuthenticationAuditEntry`, written on
+register/login/MFA/logout events), `rbac-service`
+(`AuthorizationAuditEntry`, written only for
+`/authorization/evaluate` decisions — role/permission/policy CRUD
+writes no audit row at all), `administration-portal-service`
+(`SystemAuditRepository`, real working `list_recent`/`list_for_entity`
+methods, unrouted; only `TENANT_OPERATION` is ever referenced in code
+and even that path is dead), `automation-service`, `inventory-service`
+(both have real service/repository-layer `list_for_*` methods,
+unrouted), and `observability-platform-service` (not even wired into
+`deps.py` for writing, let alone reading). Separately,
+`alerting-service`'s `GET /alerts/{id}/history` and
+`reporting-service`'s `GET /reports/history` are real but narrower,
+single-entity-scoped changelogs — not general audit trails, and this
+feature never treats them as one.
+
+None of the three real sources consumes events from any other
+service (`compliance-service`'s `app/clients/__init__.py` is empty, no
+message-queue consumer exists anywhere in any of the three) — each can
+only ever audit actions taken through its own API.
+
+**Frontend behavior**: Prompt 015 (`docs/frontend/developer-guide/audit-activity.md`)
+builds a source-selector over the three real routes, never merged into
+one list. The six unrouted tables and two narrower changelog routes
+are documented, not worked around — there is nothing to build against.
+
+## Two of the three real audit routes require no authentication at all
+
+**Discovered**: Prompt 015.
+
+`integration-hub-service`'s `GET /integrations/audit`
+(`app/api/analytics.py`) and `notification-center-service`'s `GET
+/notifications/audit`+`/audit/summary` (`app/api/analytics.py`) do not
+declare `CurrentUserId` (or any caller-identity dependency) as a route
+parameter — FastAPI enforces no authentication on them, not merely no
+authorization. `compliance-service`'s `GET /compliance/audit` requires
+a valid JWT but checks no role or permission beyond that (consistent
+with, but more severe than, Prompt 014's finding that
+`user-management-service` checks no authorization while still
+requiring a valid token).
+
+**Frontend behavior**: a permanent, per-source `Alert` on the Activity
+page names exactly which gap applies to the source currently selected
+— never a single generic warning implying all three are equally
+exposed. The feature's own nav entry is restricted to
+`super_admin`/`organization_admin`, stated plainly as a frontend
+convenience that does not close this gap.
+
+## `compliance-service`'s audit trail is genuinely immutable; the other two real sources were not confirmed either way
+
+**Discovered**: Prompt 015.
+
+`AuditRepository` (`compliance-service`) has no update or delete
+method at all, confirmed by direct source inspection — a real,
+enforced immutability at the repository layer, not a documentation
+claim. `AuditService.record_failure()` exists but is never called by
+any caller in the service (confirmed by grep) — failed/refused actions
+therefore produce zero audit rows today, only successes are audited.
+No retention period, archive status, or historical-range limit is
+exposed by any of the three real audit routes; a separate,
+unrelated *evidence* retention concept exists in `compliance-service`
+and is never conflated with the audit trail.
+
+**Frontend behavior**: the developer guide and RFI state the
+immutability finding scoped specifically to `compliance-service`'s own
+audit trail, never generalized to `integrations`/`notifications` or to
+"the platform" — per the prompt's own explicit prohibition on claiming
+retention guarantees or immutable storage without backend
+confirmation.
+
+## No route on any of the three real audit services returns a single event by its own id
+
+**Discovered**: Prompt 015.
+
+Confirmed across all three: `compliance-service`, `integration-hub-service`,
+and `notification-center-service` each expose only a list route for
+audit entries — none has a `GET /.../audit/{id}`-shaped route.
+
+**Frontend behavior**: Event Detail (`EventDetailDrawer`) is built
+entirely from the row already present in the loaded list/timeline,
+rendered as an in-page drawer rather than the prompt's own suggested
+`/audit/events/[id]` route — there is nothing such a route could fetch
+on a fresh page load.
+
+## Compliance's audit-report export pipeline has no relationship to Prompt 008's Reporting feature
+
+**Discovered**: Prompt 015.
+
+`POST /compliance/reports {kind:"audit"}` → `GET
+/compliance/reports/{id}/download` is a real, synchronous (no job
+polling — the POST response already carries a terminal `status`)
+report-generation pipeline, but it belongs entirely to
+`compliance-service`'s own `ReportService`/`ComplianceReport` model —
+unrelated to `reporting-service`'s `Report`/`ReportExecution` models
+that back Prompt 008's Reporting feature, despite both being called
+"reports." `integration-hub-service` and `notification-center-service`
+have no report-generation or export route of any kind. The exported
+row is also narrower than the live `/compliance/audit` response —
+`_audit()` (`compliance-service/app/services/reporting.py`) confirmed
+to omit `id`, `entity_id`, `actor_type`, `changes`, and `context`.
+
+**Frontend behavior**: export is offered only for the `compliance`
+source, calling this pipeline directly rather than routing through
+Reporting (the prompt's own §31 suggests an "Audit → Reporting"
+integration; no such technical relationship exists in V1 to build it
+against), with an inline note that the exported file has fewer columns
+than the on-screen table.
+
+## No confirmed identity-space link between an audit event's actor and `user-management-service`'s own user records
+
+**Discovered**: Prompt 015.
+
+Every audit entry's `actor_id` across all three real sources is
+`str(caller)` — the JWT `sub` claim of whoever called the API, i.e.
+the same identity `authentication-service` issues at login.
+`user-management-service` maintains its own, separately-keyed `users`
+table (`services/user-management-service/app/models/user.py`), and
+`authentication-service` never calls `user-management-service` at
+registration or anywhere else (confirmed absent by grep) — there is no
+event that would keep the two id spaces in sync, and no route on
+either service confirms they are.
+
+**Frontend behavior**: no "Event Actor → User Detail" link is built
+(Prompt 015 §32's own request) — resolving an unconfirmed id match
+risks silently pointing at the wrong account, which is worse than
+showing no link at all. Documented as a confirmed impossibility rather
+than an unbuilt convenience, so a future prompt doesn't re-attempt it
+without first confirming the identity spaces are unified.
