@@ -2,13 +2,15 @@
 
 import { Copy, Share2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/data-display/card";
+import { Tabs } from "@/components/navigation/tabs";
 import { StatusBadge } from "@/components/feedback/status-badge";
 import { StatusIndicator } from "@/components/data-display/status-indicator";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
+import { ResourceSection } from "@/components/resource/resource-section";
 import { AskAiButton } from "@/features/ai-assistant/components/ask-ai-button";
 import { AssetActions } from "@/features/infrastructure/components/asset-actions";
 import { AssetRelationshipsSection } from "@/features/infrastructure/components/asset-relationships-section";
@@ -18,20 +20,35 @@ import { isSensitiveMetadataKey, maskMetadataValue } from "@/features/infrastruc
 import type { Asset } from "@/features/infrastructure/types";
 import { toast } from "@/state/toast-store";
 
+const TABS = [
+  { id: "overview", label: "Overview" },
+  { id: "relationships", label: "Relationships" },
+  { id: "topology", label: "Topology" },
+  { id: "configuration", label: "Configuration" },
+];
+
 /**
- * Asset Detail (§9) — Identity → Current State/Health → Metadata →
- * Relationships → Topology → Related Operations, per the prompt's own
- * hierarchy. No Events or Metrics section: `GET /observability/events`
- * has no asset-id reference field, and there's no metric-series-
- * discovery endpoint (confirmed absent — see
- * `docs/frontend/backend-v1-integration-limitations.md`), both
- * pre-existing documented gaps, not omissions. No Monitoring or
- * Alerting or Automation cross-link: confirmed absent, no real
- * relationship exists in `inventory-service` to either service (see
- * the developer guide) — only "Ask AI" and "View in Topology" (Prompt
- * 012, §35) are real.
+ * Asset Detail's tabbed body (§19/§38's `ResourceSection`/tabs pattern).
+ * Only four real tabs — every other section a resource investigation
+ * workspace could show is confirmed absent for Infrastructure Assets
+ * specifically (see this component's own developer-guide entry):
+ * no metric-series endpoint, no Alert/Automation/Report FK into
+ * `inventory-service`, and `inventory-service`'s own audit trail is
+ * unrouted. Only "View in Topology" and "Ask AI" are real cross-module
+ * actions.
  */
 export function AssetDetailView({ asset }: { asset: Asset }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTab = searchParams.get("tab") ?? "overview";
+
+  function handleTabChange(tab: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === "overview") params.delete("tab");
+    else params.set("tab", tab);
+    router.push(`/infrastructure/assets/${asset.id}?${params.toString()}`);
+  }
+
   function copyId() {
     void navigator.clipboard.writeText(asset.id);
     toast.info("Asset ID copied");
@@ -47,68 +64,59 @@ export function AssetDetailView({ asset }: { asset: Asset }) {
         <AskAiButton draft={`Tell me about the asset "${asset.name}" (id: ${asset.id}).`} />
       </div>
 
-      <IdentitySection asset={asset} onCopyId={copyId} />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AssetActions asset={asset} />
-        </CardContent>
-      </Card>
-
-      <StateSection asset={asset} />
-      <MetadataSection asset={asset} />
-      <AssetRelationshipsSection asset={asset} />
-      <TopologySection assetId={asset.id} />
+      <Tabs items={TABS} activeId={activeTab} onChange={handleTabChange}>
+        {activeTab === "overview" && (
+          <div className="flex flex-col gap-6">
+            <IdentitySection asset={asset} onCopyId={copyId} />
+            <ResourceSection title="Actions">
+              <AssetActions asset={asset} />
+            </ResourceSection>
+            <StateSection asset={asset} />
+          </div>
+        )}
+        {activeTab === "relationships" && <AssetRelationshipsSection asset={asset} />}
+        {activeTab === "topology" && <TopologySection assetId={asset.id} />}
+        {activeTab === "configuration" && <ConfigurationSection asset={asset} />}
+      </Tabs>
     </div>
   );
 }
 
 function IdentitySection({ asset, onCopyId }: { asset: Asset; onCopyId: () => void }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Identity</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
-          <Field label="Name" value={asset.name} />
-          <Field label="Display name" value={asset.displayName} />
-          <Field label="Type" value={asset.assetType} />
-          <Field label="Hostname" value={asset.hostname} />
-          <Field label="FQDN" value={asset.fqdn} />
-          <Field label="IP address" value={asset.ipAddress} />
-          <Field label="MAC address" value={asset.macAddress} mono />
-          <Field label="Serial number" value={asset.serialNumber} mono />
-          <Field label="Vendor" value={asset.vendor} />
-          <Field label="Manufacturer" value={asset.manufacturer} />
-          <Field label="Model" value={asset.model} />
-          <Field label="Firmware version" value={asset.firmwareVersion} />
-          <Field label="Operating system" value={asset.operatingSystem} />
-          <Field label="Architecture" value={asset.architecture} />
-          <Field label="Environment" value={asset.environment} />
-          <div className="flex flex-col gap-0.5">
-            <dt className="text-muted-foreground text-xs">Asset ID</dt>
-            <dd className="flex items-center gap-1 font-mono text-xs">
-              {asset.id}
-              <IconButton icon={Copy} aria-label="Copy asset ID" variant="ghost" onClick={onCopyId} className="size-5" />
-            </dd>
-          </div>
-        </dl>
-      </CardContent>
-    </Card>
+    <ResourceSection title="Identity">
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+        <Field label="Name" value={asset.name} />
+        <Field label="Display name" value={asset.displayName} />
+        <Field label="Type" value={asset.assetType} />
+        <Field label="Hostname" value={asset.hostname} />
+        <Field label="FQDN" value={asset.fqdn} />
+        <Field label="IP address" value={asset.ipAddress} />
+        <Field label="MAC address" value={asset.macAddress} mono />
+        <Field label="Serial number" value={asset.serialNumber} mono />
+        <Field label="Vendor" value={asset.vendor} />
+        <Field label="Manufacturer" value={asset.manufacturer} />
+        <Field label="Model" value={asset.model} />
+        <Field label="Firmware version" value={asset.firmwareVersion} />
+        <Field label="Operating system" value={asset.operatingSystem} />
+        <Field label="Architecture" value={asset.architecture} />
+        <Field label="Environment" value={asset.environment} />
+        <div className="flex flex-col gap-0.5">
+          <dt className="text-muted-foreground text-xs">Asset ID</dt>
+          <dd className="flex items-center gap-1 font-mono text-xs">
+            {asset.id}
+            <IconButton icon={Copy} aria-label="Copy asset ID" variant="ghost" onClick={onCopyId} className="size-5" />
+          </dd>
+        </div>
+      </dl>
+    </ResourceSection>
   );
 }
 
 function StateSection({ asset }: { asset: Asset }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Current state</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-wrap items-center gap-6">
+    <ResourceSection title="Current state">
+      <div className="flex flex-wrap items-center gap-6">
         <div className="flex flex-col gap-1">
           <p className="text-muted-foreground text-xs">Health</p>
           <StatusIndicator state={ASSET_HEALTH_TO_STATUS[asset.health]} />
@@ -135,23 +143,20 @@ function StateSection({ asset }: { asset: Asset }) {
             <time dateTime={asset.updatedAt}>{new Date(asset.updatedAt).toLocaleString()}</time>
           </p>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </ResourceSection>
   );
 }
 
-function MetadataSection({ asset }: { asset: Asset }) {
+function ConfigurationSection({ asset }: { asset: Asset }) {
   const metadataEntries = Object.entries(asset.metadata);
   // category_id/class_id/location_id/owner_id have no name-resolution
   // endpoint on inventory-service (confirmed by source inspection) —
   // shown as raw identifiers, clearly labeled as ids, rather than
   // invented names.
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Metadata</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+    <ResourceSection title="Configuration">
+      <div className="flex flex-col gap-4">
         {asset.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {asset.tags.map((tag) => (
@@ -171,17 +176,12 @@ function MetadataSection({ asset }: { asset: Asset }) {
         {metadataEntries.length > 0 && (
           <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
             {metadataEntries.map(([key, value]) => (
-              <Field
-                key={key}
-                label={key}
-                value={maskMetadataValue(key, value)}
-                mono={isSensitiveMetadataKey(key)}
-              />
+              <Field key={key} label={key} value={maskMetadataValue(key, value)} mono={isSensitiveMetadataKey(key)} />
             ))}
           </dl>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </ResourceSection>
   );
 }
 

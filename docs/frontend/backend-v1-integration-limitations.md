@@ -1765,3 +1765,58 @@ a fix for any one backend service's own authorization gap — several of
 those (`user-management-service` chief among them) remain confirmed to
 enforce no server-side check at all, documented in their own separate
 entries above.
+
+## No dynamic detail route has ever shown a breadcrumb trail — a real, pre-existing gap, now fixed for Asset Detail
+
+**Discovered**: Prompt 018 (present since Prompt 003's own
+route-registry design).
+
+`components/navigation/breadcrumbs.tsx`'s `getBreadcrumbTrail` resolves
+a trail by an *exact* pathname match against `lib/route-registry.ts`.
+No dynamic `[id]` route (e.g. `/infrastructure/assets/{id}`,
+`/administration/users/{id}`, `/reporting/reports/{id}`, `/notifications/{id}`,
+`/alerting/alerts/{id}`, `/automation/automations/{id}`,
+`/workflows/instances/{id}`) has ever been registered there — confirmed
+by inspecting `ROUTE_REGISTRY` — so every one of these pages has shown
+**no breadcrumb trail at all** since it was first built, relying only
+on its own "Back to X" button.
+
+**Frontend behavior**: `components/resource/resource-breadcrumbs.tsx`
+fixes this for Asset Detail — its static ancestor entries still come
+from the real registry (`getRouteById`); only the final, current-
+resource entry is supplied directly, since no registry entry could
+express a dynamic name. The other six dynamic detail pages listed
+above were not retrofitted in this prompt (see the "one real resource
+type" scope decision in the developer guide) and still show no
+breadcrumb trail — a known, now-documented gap for a future prompt to
+close the same way, not a regression this prompt introduced.
+
+## Infrastructure assets have no structured, real link to Alerts, Automation, Reports, or Monitoring — confirmed from the resource side
+
+**Discovered**: Prompt 011/012 (from the Alerting/Automation side).
+**Reconfirmed here from Infrastructure's own side**: Prompt 018.
+
+- **Alerts**: `alerting-service`'s `Alert.source_reference` is
+  unstructured JSON (`app/models/alert_instance.py`) — no
+  schema-enforced `asset_id`/foreign key exists, by the model's own
+  explicit design ("without this service needing a foreign key into
+  every other service's own schema").
+- **Automation**: `automation-service`'s `AutomationTargetResponse`/
+  `AutomationTargetCreateRequest` have a real `inventory_asset_id`
+  field and a real persisted model, but no router registers a targets
+  endpoint at all — already documented above ("`automation-service`
+  has a real asset-linking field with zero route that ever reaches
+  it").
+- **Reports**: `reporting-service`'s `Report` model has no asset-scoped
+  field of any kind.
+- **Monitoring**: `observability-platform-service`'s own topology/
+  events routes are an entirely separate system from
+  `inventory-service`'s `/inventory/topology` (already consumed by
+  Infrastructure) — no cross-reference exists between the two.
+
+**Frontend behavior**: Asset Detail's Resource Investigation Workspace
+shows no Alerts/Automation/Reports/Monitoring section — only the two
+cross-module links that are real (Topology, AI). Building any of the
+four would mean either inventing a link the backend doesn't enforce
+(Alerts) or exposing a capability with no route to reach it
+(Automation) — both explicitly forbidden by this prompt's own rules.

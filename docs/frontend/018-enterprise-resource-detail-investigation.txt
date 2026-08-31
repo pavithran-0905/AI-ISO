@@ -1,0 +1,1241 @@
+# FRONTEND PROMPT 018
+# Enterprise Resource Detail & Investigation Workspace
+
+## ROLE
+
+Act as a Principal Product Designer, Enterprise Operations UX Architect, Resource Investigation UX Specialist, Frontend Architect, Senior Next.js/React Engineer, Accessibility Engineer, and Enterprise Platform UI Architect.
+
+Frontend Prompts 001–017 are COMPLETE.
+
+Use the existing frontend architecture and design system.
+
+==================================================
+CRITICAL BACKEND V1 FREEZE
+==================================================
+
+AI-IOS Backend V1 is COMPLETE and FROZEN.
+
+THIS IS A FRONTEND-ONLY PROMPT.
+
+DO NOT:
+
+- modify backend source code
+- add backend endpoints
+- modify existing backend APIs
+- modify databases
+- modify Neo4j
+- modify migrations
+- modify authentication
+- modify RBAC
+- modify monitoring services
+- modify alerting services
+- modify automation services
+- modify reporting services
+- modify AI services
+- modify backend configuration
+- modify backend dependencies
+
+If a resource capability is unavailable:
+
+1. Document it.
+2. Do not fabricate it.
+3. Do not modify backend.
+4. Use only confirmed V1 capabilities.
+5. Record the limitation in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Backend modifications MUST remain ZERO.
+
+==================================================
+1. OBJECTIVE
+==================================================
+
+Build a reusable enterprise Resource Detail & Investigation Workspace.
+
+The experience should allow an operator to move from:
+
+Resource discovery
+↓
+Resource overview
+↓
+Health
+↓
+Relationships
+↓
+Alerts
+↓
+Activity
+↓
+Configuration
+↓
+Automation
+↓
+Reports
+↓
+AI investigation
+
+where the corresponding V1 capabilities exist.
+
+The goal is:
+
+"Everything I need to understand this resource in one place."
+
+Do not create isolated detail-page implementations for every resource.
+
+Build a reusable architecture.
+
+==================================================
+2. INSPECT V1 RESOURCE TYPES
+==================================================
+
+Inspect actual V1 APIs and existing frontend routes.
+
+Identify supported resource types.
+
+Potential examples:
+
+- Physical Machine
+- VM Host
+- Virtual Machine
+- Service
+- Application
+- Asset
+- Alert
+- Automation
+- Report
+- User
+- Project
+
+These are examples only.
+
+Use only actual V1 resources.
+
+==================================================
+3. RESOURCE DETAIL ARCHITECTURE
+==================================================
+
+Create a reusable concept:
+
+ResourceDetailWorkspace
+
+with resource-specific adapters.
+
+Architecture:
+
+Resource Route
+↓
+Resource Adapter
+↓
+Resource Detail Model
+↓
+Reusable Workspace
+↓
+Resource Sections
+
+Do not duplicate layout logic across resource pages.
+
+==================================================
+4. CANONICAL RESOURCE MODEL
+==================================================
+
+Create a normalized model where possible:
+
+ResourceIdentity
+ResourceStatus
+ResourceHealth
+ResourceRelationships
+ResourceActivity
+ResourceAlerts
+ResourceActions
+
+Only include information actually available.
+
+Do not force every resource into identical backend fields.
+
+==================================================
+5. RESOURCE HEADER
+==================================================
+
+Create a premium resource header.
+
+Show where supported:
+
+- resource icon
+- resource name
+- type
+- status
+- health
+- identifier
+- environment/project
+- last updated
+- primary actions
+
+Example:
+
+Machine
+edge-01
+Healthy
+Production
+
+Do not overload the header.
+
+==================================================
+6. BREADCRUMBS
+==================================================
+
+Provide clear navigation:
+
+Infrastructure
+→ Machines
+→ edge-01
+
+or appropriate canonical hierarchy.
+
+Use existing route registry.
+
+==================================================
+7. PRIMARY ACTIONS
+==================================================
+
+Only show actual supported actions.
+
+Potential:
+
+- Edit
+- Open Monitoring
+- Open Alerts
+- Open Topology
+- Run Automation
+- Generate Report
+- Ask AI
+
+These are examples only.
+
+Never invent actions.
+
+==================================================
+8. OVERVIEW TAB
+==================================================
+
+Create a clean overview.
+
+Potential sections:
+
+Identity
+Health
+Key Metrics
+Environment
+Relationships
+Recent Activity
+Active Alerts
+
+Only display sections backed by V1.
+
+==================================================
+9. HEALTH SECTION
+==================================================
+
+If Monitoring V1 provides health:
+
+show:
+
+- current health
+- status
+- last check
+- relevant metrics
+
+Use the canonical status system.
+
+Do not recalculate backend health semantics.
+
+==================================================
+10. METRICS
+==================================================
+
+If V1 provides metrics:
+
+display relevant metrics.
+
+Potential:
+
+CPU
+Memory
+Storage
+Network
+
+These are examples only.
+
+Use actual available metrics.
+
+Do not fabricate values.
+
+==================================================
+11. ALERTS SECTION
+==================================================
+
+If Alerting V1 provides related alerts:
+
+show:
+
+- active alerts
+- recent alerts
+- severity
+- timestamp
+- status
+
+Provide:
+
+View all alerts
+
+Only use actual resource relationships.
+
+==================================================
+12. TOPOLOGY SECTION
+==================================================
+
+Integrate Prompt 012.
+
+Show:
+
+- connected resources
+- dependencies
+- parent/child relationships
+- topology preview
+
+where V1 supports them.
+
+Provide:
+
+Open in Topology
+
+Do not build a second topology renderer.
+
+==================================================
+13. ACTIVITY SECTION
+==================================================
+
+Integrate Prompt 015.
+
+Show resource-specific activity where supported.
+
+Example:
+
+Configuration changed
+Automation executed
+Alert generated
+
+Only use actual V1 events.
+
+Provide:
+
+View full activity
+
+==================================================
+14. CONFIGURATION SECTION
+==================================================
+
+If V1 exposes resource configuration:
+
+show it in a structured read-only presentation.
+
+Use:
+
+Category
+Field
+Value
+
+Do not expose secrets.
+
+Do not add editing unless V1 supports it.
+
+==================================================
+15. AUTOMATION SECTION
+==================================================
+
+If V1 supports resource automation:
+
+show relevant automation information.
+
+Potential:
+
+- available automation
+- recent executions
+- status
+- last execution
+
+Only use actual relationships.
+
+Provide:
+
+Open Automation
+
+==================================================
+16. REPORTING SECTION
+==================================================
+
+If Reporting V1 supports resource-related reports:
+
+show:
+
+- recent reports
+- report status
+- generated time
+
+Provide:
+
+Open Reports
+
+Do not generate duplicate report UI.
+
+==================================================
+17. AI INVESTIGATION
+==================================================
+
+If V1 supports contextual AI:
+
+provide:
+
+Ask AI about this resource
+
+Context should be based only on actual resource data available to the frontend.
+
+Potential questions:
+
+"Why is this resource unhealthy?"
+
+"What changed recently?"
+
+"What dependencies are affected?"
+
+Do not fabricate context.
+
+Do not expose secrets to AI.
+
+==================================================
+18. AI vs DATA
+==================================================
+
+Clearly distinguish:
+
+Observed Data
+
+from:
+
+AI Analysis
+
+Never present AI-generated conclusions as backend facts.
+
+==================================================
+19. TABS
+==================================================
+
+Use tabs only where the resource has enough information.
+
+Potential:
+
+Overview
+Monitoring
+Alerts
+Topology
+Activity
+Configuration
+Automation
+
+Do not create empty tabs.
+
+If a section has no V1 support:
+
+hide it rather than displaying an unusable empty page.
+
+==================================================
+20. URL DEEP LINKING
+==================================================
+
+Support:
+
+/resources/[type]/[id]
+
+or the canonical resource route structure.
+
+Where tabs exist:
+
+?tab=alerts
+
+or equivalent route-state convention.
+
+Use centralized routing.
+
+==================================================
+21. REFRESH
+==================================================
+
+Provide refresh where appropriate.
+
+Refresh only the necessary resource data.
+
+Do not reload the entire application.
+
+==================================================
+22. LAST UPDATED
+==================================================
+
+Where backend provides timestamps:
+
+show:
+
+Last updated
+X minutes ago
+
+Provide exact timestamp on hover/focus if appropriate.
+
+Use centralized date/time formatting.
+
+==================================================
+23. REAL-TIME
+==================================================
+
+If V1 provides real-time resource updates:
+
+consume the existing mechanism.
+
+Otherwise:
+
+use existing supported polling/manual refresh.
+
+Do not invent WebSocket/SSE behaviour.
+
+==================================================
+24. RESOURCE RELATIONSHIPS
+==================================================
+
+Use Prompt 012 topology relationships.
+
+Do not independently calculate graph relationships.
+
+Resource Detail should consume the same normalized topology model.
+
+==================================================
+25. RESOURCE ACTIONS
+==================================================
+
+Actions must be permission-aware.
+
+Use existing permission architecture.
+
+Hide actions the user cannot perform.
+
+Backend remains authoritative.
+
+==================================================
+26. DANGEROUS ACTIONS
+==================================================
+
+If a resource supports destructive operations:
+
+use explicit confirmation.
+
+Show:
+
+- resource
+- action
+- expected impact
+
+Do not execute destructive operations from overview cards without confirmation.
+
+==================================================
+27. ACTION EXECUTION
+==================================================
+
+If an action starts an automation:
+
+navigate through the existing Automation workflow.
+
+Do not directly call automation APIs from the resource header unless the existing frontend architecture explicitly supports it.
+
+==================================================
+28. ERROR BOUNDARIES
+==================================================
+
+Each resource section should be independently resilient.
+
+Example:
+
+Overview ✓
+Monitoring ✓
+Alerts ✕
+Topology ✓
+
+Show:
+
+"Alerts are temporarily unavailable."
+
+Keep other sections usable.
+
+==================================================
+29. RESOURCE NOT FOUND
+==================================================
+
+If V1 returns not found:
+
+show a dedicated 404 resource state.
+
+Do not show a generic application error.
+
+Provide:
+
+Back
+Search
+Infrastructure
+
+where appropriate.
+
+==================================================
+30. PERMISSION DENIED
+==================================================
+
+If the user cannot access a resource:
+
+show a safe permission state.
+
+Do not reveal sensitive resource details.
+
+Do not reveal whether hidden resources exist unless V1 semantics allow it.
+
+==================================================
+31. LOADING
+==================================================
+
+Use skeletons.
+
+Avoid blank pages.
+
+Header and navigation can load independently from secondary sections.
+
+==================================================
+32. EMPTY STATES
+==================================================
+
+Examples:
+
+"No active alerts."
+
+"No recent activity."
+
+"No topology relationships."
+
+"No automation executions."
+
+Only show empty states for valid supported sections.
+
+==================================================
+33. RESPONSIVE DESIGN
+==================================================
+
+Desktop:
+
+Full investigation workspace.
+
+Tablet:
+
+Collapsible secondary sections.
+
+Mobile:
+
+Resource header
+↓
+Tabs/sections
+↓
+Details
+
+Prioritize important operational information.
+
+==================================================
+34. ACCESSIBILITY
+==================================================
+
+Target WCAG 2.2 AA.
+
+Ensure:
+
+- tabs accessible
+- headings structured
+- status announced
+- actions keyboard accessible
+- tables accessible
+- drawers accessible
+- links meaningful
+- loading states announced
+
+==================================================
+35. PERFORMANCE
+==================================================
+
+Do not load every resource section simultaneously if unnecessary.
+
+Use:
+
+- lazy-loaded sections
+- query caching
+- parallel loading where beneficial
+- independent section queries
+
+Do not create waterfall API calls unnecessarily.
+
+==================================================
+36. API ARCHITECTURE
+==================================================
+
+Use:
+
+Resource Page
+↓
+Resource Hooks
+↓
+Resource Adapters
+↓
+Existing Feature APIs
+↓
+Shared API Client
+↓
+Backend V1
+
+Components must not call HTTP directly.
+
+==================================================
+37. ADAPTER ARCHITECTURE
+==================================================
+
+Create resource adapters such as:
+
+MachineAdapter
+VirtualMachineAdapter
+ServiceAdapter
+ApplicationAdapter
+
+Only create adapters for actual V1 resource types.
+
+Each adapter should map backend data into the reusable resource model.
+
+==================================================
+38. COMPONENT ARCHITECTURE
+==================================================
+
+Create reusable components such as:
+
+ResourceHeader
+ResourceBreadcrumbs
+ResourceStatus
+ResourceOverview
+ResourceSection
+ResourceMetrics
+ResourceRelationships
+ResourceAlerts
+ResourceActivity
+ResourceConfiguration
+ResourceActions
+
+Avoid resource-specific duplication.
+
+==================================================
+39. TYPES
+==================================================
+
+Use strict TypeScript.
+
+Use discriminated unions where appropriate.
+
+Do not use:
+
+any
+
+Keep API types separate from UI types.
+
+==================================================
+40. QUERY ARCHITECTURE
+==================================================
+
+Use TanStack Query.
+
+Use independent query keys for:
+
+- resource
+- health
+- metrics
+- alerts
+- relationships
+- activity
+- configuration
+- automation
+- reports
+
+Only create queries backed by V1.
+
+==================================================
+41. CACHE INVALIDATION
+==================================================
+
+When an existing frontend action changes resource state:
+
+invalidate the relevant resource query.
+
+Do not invalidate the entire application unnecessarily.
+
+==================================================
+42. GLOBAL SEARCH INTEGRATION
+==================================================
+
+Integrate Prompt 017.
+
+Search result:
+
+→ Resource Detail
+
+Preserve the correct resource type/id.
+
+==================================================
+43. NOTIFICATION INTEGRATION
+==================================================
+
+Where supported:
+
+Notification
+→ Resource Detail
+
+Do not fabricate resource relationships.
+
+==================================================
+44. AUDIT INTEGRATION
+==================================================
+
+Where supported:
+
+Resource
+→ Audit activity
+
+Audit event
+→ Resource
+
+Use actual resource identifiers.
+
+==================================================
+45. MONITORING INTEGRATION
+==================================================
+
+Resource:
+
+→ Monitoring
+
+Monitoring:
+
+→ Resource Detail
+
+Reuse existing monitoring pages and query infrastructure.
+
+Do not duplicate monitoring logic.
+
+==================================================
+46. ALERTING INTEGRATION
+==================================================
+
+Resource:
+
+→ Alerting
+
+Alert:
+
+→ Resource Detail
+
+Use existing Alerting components.
+
+==================================================
+47. TOPOLOGY INTEGRATION
+==================================================
+
+Resource:
+
+→ Topology focused view
+
+Topology node:
+
+→ Resource Detail
+
+Do not create another graph implementation.
+
+==================================================
+48. AUTOMATION INTEGRATION
+==================================================
+
+Resource:
+
+→ Automation
+
+Automation execution:
+
+→ Resource Detail
+
+Only where supported.
+
+==================================================
+49. REPORTING INTEGRATION
+==================================================
+
+Resource:
+
+→ Related Reports
+
+Report:
+
+→ Resource Detail
+
+Only where supported.
+
+==================================================
+50. USER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/user-guide/resource-investigation.md
+
+Document:
+
+- resource detail
+- overview
+- health
+- metrics
+- alerts
+- topology
+- activity
+- configuration
+- automation
+- reporting
+- AI investigation
+- actions
+- permissions
+- troubleshooting
+
+Only document implemented functionality.
+
+==================================================
+51. DEVELOPER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/developer-guide/resource-investigation.md
+
+Document:
+
+- resource workspace architecture
+- normalized resource model
+- adapters
+- resource-specific APIs
+- query architecture
+- section architecture
+- cross-module integration
+- error isolation
+- performance
+- accessibility
+
+==================================================
+52. RFI / RFP DOCUMENTATION
+==================================================
+
+Create:
+
+docs/frontend/rfi/resource-investigation.md
+
+Document:
+
+- unified resource investigation
+- operational visibility
+- cross-module navigation
+- health visibility
+- topology integration
+- alert integration
+- activity visibility
+- automation integration
+- AI-assisted investigation
+- permission-aware UX
+- scalability
+- accessibility
+
+Clearly distinguish:
+
+Implemented V1
+
+from:
+
+Unavailable/planned.
+
+==================================================
+53. BACKEND V1 LIMITATIONS
+==================================================
+
+Update:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Document resource capabilities that are not available in V1.
+
+Do not modify backend.
+
+==================================================
+54. TESTING
+==================================================
+
+Create tests for:
+
+### Workspace
+
+- render
+- header
+- breadcrumbs
+- tabs
+- section visibility
+
+### Resource adapters
+
+- machine
+- VM
+- service
+- application
+- other actual V1 resource types
+
+### Sections
+
+- overview
+- health
+- alerts
+- topology
+- activity
+- configuration
+- automation
+- reports
+
+Only test sections actually implemented.
+
+### Error isolation
+
+- section failure
+- partial data
+- not found
+- permission denied
+
+### Navigation
+
+- global search
+- notifications
+- audit
+- monitoring
+- alerting
+- topology
+- automation
+- reporting
+
+### Accessibility
+
+- tabs
+- headings
+- keyboard
+- focus
+- status
+
+==================================================
+55. E2E
+==================================================
+
+Where environment permits:
+
+- open resource
+- inspect header
+- switch tabs
+- open alerts
+- open topology
+- open activity
+- navigate to Monitoring
+- navigate to Alerting
+- return to resource
+- use global search to open resource
+
+Use safe test data.
+
+Do not execute destructive operations.
+
+Do not modify backend.
+
+==================================================
+56. DEPENDENCY SAFETY
+==================================================
+
+Use existing dependencies.
+
+Do not add another resource-detail framework.
+
+Reuse existing UI primitives.
+
+==================================================
+57. BACKEND FREEZE VERIFICATION
+==================================================
+
+Before completion:
+
+[ ] Backend source changes = 0
+[ ] API changes = 0
+[ ] Database changes = 0
+[ ] Migration changes = 0
+[ ] Neo4j changes = 0
+[ ] Authentication changes = 0
+[ ] RBAC changes = 0
+[ ] Monitoring changes = 0
+[ ] Alerting changes = 0
+[ ] Automation changes = 0
+[ ] Reporting changes = 0
+[ ] AI backend changes = 0
+[ ] Backend configuration changes = 0
+[ ] Backend dependencies = 0
+
+==================================================
+58. VALIDATION
+==================================================
+
+Run:
+
+- typecheck
+- lint
+- unit tests
+- production build
+- applicable E2E
+
+Do not claim success without execution.
+
+==================================================
+59. GIT SAFETY
+==================================================
+
+Before commit:
+
+- inspect git status
+- inspect changed files
+- verify no secrets
+- verify no .env
+- verify no credentials
+- verify no backend modifications
+- inspect dependency changes
+- inspect lockfile
+
+==================================================
+60. COMMIT
+==================================================
+
+If validation passes:
+
+feat(frontend): implement reusable resource investigation workspace
+
+Push according to repository workflow.
+
+==================================================
+61. DEFINITION OF DONE
+==================================================
+
+[ ] Reusable resource workspace implemented.
+[ ] Actual V1 resource types discovered.
+[ ] Resource adapters implemented.
+[ ] Resource header implemented.
+[ ] Breadcrumbs implemented.
+[ ] Overview implemented.
+[ ] Health implemented where supported.
+[ ] Metrics implemented where supported.
+[ ] Alerts implemented where supported.
+[ ] Topology implemented where supported.
+[ ] Activity implemented where supported.
+[ ] Configuration implemented where supported.
+[ ] Automation implemented where supported.
+[ ] Reporting implemented where supported.
+[ ] AI investigation implemented where supported.
+[ ] Permission-aware actions implemented.
+[ ] Dangerous actions protected.
+[ ] Resource not-found state implemented.
+[ ] Permission-denied state implemented.
+[ ] Section-level error isolation implemented.
+[ ] Loading states implemented.
+[ ] Empty states implemented.
+[ ] Responsive UX implemented.
+[ ] Accessibility requirements met.
+[ ] Global Search integration implemented.
+[ ] Notification integration implemented where supported.
+[ ] Audit integration implemented where supported.
+[ ] Monitoring integration implemented.
+[ ] Alerting integration implemented.
+[ ] Topology integration implemented.
+[ ] Automation integration implemented where supported.
+[ ] Reporting integration implemented where supported.
+[ ] User guide created.
+[ ] Developer guide created.
+[ ] RFI documentation created.
+[ ] Backend V1 untouched.
+[ ] No backend API changes.
+[ ] No database changes.
+[ ] No Neo4j changes.
+[ ] No unnecessary dependencies.
+[ ] Typecheck passes.
+[ ] Lint passes.
+[ ] Tests pass.
+[ ] Production build passes.
+[ ] Applicable E2E passes.
+[ ] Git state clean except explicitly pre-existing files.
+
+==================================================
+62. FINAL REPORT
+==================================================
+
+Provide:
+
+1. Resource Investigation implementation summary
+2. Actual V1 resource types
+3. Actual V1 APIs consumed
+4. Routes created
+5. Resource adapters
+6. Normalized resource model
+7. Workspace architecture
+8. Header implementation
+9. Section architecture
+10. Health integration
+11. Metrics integration
+12. Alerting integration
+13. Topology integration
+14. Activity integration
+15. Configuration integration
+16. Automation integration
+17. Reporting integration
+18. AI integration
+19. Search integration
+20. Notification integration
+21. Audit integration
+22. Permission handling
+23. Error isolation
+24. Performance strategy
+25. Accessibility
+26. Responsive behaviour
+27. User guide
+28. Developer guide
+29. RFI documentation
+30. Tests
+31. E2E
+32. Typecheck
+33. Lint
+34. Production build
+35. Dependency changes
+36. Lockfile changes
+37. Backend files changed — MUST BE ZERO
+38. Backend V1 limitations
+39. Git commit
+40. Known limitations
+41. Recommended next frontend prompt
+
+Do not modify the backend.
+
+Do not fabricate resource capabilities.
+
+Proceed with implementation.

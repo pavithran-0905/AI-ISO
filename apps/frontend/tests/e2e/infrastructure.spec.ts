@@ -121,7 +121,7 @@ test("asset list, search, and navigation to a detail page with real relationship
   await page.getByRole("link", { name: "Primary DB" }).click();
   await expect(page).toHaveURL(/\/infrastructure\/assets\/e2e-asset-1/);
   await expect(page.getByRole("heading", { name: "Primary DB" })).toBeVisible();
-  await expect(page.getByText("db-01.internal")).toBeVisible();
+  await expect(page.getByText("db-01.internal").first()).toBeVisible();
   await expect(page.getByText("Ubuntu 24.04")).toBeVisible();
 });
 
