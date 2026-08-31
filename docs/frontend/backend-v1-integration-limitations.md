@@ -1820,3 +1820,65 @@ cross-module links that are real (Topology, AI). Building any of the
 four would mean either inventing a link the backend doesn't enforce
 (Alerts) or exposing a capability with no route to reach it
 (Automation) — both explicitly forbidden by this prompt's own rules.
+
+## No health filter exists on the asset search route — "unhealthy assets" cannot be efficiently queried
+
+**Discovered**: Prompt 019.
+
+`GET /inventory/search`'s real, confirmed query parameters
+(`organization_id`, `query`, `asset_type`, `status`, `owner_id`,
+`project_id`, `page`, `page_size`, `sort`) include no `health` filter
+of any kind. The only alternative, `useAllAssets`
+(`features/infrastructure/hooks/use-assets.ts`), fetches an entire
+organization's assets unbounded — its own docstring already warns
+"only for a relationship-target picker or similar, never a primary
+list view."
+
+**Frontend behavior**: Operations Workspace does not offer an
+"Unhealthy Assets" signal source — the only two honest options were
+fetching an unbounded dataset to filter client-side (violating this
+prompt's own §45 performance rule) or fabricating a filter that
+doesn't exist. Documented as confirmed unavailable rather than
+approximated.
+
+## An automation execution's target ids are real but not confirmed to reference an existing asset
+
+**Discovered**: Prompt 009 (the field itself, and
+`ExecutionDetailView`'s own choice not to link it). **Reconfirmed and
+extended**: Prompt 019.
+
+`AutomationExecution.variables._target_ids` is real and recoverable
+(`splitExecutionVariables()`) — genuinely different from the separate,
+fully-unrouted `AutomationTargetResponse.inventory_asset_id` field
+documented above. However, no run-automation UI anywhere in this
+frontend populates `_target_ids` from a validated asset picker sourced
+against `inventory-service` — the values, when present, are whatever
+the API caller supplied at trigger time, with no guarantee they
+correspond to a currently-existing (or ever-existing) asset id.
+
+**Frontend behavior**: both `ExecutionDetailView` (Prompt 009,
+pre-existing) and Operations Workspace's `ExecutionContextPanel`
+(Prompt 019) show target ids as plain, unlinked mono-font text —
+deliberately not treated as a confirmed cross-module resource link,
+consistent between the two features.
+
+## No signal shown in Operations Workspace carries a confirmed link to a resource, an audit event, or a notification
+
+**Discovered**: Prompt 019 (consolidates and reconfirms, from a new
+angle, findings already independently established in Prompts 015/016/018).
+
+Neither an `Alert` nor an `AutomationExecution` (Operations
+Workspace's own two real signal types) carries a structured reference
+to an Infrastructure asset, an Audit entity, or a Notification. This
+means none of §12 (Resource Impact View), §13 (Topology Context), §15
+(Monitoring Context), §20 (Reporting Context), §39 (Notification
+Integration), or the "Audit event → Operations context" half of §40
+have anything real to build against for either signal type — only the
+directions already confirmed real (alert-to-alert correlation,
+Activity → Audit's own full page, Global Search → this workspace via
+the route registry) are implemented.
+
+**Frontend behavior**: none of the above sections were built. Where a
+prompt's own IA suggests one, the developer guide and RFI state the
+absence explicitly, citing the specific model/route inspected, rather
+than leaving the gap unexplained or approximating it.

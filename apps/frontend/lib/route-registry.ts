@@ -22,7 +22,7 @@
  */
 
 import type { LucideIcon } from "lucide-react";
-import { Activity, Bot, FileBarChart, Gauge, HardDrive, History, LayoutDashboard, MessageSquare, Server, ShieldCheck, Siren, Sparkles, Users, Workflow } from "lucide-react";
+import { Activity, Bot, FileBarChart, Gauge, HardDrive, History, LayoutDashboard, MessageSquare, Radar, Server, ShieldCheck, Siren, Sparkles, Users, Workflow } from "lucide-react";
 
 import type { Role } from "@/auth/types";
 
@@ -296,6 +296,24 @@ export const ROUTE_REGISTRY: readonly RouteMeta[] = [
   }),
 
   // ---- Operations ---------------------------------------------------------------------
+  // Prompt 019 — a frontend-only correlation view over Alerting's and
+  // Automation's own real data, never an "Incidents" system (the
+  // pre-existing `id: "incidents"` planned() stub below stays
+  // untouched: it names a real backend incident concept that doesn't
+  // exist in V1, which this workspace deliberately is not).
+  implemented({
+    id: "operations-workspace",
+    path: "/operations",
+    title: "Operations Workspace",
+    description: "Investigate active alerts and recent automation activity together.",
+    breadcrumb: "Operations Workspace",
+    navGroup: "operations",
+    navLabel: "Operations",
+    icon: Radar,
+    roles: null,
+    feature: null,
+    layout: "main",
+  }),
   implemented({
     id: "monitoring",
     path: "/monitoring",

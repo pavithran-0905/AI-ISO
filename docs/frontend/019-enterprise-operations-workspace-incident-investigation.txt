@@ -1,0 +1,1253 @@
+# FRONTEND PROMPT 019
+# Enterprise Operations Workspace & Incident Investigation Experience
+
+## ROLE
+
+Act as a Principal Product Designer, Enterprise Operations UX Architect, Incident Investigation UX Specialist, Frontend Architect, Senior Next.js/React Engineer, Accessibility Engineer, and Enterprise Observability Platform Specialist.
+
+Frontend Prompts 001–018 are COMPLETE.
+
+Use the existing:
+
+- application shell
+- design system
+- authentication
+- permissions
+- routing
+- API client
+- Dashboard
+- Monitoring
+- Alerting
+- Reporting
+- Automation
+- AI Assistant
+- Infrastructure
+- Topology
+- Settings
+- User Management
+- Audit
+- Notifications
+- Global Search
+- Resource Investigation Workspace
+- query/state architecture
+- documentation architecture
+
+Do not create competing architecture.
+
+==================================================
+CRITICAL BACKEND V1 FREEZE
+==================================================
+
+AI-IOS Backend V1 is COMPLETE and FROZEN.
+
+THIS IS A FRONTEND-ONLY PROMPT.
+
+DO NOT:
+
+- modify backend source code
+- add backend endpoints
+- modify existing backend APIs
+- modify database schemas
+- modify migrations
+- modify Neo4j
+- modify PostgreSQL
+- modify Redis
+- modify authentication
+- modify RBAC
+- modify monitoring backend
+- modify alerting backend
+- modify automation backend
+- modify reporting backend
+- modify AI backend
+- modify backend configuration
+- modify backend dependencies
+
+If a requested operational capability is unavailable:
+
+1. Document it.
+2. Do not fabricate it.
+3. Do not modify backend.
+4. Use only confirmed V1 APIs and frontend capabilities.
+5. Record the limitation in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Backend modifications MUST remain ZERO.
+
+==================================================
+1. OBJECTIVE
+==================================================
+
+Build an enterprise Operations Workspace for investigating operational situations across multiple resources.
+
+The workspace should help an operator move from:
+
+Signal
+↓
+Affected resource
+↓
+Related resources
+↓
+Alerts
+↓
+Health
+↓
+Recent activity
+↓
+Automation/execution
+↓
+Topology
+↓
+AI analysis
+↓
+Resolution workflow
+
+The workspace must not create a new backend incident-management system.
+
+It is a FRONTEND investigation and operational-awareness experience using existing V1 capabilities.
+
+==================================================
+2. IMPORTANT DISTINCTION
+==================================================
+
+Do NOT invent:
+
+- Incident entity
+- Incident database
+- Incident API
+- Incident lifecycle backend
+- Incident assignment backend
+- Incident persistence
+
+unless those already exist in V1.
+
+If Backend V1 has no incident object:
+
+call this experience:
+
+Operations Workspace
+
+not:
+
+Incident Management System.
+
+==================================================
+3. INSPECT BACKEND V1 FIRST
+==================================================
+
+Inspect actual V1 capabilities for:
+
+- active alerts
+- alert relationships
+- asset health
+- monitoring data
+- topology relationships
+- automation executions
+- execution status
+- audit/activity
+- notifications
+- reports
+- AI Assistant
+- resource details
+- search
+
+Determine which data can be correlated safely in the frontend.
+
+Do not infer relationships that are not supported.
+
+==================================================
+4. OPERATIONS WORKSPACE ROUTE
+==================================================
+
+Recommended:
+
+/operations
+
+Use centralized route registry.
+
+Do not create another application shell.
+
+==================================================
+5. PRIMARY WORKSPACE LAYOUT
+==================================================
+
+Recommended enterprise layout:
+
+------------------------------------------------
+Header
+------------------------------------------------
+Context / Filters
+------------------------------------------------
+Main Investigation Area | Context Panel
+                        |
+                        |
+------------------------------------------------
+Timeline / Activity
+------------------------------------------------
+
+The layout must remain readable and operationally focused.
+
+==================================================
+6. WORKSPACE HEADER
+==================================================
+
+Show:
+
+Operations
+
+and where supported:
+
+- current scope
+- active alerts
+- unhealthy resources
+- recent changes
+- last refreshed
+
+Only show real V1 data.
+
+==================================================
+7. OPERATIONAL SCOPE
+==================================================
+
+If V1 supports:
+
+Organization
+Project
+Environment
+Site
+
+allow the operator to select an authorized scope.
+
+Use existing scope architecture.
+
+Do not create a separate scope system.
+
+==================================================
+8. FILTER BAR
+==================================================
+
+Where supported:
+
+- severity
+- status
+- resource type
+- environment
+- site
+- time range
+- alert state
+
+Only expose filters supported by existing APIs.
+
+==================================================
+9. ACTIVE SIGNALS
+==================================================
+
+Create a clear signal area.
+
+Potential:
+
+Critical Alerts
+Warnings
+Unhealthy Assets
+Recent Failures
+
+These are examples.
+
+Only display actual backend data.
+
+==================================================
+10. SIGNAL CARD
+==================================================
+
+Each signal should show:
+
+- severity/status
+- title
+- resource
+- timestamp
+- source
+- quick navigation
+
+Avoid dense raw payloads.
+
+==================================================
+11. ALERT CLUSTERING
+==================================================
+
+If multiple alerts reference the same resource:
+
+group them visually where the relationship is explicitly available.
+
+Do NOT create a new backend correlation engine.
+
+Do not claim:
+
+"These alerts have the same root cause"
+
+unless V1 explicitly provides that information.
+
+Use language such as:
+
+"Related alerts"
+
+when relationship is known.
+
+==================================================
+12. RESOURCE IMPACT VIEW
+==================================================
+
+When an operator selects a signal:
+
+show affected resources.
+
+Potential:
+
+Primary Resource
+Related Resources
+Dependencies
+Dependents
+
+Only use actual V1 topology/resource relationships.
+
+==================================================
+13. TOPOLOGY CONTEXT
+==================================================
+
+Integrate existing Topology implementation.
+
+Provide:
+
+Open topology context
+
+or a focused topology preview if existing frontend architecture supports it.
+
+Do not create another graph implementation.
+
+==================================================
+14. HEALTH CONTEXT
+==================================================
+
+Show current health of relevant resources.
+
+Potential:
+
+Healthy
+Warning
+Critical
+Unknown
+
+Only use canonical backend status values.
+
+Do not recalculate health.
+
+==================================================
+15. MONITORING CONTEXT
+==================================================
+
+Where metrics exist:
+
+show relevant monitoring information.
+
+Potential:
+
+CPU
+Memory
+Storage
+Network
+
+Only if V1 provides them.
+
+Provide:
+
+View Monitoring
+
+Do not duplicate the monitoring implementation.
+
+==================================================
+16. ALERT CONTEXT
+==================================================
+
+Show:
+
+- active alerts
+- recent alerts
+- severity
+- state
+- timestamps
+
+Use existing Alerting components.
+
+Do not create another alert model.
+
+==================================================
+17. ACTIVITY TIMELINE
+==================================================
+
+Integrate Audit/Activity.
+
+Timeline may show:
+
+- configuration change
+- automation execution
+- alert
+- status change
+- user action
+
+Only show actual V1 events.
+
+Do not fabricate event chronology.
+
+==================================================
+18. AUTOMATION CONTEXT
+==================================================
+
+If automation data is related:
+
+show:
+
+- execution
+- status
+- start time
+- completion
+- resource
+
+Provide:
+
+Open Execution
+
+Do not execute automation directly from the Operations Workspace unless an existing safe frontend workflow supports it.
+
+==================================================
+19. NOTIFICATION CONTEXT
+==================================================
+
+Where supported:
+
+show notifications associated with the selected operational context.
+
+Do not duplicate Notification Center.
+
+Provide:
+
+View Notifications
+
+where appropriate.
+
+==================================================
+20. REPORTING CONTEXT
+==================================================
+
+If relevant reports exist:
+
+show them.
+
+Potential:
+
+- recent report
+- report status
+- generated time
+
+Use existing Reporting UI.
+
+==================================================
+21. AI INVESTIGATION
+==================================================
+
+If Backend V1 supports contextual AI:
+
+provide:
+
+Investigate with AI
+
+The AI request must use only authorized context.
+
+Potential questions:
+
+- "What changed recently?"
+- "What resources are affected?"
+- "What alerts are active?"
+- "Summarize this operational situation."
+
+Do not fabricate AI capabilities.
+
+==================================================
+22. AI SAFETY
+==================================================
+
+AI output must be visually distinguished from observed system data.
+
+Use:
+
+Observed
+AI Analysis
+
+Do not present generated explanations as confirmed facts.
+
+==================================================
+23. EVIDENCE MODEL
+==================================================
+
+The workspace should distinguish:
+
+Observed Evidence
+- alerts
+- metrics
+- activity
+- execution results
+
+AI Interpretation
+- summary
+- possible explanation
+- suggested next step
+
+This distinction is mandatory.
+
+==================================================
+24. INVESTIGATION CONTEXT
+==================================================
+
+Allow the user to select a resource/signal and maintain investigation context locally.
+
+Local context may include:
+
+- selected resource
+- selected alert
+- selected time range
+- selected filters
+
+Do not persist this as a backend incident.
+
+==================================================
+25. URL STATE
+==================================================
+
+Where useful, preserve:
+
+- selected resource ID
+- selected alert ID
+- filters
+- time range
+
+Use URL state only for compact identifiers.
+
+Do not put complete operational payloads into URLs.
+
+==================================================
+26. SHAREABLE CONTEXT
+==================================================
+
+If URL state is used:
+
+the operator should be able to copy the URL and reopen the same investigation context.
+
+Only include data that the user is authorized to access.
+
+==================================================
+27. REFRESH
+==================================================
+
+Provide refresh.
+
+Refresh only relevant data.
+
+Do not reload the entire application.
+
+==================================================
+28. REAL-TIME
+==================================================
+
+Inspect existing V1 capabilities.
+
+If supported:
+
+consume existing real-time data.
+
+If not:
+
+use supported polling/manual refresh.
+
+Never fake real-time updates.
+
+==================================================
+29. STALE DATA
+==================================================
+
+Clearly communicate stale data when appropriate.
+
+Example:
+
+"Updated 2 minutes ago"
+
+Do not claim real-time state when the data is not real-time.
+
+==================================================
+30. PARTIAL FAILURE
+==================================================
+
+The workspace must survive individual service failures.
+
+Example:
+
+Alerts ✓
+Health ✓
+Topology ✕
+Automation ✓
+
+Show:
+
+"Topology data is temporarily unavailable."
+
+Keep the rest usable.
+
+==================================================
+31. ERROR STATES
+==================================================
+
+Support:
+
+- workspace load failure
+- alerts failure
+- monitoring failure
+- topology failure
+- activity failure
+- automation failure
+- AI failure
+- permission denied
+- resource not found
+- network timeout
+
+Do not expose backend stack traces.
+
+==================================================
+32. EMPTY STATES
+==================================================
+
+Examples:
+
+"No active operational signals."
+
+"No related alerts."
+
+"No recent activity."
+
+"No automation executions."
+
+"No topology relationships."
+
+Only show meaningful empty states.
+
+==================================================
+33. NO SIGNAL STATE
+==================================================
+
+When the environment is healthy:
+
+show a clear calm state.
+
+Example:
+
+"No active issues detected in this scope."
+
+Do not use alarming visual language when nothing is wrong.
+
+==================================================
+34. SEVERITY VISUAL HIERARCHY
+==================================================
+
+Use the existing design system semantic status tokens.
+
+Critical information must be visually prominent.
+
+Do not use color alone.
+
+Use:
+
+- icon
+- text
+- shape/status indicator
+
+for accessibility.
+
+==================================================
+35. ACTIONS
+==================================================
+
+Only expose safe, existing actions.
+
+Potential:
+
+Open Resource
+Open Alert
+Open Monitoring
+Open Topology
+Open Automation
+Open Audit
+Open Report
+Ask AI
+
+Do not add destructive operational actions.
+
+==================================================
+36. DANGEROUS OPERATIONS
+==================================================
+
+If an existing workflow allows an operational mutation:
+
+navigate to the appropriate module.
+
+Do not bypass:
+
+- confirmation
+- permissions
+- validation
+- existing workflow
+
+==================================================
+37. SEARCH INTEGRATION
+==================================================
+
+Integrate Prompt 017.
+
+Global Search:
+
+→ Operations Workspace
+
+where appropriate.
+
+Selected resource:
+
+→ Operations Workspace
+
+Do not duplicate search functionality.
+
+==================================================
+38. RESOURCE WORKSPACE INTEGRATION
+==================================================
+
+Integrate Prompt 018.
+
+Operations Workspace:
+
+→ Resource Detail
+
+Resource Detail:
+
+→ Operations Workspace
+
+Use canonical routes.
+
+==================================================
+39. NOTIFICATION INTEGRATION
+==================================================
+
+Integrate Prompt 016.
+
+Notification:
+
+→ Operations context
+
+where V1 provides enough information.
+
+Do not fabricate relationships.
+
+==================================================
+40. AUDIT INTEGRATION
+==================================================
+
+Integrate Prompt 015.
+
+Operations event:
+
+→ Audit
+
+Audit event:
+
+→ Operations context
+
+Only where resource identifiers allow it.
+
+==================================================
+41. API ARCHITECTURE
+==================================================
+
+Use:
+
+Operations Workspace
+↓
+Operations Hooks
+↓
+Existing Feature Hooks/APIs
+↓
+Shared API Client
+↓
+Backend V1
+
+Do not create a fake "incident API".
+
+==================================================
+42. DATA CORRELATION
+==================================================
+
+Frontend correlation may combine existing data only when the relationship is explicit.
+
+Allowed examples:
+
+Same resource ID
+Same automation execution ID
+Same alert resource ID
+Same topology relationship
+
+Do NOT infer:
+
+Root cause
+Causal relationship
+Dependency impact
+
+unless V1 explicitly provides it.
+
+==================================================
+43. TYPES
+==================================================
+
+Use strict TypeScript.
+
+Create normalized frontend view models:
+
+OperationalSignal
+OperationalResource
+OperationalActivity
+OperationalContext
+
+Keep API types separate.
+
+Do not use:
+
+any
+
+==================================================
+44. QUERY ARCHITECTURE
+==================================================
+
+Use TanStack Query.
+
+Queries should remain modular:
+
+- signals
+- resources
+- health
+- alerts
+- topology
+- activity
+- automation
+- reports
+- notifications
+
+Do not create one giant query.
+
+==================================================
+45. PERFORMANCE
+==================================================
+
+Operations workspace may aggregate multiple sources.
+
+Avoid request waterfalls.
+
+Use:
+
+- parallel queries
+- lazy secondary panels
+- query caching
+- request cancellation
+- pagination
+- selective refresh
+
+Do not request large datasets unnecessarily.
+
+==================================================
+46. RESPONSIVE DESIGN
+==================================================
+
+Desktop:
+
+Three-zone investigation workspace.
+
+Tablet:
+
+Main content + collapsible context panel.
+
+Mobile:
+
+Signal list
+↓
+Selected signal
+↓
+Context sections
+
+Do not force desktop multi-column layouts onto mobile.
+
+==================================================
+47. ACCESSIBILITY
+==================================================
+
+Target WCAG 2.2 AA.
+
+Ensure:
+
+- keyboard navigation
+- accessible signal cards
+- status semantics
+- focus management
+- screen-reader-friendly timeline
+- accessible tabs
+- accessible filters
+- accessible loading/error states
+
+==================================================
+48. USER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/user-guide/operations-workspace.md
+
+Document:
+
+- Operations Workspace
+- operational scope
+- signals
+- resource impact
+- topology
+- health
+- alerts
+- activity
+- automation
+- reports
+- AI investigation
+- filters
+- refresh
+- troubleshooting
+
+Only document implemented V1 capabilities.
+
+==================================================
+49. DEVELOPER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/developer-guide/operations-workspace.md
+
+Document:
+
+- workspace architecture
+- data correlation
+- normalized models
+- query architecture
+- partial failure handling
+- URL state
+- cross-module navigation
+- performance
+- AI context handling
+- security
+
+==================================================
+50. RFI / RFP DOCUMENTATION
+==================================================
+
+Create:
+
+docs/frontend/rfi/operations-workspace.md
+
+Document:
+
+- enterprise operational awareness
+- multi-resource investigation
+- cross-module visibility
+- topology context
+- alert correlation
+- activity visibility
+- automation visibility
+- AI-assisted investigation
+- permission-aware operation
+- resilient frontend architecture
+- accessibility
+- responsive design
+
+Do NOT claim automated root-cause analysis unless V1 actually provides it.
+
+==================================================
+51. BACKEND V1 LIMITATIONS
+==================================================
+
+Update:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Record:
+
+- missing operational capabilities
+- unavailable correlations
+- unavailable real-time features
+- unavailable incident lifecycle
+- unavailable backend aggregations
+
+Do not modify backend.
+
+==================================================
+52. TESTING
+==================================================
+
+Create tests for:
+
+### Workspace
+
+- render
+- scope
+- signals
+- selection
+- filters
+
+### Correlation
+
+- same resource
+- explicit relationship
+- unrelated resources remain separate
+
+### Sections
+
+- alerts
+- health
+- topology
+- activity
+- automation
+- reports
+- notifications
+- AI
+
+Only where supported.
+
+### Partial Failure
+
+- one source fails
+- multiple sources fail
+- retry
+
+### State
+
+- selected resource
+- selected alert
+- URL state
+- refresh
+
+### Permissions
+
+- authorized
+- unauthorized
+
+### Accessibility
+
+- keyboard
+- focus
+- status
+- timeline
+- filters
+
+==================================================
+53. E2E
+==================================================
+
+Where environment permits:
+
+- open Operations
+- inspect signals
+- select a resource
+- inspect related alerts
+- open topology
+- open activity
+- navigate to resource detail
+- return to Operations
+- use global search
+- use notification deep link
+- use AI investigation where supported
+
+Use safe test data.
+
+Do not execute destructive actions.
+
+Do not modify backend.
+
+==================================================
+54. DEPENDENCY SAFETY
+==================================================
+
+Use existing dependencies.
+
+Do not add:
+
+- incident-management frameworks
+- observability frameworks
+- state-management libraries
+- charting libraries
+
+unless existing architecture genuinely requires them and no existing solution is available.
+
+==================================================
+55. BACKEND FREEZE VERIFICATION
+==================================================
+
+Before completion:
+
+[ ] Backend source changes = 0
+[ ] API changes = 0
+[ ] Database changes = 0
+[ ] Migration changes = 0
+[ ] Neo4j changes = 0
+[ ] PostgreSQL changes = 0
+[ ] Authentication changes = 0
+[ ] RBAC changes = 0
+[ ] Monitoring changes = 0
+[ ] Alerting changes = 0
+[ ] Automation changes = 0
+[ ] Reporting changes = 0
+[ ] AI backend changes = 0
+[ ] Backend configuration changes = 0
+[ ] Backend dependencies = 0
+
+==================================================
+56. VALIDATION
+==================================================
+
+Run:
+
+- typecheck
+- lint
+- unit tests
+- production build
+- applicable E2E
+
+Do not claim success without execution.
+
+==================================================
+57. GIT SAFETY
+==================================================
+
+Before commit:
+
+- inspect git status
+- inspect changed files
+- verify no secrets
+- verify no .env
+- verify no credentials
+- verify no backend modifications
+- inspect dependency changes
+- inspect lockfile
+
+==================================================
+58. COMMIT
+==================================================
+
+If validation passes:
+
+feat(frontend): implement enterprise operations workspace
+
+Push according to repository workflow.
+
+==================================================
+59. DEFINITION OF DONE
+==================================================
+
+[ ] Operations route implemented.
+[ ] Actual V1 capabilities inspected.
+[ ] Operational signals implemented.
+[ ] Scope/filter system implemented where supported.
+[ ] Resource selection implemented.
+[ ] Alert context implemented.
+[ ] Health context implemented.
+[ ] Monitoring context implemented.
+[ ] Topology context implemented.
+[ ] Activity timeline implemented.
+[ ] Automation context implemented where supported.
+[ ] Reporting context implemented where supported.
+[ ] Notification context implemented where supported.
+[ ] AI investigation implemented where supported.
+[ ] Evidence vs AI distinction implemented.
+[ ] No fabricated incident entity.
+[ ] No fabricated root-cause correlation.
+[ ] URL investigation context implemented where appropriate.
+[ ] Search integration implemented.
+[ ] Resource Detail integration implemented.
+[ ] Permission-aware actions implemented.
+[ ] Dangerous operations remain in existing workflows.
+[ ] Partial failure handling implemented.
+[ ] Loading states implemented.
+[ ] Empty states implemented.
+[ ] No-signal state implemented.
+[ ] Error states implemented.
+[ ] Responsive UX implemented.
+[ ] Accessibility requirements met.
+[ ] Performance validated.
+[ ] User guide created.
+[ ] Developer guide created.
+[ ] RFI documentation created.
+[ ] Backend V1 untouched.
+[ ] No backend API changes.
+[ ] No database changes.
+[ ] No Neo4j changes.
+[ ] No unnecessary dependencies.
+[ ] Typecheck passes.
+[ ] Lint passes.
+[ ] Tests pass.
+[ ] Production build passes.
+[ ] Applicable E2E passes.
+[ ] Git state clean except explicitly pre-existing files.
+
+==================================================
+60. FINAL REPORT
+==================================================
+
+Provide:
+
+1. Operations Workspace implementation summary
+2. Actual V1 APIs consumed
+3. Actual V1 resource types
+4. Operational signal model
+5. Resource correlation strategy
+6. Alert integration
+7. Monitoring integration
+8. Health integration
+9. Topology integration
+10. Activity integration
+11. Automation integration
+12. Reporting integration
+13. Notification integration
+14. AI integration
+15. Evidence vs AI distinction
+16. URL investigation state
+17. Permission handling
+18. Partial failure strategy
+19. Performance strategy
+20. Accessibility
+21. Responsive behaviour
+22. User guide
+23. Developer guide
+24. RFI documentation
+25. Tests
+26. E2E
+27. Typecheck
+28. Lint
+29. Production build
+30. Dependency changes
+31. Lockfile changes
+32. Backend files changed — MUST BE ZERO
+33. Backend V1 limitations
+34. Git commit
+35. Known limitations
+36. Recommended next frontend prompt
+
+Do not modify the backend.
+
+Do not fabricate incident-management capabilities.
+
+Do not claim root-cause analysis unless explicitly provided by V1.
+
+Proceed with implementation.
