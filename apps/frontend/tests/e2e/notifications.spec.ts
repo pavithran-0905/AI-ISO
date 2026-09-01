@@ -45,7 +45,12 @@ test("the notification bell shows an unread indicator and lists real notificatio
   await expect(page.getByRole("button", { name: "Notifications, unread items" })).toBeVisible();
 
   await page.getByRole("button", { name: "Notifications, unread items" }).click();
-  await expect(page.getByText("Disk usage above threshold")).toBeVisible();
+  // `.first()`: Dashboard's own Notification Summary widget (Prompt
+  // 020) now also renders this same real notification's subject on
+  // the same page — both are genuinely correct, so this asserts the
+  // bell popover's own copy specifically (it renders first in DOM
+  // order, ahead of <main>).
+  await expect(page.getByText("Disk usage above threshold").first()).toBeVisible();
 });
 
 test("View all from the bell opens the Notification Center, where the notification can be opened and marked read", async ({ page, context }) => {

@@ -38,12 +38,27 @@ test("dashboard auto-selects the sole organization and renders every real sectio
   await expect(main.getByText("Users")).toBeVisible();
   await expect(main.getByText("3", { exact: true })).toBeVisible();
 
+  // Asset Health (§10/§11, Prompt 020) — real, org-scoped
+  // `/inventory/statistics`, seeded empty by `seed-session.ts`.
+  await expect(main.getByRole("heading", { name: "Asset health" })).toBeVisible();
+  await expect(main.getByText("No assets registered yet")).toBeVisible();
+
   await expect(main.getByRole("heading", { name: "Operational health" })).toBeVisible();
   await expect(main.getByRole("heading", { name: "Attention required" })).toBeVisible();
   await expect(main.getByText("No active alerts")).toBeVisible();
   await expect(main.getByRole("heading", { name: "Recent automation activity" })).toBeVisible();
   await expect(main.getByText("No recent automation activity")).toBeVisible();
   await expect(main.getByRole("heading", { name: "System status" })).toBeVisible();
+
+  // Quick Access (§23, Prompt 020) — real routes from the registry.
+  await expect(main.getByRole("heading", { name: "Quick access" })).toBeVisible();
+  await expect(main.getByRole("link", { name: "Infrastructure", exact: true })).toBeVisible();
+  await expect(main.getByRole("link", { name: "Operations", exact: true })).toBeVisible();
+
+  // The optional widget grid (§26) — Executive mode is the default.
+  await expect(main.getByRole("heading", { name: "Additional insights" })).toBeVisible();
+  await expect(main.getByRole("heading", { name: "Reporting" })).toBeVisible();
+  await expect(main.getByRole("heading", { name: "AI Insight" })).toBeVisible();
 });
 
 test("refresh action re-fetches dashboard data", async ({ page }) => {
@@ -91,3 +106,49 @@ test("theme toggle switches between light and dark", async ({ page }) => {
   await toggle.click();
   await expect(html).toHaveClass(initiallyDark ? /^(?!.*dark).*$/ : /dark/);
 });
+
+test("switching to Operations mode swaps which optional widgets are visible", async ({ page }) => {
+  await page.goto("/");
+  const main = page.getByRole("main");
+
+  await expect(main.getByRole("heading", { name: "Reporting" })).toBeVisible();
+  await expect(main.getByRole("heading", { name: "Operations Workspace" })).not.toBeVisible();
+
+  await page.getByRole("radio", { name: "Operations" }).click();
+  await expect(page).toHaveURL(/[?&]mode=operations/);
+
+  await expect(main.getByRole("heading", { name: "Operations Workspace" })).toBeVisible();
+  await expect(main.getByRole("heading", { name: "Reporting" })).not.toBeVisible();
+
+  // The mode is a real, shareable URL param (§51) — reloading keeps it.
+  await page.reload();
+  await expect(main.getByRole("heading", { name: "Operations Workspace" })).toBeVisible();
+});
+
+test("Quick Access navigates into a real module", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByRole("main").getByRole("link", { name: "Infrastructure", exact: true }).click();
+  await expect(page).toHaveURL(/\/infrastructure$/);
+});
+
+test("Customize menu hides and restores an optional widget", async ({ page }) => {
+  await page.goto("/");
+  const main = page.getByRole("main");
+  await expect(main.getByRole("heading", { name: "AI Insight" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Customize dashboard" }).click();
+  await page.getByRole("checkbox", { name: "AI Insight" }).uncheck();
+  await expect(main.getByRole("heading", { name: "AI Insight" })).not.toBeVisible();
+
+  // Persisted (§24) — still hidden after a reload.
+  await page.reload();
+  await expect(main.getByRole("heading", { name: "AI Insight" })).not.toBeVisible();
+
+  await page.getByRole("button", { name: "Customize dashboard" }).click();
+  await page.getByRole("checkbox", { name: "AI Insight" }).check();
+  await expect(main.getByRole("heading", { name: "AI Insight" })).toBeVisible();
+});
+
+// "Dashboard cross-links into Alerting" is covered by
+// `alerting.spec.ts` (that link's own behavior is unchanged here).

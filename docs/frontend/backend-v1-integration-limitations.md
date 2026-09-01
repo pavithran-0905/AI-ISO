@@ -1882,3 +1882,61 @@ the route registry) are implemented.
 prompt's own IA suggests one, the developer guide and RFI state the
 absence explicitly, citing the specific model/route inspected, rather
 than leaving the gap unexplained or approximating it.
+
+## No org-wide Topology summary/health endpoint exists — every topology query requires a specific asset id
+
+**Discovered**: Prompt 020.
+
+`topologyApi.get()` (`features/infrastructure/api/topology-api.ts`,
+backing `useTopology`) calls `GET /inventory/{assetId}/topology` —
+`assetId` is a required path parameter, and no
+list-every-relationship-for-an-organization or aggregate
+topology-health route exists anywhere in `inventory-service`.
+
+**Frontend behavior**: the Dashboard's Infrastructure widget shows the
+one honest, real, org-wide topology-adjacent number this backend does
+provide — `InventoryStatistics.totalRelationships` (`GET
+/inventory/statistics`) — rather than a "Topology Health"/"Dependencies"
+card that would need per-asset data aggregated in a way no route
+supports. A direct link into the real per-asset Topology experience
+(Prompt 018) is provided instead of a fabricated summary.
+
+## No dashboard/platform-summarization AI endpoint exists
+
+**Discovered**: Prompt 020.
+
+`ai-assistant-service`'s real routes (`insights.py`, confirmed by
+direct source inspection —
+`features/ai-assistant/api/insights-api.ts`) cover recommendations, AI
+reports, feedback, memory, and statistics — none of them accepts
+"the current dashboard state" as input and returns a generated
+narrative summary. The only automatic-generation-adjacent route,
+`POST /ai/recommendations`, requires an explicit `subject`/
+`recommendation_type` a human selects; it is never called
+automatically by any page in this frontend, and Dashboard is no
+exception.
+
+**Frontend behavior**: the AI Insight widget never renders generated
+text inline. It shows a real, already-generated count of
+recommendations with `status === "proposed"` (data that exists because
+someone explicitly triggered generation elsewhere, not because this
+card asked for it) plus `AskAiButton`'s existing pattern — a redirect
+into a genuinely separate Assistant conversation with a pre-filled,
+never-auto-sent draft. No automatic AI request is ever made by loading
+the Dashboard.
+
+## No platform-wide unread-notification total exists (reconfirmed for Dashboard)
+
+**Discovered**: Prompt 016 (`NotificationArea`/`useRecentNotifications`).
+**Reconfirmed**: Prompt 020, for the Dashboard's own Notification
+Summary widget.
+
+`NotificationRepository.count_unread` is real but never called from
+any route (confirmed absent, per Prompt 016's own finding) — this
+still holds for every route this widget calls.
+
+**Frontend behavior**: the Notification Summary widget never shows a
+total-unread count, only an "Unread" badge on an individual item
+within its own bounded, most-recent page — identical treatment to the
+shell's own notification bell, and the same underlying data (same
+`queryKey`, deduped by React Query).

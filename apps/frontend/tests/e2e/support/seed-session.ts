@@ -201,4 +201,42 @@ export async function seedAuthenticatedSession(context: BrowserContext): Promise
       body: envelope({ events: [], page: { next_cursor: null, has_more: false } }),
     }),
   );
+
+  // Dashboard (Prompt 020) — every spec that visits "/" (many do, on
+  // the way to clicking a sidebar link) now also renders the Recent
+  // Activity, Reporting, and AI Insight widgets, which call these three
+  // routes for the first time. Same reasoning as `/alerts*`/
+  // `/automation/executions*`/`/notifications*` above: without a
+  // deterministic stub, an unrelated spec either waits on a real
+  // backend or races a rejected request, exactly the regression already
+  // documented for the notification bell (Prompt 016).
+  await context.route("**/compliance/audit*", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: envelope([]) }),
+  );
+  await context.route("**/reports/statistics*", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: envelope({
+        total_reports: 0,
+        total_executions: 0,
+        successful_executions: 0,
+        failed_executions: 0,
+        scheduled_executions: 0,
+        total_downloads: 0,
+        total_distributions: 0,
+        failed_distributions: 0,
+        average_duration_ms: 0,
+        popular_reports: {},
+        export_format_usage: {},
+        template_usage: {},
+        schedule_usage: {},
+        distribution_usage: {},
+        computed_at: "2026-01-01T00:00:00Z",
+      }),
+    }),
+  );
+  await context.route("**/ai/recommendations*", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: envelope([]) }),
+  );
 }
