@@ -1,0 +1,1332 @@
+# FRONTEND PROMPT 020
+# Enterprise Dashboard & Executive Command Center
+
+## ROLE
+
+Act as a Principal Product Designer, Enterprise Dashboard UX Architect, Executive Command Center Designer, Frontend Architect, Senior Next.js/React Engineer, Accessibility Engineer, Data Visualization UX Specialist, and Enterprise Operations Platform Architect.
+
+Frontend Prompts 001–019 are COMPLETE.
+
+Use the existing frontend architecture and design system.
+
+==================================================
+CRITICAL BACKEND V1 FREEZE
+==================================================
+
+AI-IOS Backend V1 is COMPLETE and FROZEN.
+
+THIS IS A FRONTEND-ONLY PROMPT.
+
+DO NOT:
+
+- modify backend source code
+- add backend endpoints
+- modify existing backend APIs
+- modify databases
+- modify migrations
+- modify Neo4j
+- modify PostgreSQL
+- modify Redis
+- modify authentication
+- modify RBAC
+- modify monitoring backend
+- modify alerting backend
+- modify automation backend
+- modify reporting backend
+- modify AI backend
+- modify backend configuration
+- modify backend dependencies
+
+If a dashboard metric or capability is unavailable:
+
+1. Document it.
+2. Do not fabricate it.
+3. Do not modify backend.
+4. Reuse existing V1 APIs already available to the frontend.
+5. Record the limitation in:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Backend modifications MUST remain ZERO.
+
+==================================================
+1. OBJECTIVE
+==================================================
+
+Build the final enterprise Dashboard / Executive Command Center.
+
+The Dashboard must answer three questions quickly:
+
+1. What is the current state of the platform?
+2. What needs attention?
+3. Where should I go next?
+
+The Dashboard must support both:
+
+Executive View
+and
+Operator View
+
+without creating two separate applications.
+
+==================================================
+2. IMPORTANT DESIGN PRINCIPLE
+==================================================
+
+Dashboard is an orchestration layer for existing frontend capabilities.
+
+It MUST NOT become another backend/business-logic layer.
+
+Use existing:
+
+- queries
+- hooks
+- adapters
+- components
+- normalized models
+- route registry
+- permissions
+- status system
+
+Do not duplicate business logic.
+
+==================================================
+3. INSPECT EXISTING FRONTEND FIRST
+==================================================
+
+Inspect:
+
+- existing dashboard implementation
+- modules/dashboard
+- existing widgets
+- Prompt 001 shell
+- Prompt 002 design system
+- Monitoring
+- Alerting
+- Reporting
+- Automation
+- AI Assistant
+- Infrastructure
+- Topology
+- Notifications
+- Audit
+- Global Search
+- Resource Investigation
+- Operations Workspace
+
+Determine:
+
+- what already exists
+- what should be reused
+- what should be refactored
+- what should be removed
+- what should remain feature-owned
+
+Do not create duplicate components.
+
+==================================================
+4. DASHBOARD ROUTE
+==================================================
+
+Use the existing canonical route:
+
+/
+
+or:
+
+/dashboard
+
+Use whichever route is already established by the frontend foundation.
+
+Do NOT create a second dashboard route unless the existing architecture explicitly requires it.
+
+==================================================
+5. DASHBOARD MODES
+==================================================
+
+Support where useful:
+
+Executive
+Operations
+
+Do not create separate pages.
+
+Use the same underlying data.
+
+Executive mode emphasizes:
+
+- platform health
+- major risks
+- trends
+- service state
+- critical alerts
+- operational summary
+
+Operations mode emphasizes:
+
+- active alerts
+- unhealthy assets
+- recent failures
+- automation status
+- operational signals
+
+==================================================
+6. EXECUTIVE HEADER
+==================================================
+
+Create a premium dashboard header.
+
+Show:
+
+AI Infrastructure OS
+
+Current scope
+
+Last updated
+
+Refresh
+
+Where supported:
+
+Healthy
+Warning
+Critical
+
+Do not fabricate platform health.
+
+==================================================
+7. GLOBAL SCOPE
+==================================================
+
+If V1 supports:
+
+Organization
+Project
+Environment
+Site
+
+use existing scope selectors.
+
+The dashboard must respect current scope.
+
+Do not create a second scope management system.
+
+==================================================
+8. EXECUTIVE SUMMARY
+==================================================
+
+Create a high-value summary row.
+
+Potential cards:
+
+Assets
+Healthy
+Warnings
+Critical
+Active Alerts
+Running Automations
+
+These are examples.
+
+Only display metrics actually available from V1.
+
+Do not invent counts.
+
+==================================================
+9. STATUS HIERARCHY
+==================================================
+
+Do NOT make:
+
+"Total Checks"
+
+the primary dashboard metric.
+
+Dashboard should prioritize:
+
+Asset health
+Operational state
+Active risks
+Service state
+
+Raw validation counts belong in the relevant validation/detail experience.
+
+==================================================
+10. HEALTH OVERVIEW
+==================================================
+
+If V1 provides asset health:
+
+show a clear health overview.
+
+Example:
+
+Healthy
+Warning
+Critical
+Unknown
+
+Use existing semantic status tokens.
+
+Do not recalculate backend health.
+
+==================================================
+11. HEALTH DISTRIBUTION
+==================================================
+
+If counts exist:
+
+provide a compact visualization.
+
+Possible:
+
+horizontal distribution
+donut
+stacked bar
+
+Choose the visualization that best communicates the actual dataset.
+
+Do not add charts merely for visual decoration.
+
+==================================================
+12. ACTIVE ALERTS
+==================================================
+
+Create a prominent Active Alerts widget.
+
+Show:
+
+- severity
+- title
+- resource
+- timestamp
+- state
+
+Provide:
+
+View all alerts
+
+Use existing Alerting components/data.
+
+Do not create another alert implementation.
+
+==================================================
+13. CRITICAL ATTENTION
+==================================================
+
+Create an:
+
+Attention Required
+
+section.
+
+Prioritize:
+
+- critical alerts
+- unhealthy assets
+- failed automation
+- important system failures
+
+Only show actual data.
+
+Do not create a fake scoring algorithm.
+
+==================================================
+14. OPERATIONS SIGNALS
+==================================================
+
+Where Prompt 019 provides operational signals:
+
+integrate the existing Operations Workspace data.
+
+Dashboard:
+
+Signal
+→ Operations Workspace
+
+Do not duplicate correlation logic.
+
+==================================================
+15. RECENT ACTIVITY
+==================================================
+
+Integrate Prompt 015.
+
+Show a concise recent activity feed.
+
+Potential:
+
+- configuration change
+- automation execution
+- user action
+- alert
+- system event
+
+Only use actual V1 activity data.
+
+Provide:
+
+View all activity
+
+==================================================
+16. AUTOMATION STATUS
+==================================================
+
+Integrate existing Automation functionality.
+
+Show where supported:
+
+- running
+- completed
+- failed
+- scheduled
+
+Only actual backend states.
+
+Provide:
+
+Open Automation
+
+==================================================
+17. REPORTING STATUS
+==================================================
+
+If V1 supports useful report state:
+
+show:
+
+- recent reports
+- scheduled reports
+- failed generation
+- completed reports
+
+Only where the data is useful and supported.
+
+Avoid turning the dashboard into a report catalog.
+
+==================================================
+18. INFRASTRUCTURE OVERVIEW
+==================================================
+
+If infrastructure inventory APIs provide useful summary information:
+
+show:
+
+- assets
+- machines
+- VMs
+- applications
+- services
+
+Only use actual V1 inventory.
+
+Provide:
+
+View Infrastructure
+
+==================================================
+19. TOPOLOGY SUMMARY
+==================================================
+
+Do not embed a giant graph on the dashboard.
+
+Instead show a compact topology/status summary if useful.
+
+Example:
+
+Connected Resources
+Dependencies
+Topology Health
+
+Only if V1 supports the information.
+
+Provide:
+
+Open Topology
+
+==================================================
+20. NOTIFICATION SUMMARY
+==================================================
+
+Integrate Prompt 016.
+
+Show:
+
+- unread notifications
+- important recent notifications
+
+Do not duplicate the full notification center.
+
+Provide:
+
+View notifications
+
+==================================================
+21. AI INSIGHT
+==================================================
+
+If V1 supports contextual AI:
+
+provide an AI insight card.
+
+Clearly label:
+
+AI Insight
+
+Never present AI-generated content as confirmed system state.
+
+Example:
+
+"AI summary based on current operational data."
+
+Do not automatically generate expensive AI requests on every dashboard load unless the existing V1 architecture explicitly supports this.
+
+Prefer explicit user-triggered analysis where appropriate.
+
+==================================================
+22. SEARCH INTEGRATION
+==================================================
+
+Integrate Prompt 017.
+
+Search must remain in the global shell.
+
+Dashboard should not create a second search box unless a local search is genuinely useful.
+
+==================================================
+23. RESOURCE QUICK ACCESS
+==================================================
+
+Provide useful navigation:
+
+Infrastructure
+Monitoring
+Alerting
+Automation
+Reporting
+Topology
+Operations
+
+Only show modules available to the user.
+
+==================================================
+24. PERSONALIZATION
+==================================================
+
+If frontend already supports user preferences:
+
+allow dashboard preferences such as:
+
+- density
+- preferred mode
+- widget visibility
+
+Only implement local/frontend preferences where appropriate.
+
+Do not add backend settings.
+
+==================================================
+25. WIDGET ARCHITECTURE
+==================================================
+
+Build reusable:
+
+DashboardWidget
+
+with:
+
+- title
+- description
+- content
+- loading
+- empty
+- error
+- action
+
+Example:
+
+<DashboardWidget
+  title="Active Alerts"
+  action="View all"
+/>
+
+Do not duplicate loading/error patterns.
+
+==================================================
+26. WIDGET REGISTRY
+==================================================
+
+If dashboard customization exists:
+
+create a typed widget registry.
+
+Example conceptual structure:
+
+DashboardWidgetDefinition
+
+- id
+- title
+- permissions
+- component
+- defaultPosition
+- defaultVisibility
+
+Do not use dynamic string-based component imports without type safety.
+
+==================================================
+27. PERMISSION-AWARE WIDGETS
+==================================================
+
+Widgets must respect permissions.
+
+Example:
+
+User cannot view Reports
+→ Reports widget hidden.
+
+User cannot view Infrastructure
+→ Infrastructure widget hidden.
+
+Do not show unauthorized data through aggregate widgets.
+
+==================================================
+28. WIDGET FAILURE ISOLATION
+==================================================
+
+A widget failure must not break the dashboard.
+
+Example:
+
+Health ✓
+Alerts ✓
+Automation ✕
+Reports ✓
+
+Show:
+
+"Automation data unavailable."
+
+Keep other widgets usable.
+
+==================================================
+29. LOADING STATES
+==================================================
+
+Use widget-level skeletons.
+
+Do NOT show one giant full-page spinner.
+
+Dashboard should progressively render.
+
+==================================================
+30. EMPTY STATES
+==================================================
+
+Examples:
+
+"No active alerts."
+
+"No recent activity."
+
+"No automation executions."
+
+"No reports available."
+
+Keep the dashboard calm when there is no operational issue.
+
+==================================================
+31. ERROR STATES
+==================================================
+
+Each widget should support:
+
+- retry
+- concise error
+- last successful data where appropriate
+
+Never expose stack traces.
+
+==================================================
+32. REFRESH
+==================================================
+
+Provide dashboard refresh.
+
+Refresh relevant queries only.
+
+Do not force a complete page reload.
+
+==================================================
+33. AUTO REFRESH
+==================================================
+
+Inspect existing V1 capabilities.
+
+If the frontend already has a supported polling strategy:
+
+reuse it.
+
+Do not add aggressive polling.
+
+Avoid unnecessary backend load.
+
+==================================================
+34. STALE DATA
+==================================================
+
+Show:
+
+Last updated
+
+where useful.
+
+Do not claim real-time data unless V1 actually provides it.
+
+==================================================
+35. DATA FETCHING
+==================================================
+
+Do NOT create a single:
+
+getDashboardData()
+
+frontend API call unless such an API already exists in V1.
+
+Instead compose existing feature queries.
+
+Architecture:
+
+Dashboard
+↓
+Feature Queries
+↓
+Existing API Modules
+↓
+Backend V1
+
+==================================================
+36. QUERY DEDUPLICATION
+==================================================
+
+If Dashboard and another module use the same query:
+
+reuse the same query key/cache.
+
+Do not duplicate network requests unnecessarily.
+
+==================================================
+37. QUERY PRIORITY
+==================================================
+
+Prioritize:
+
+1. platform health
+2. critical alerts
+3. attention-required signals
+4. recent activity
+5. secondary summaries
+
+Do not delay critical information behind low-value widgets.
+
+==================================================
+38. PERFORMANCE
+==================================================
+
+Dashboard must load quickly.
+
+Use:
+
+- parallel queries
+- query caching
+- lazy widgets
+- memoization where justified
+- lightweight initial payloads
+- progressive rendering
+
+Do not over-optimize prematurely.
+
+Measure before adding complexity.
+
+==================================================
+39. DATA VISUALIZATION
+==================================================
+
+Use charts only when they communicate meaningful information.
+
+Potential:
+
+- health distribution
+- alert trend
+- automation trend
+- resource utilization
+
+Only implement charts for available V1 datasets.
+
+Do not fabricate historical data.
+
+==================================================
+40. CHART ACCESSIBILITY
+==================================================
+
+Every chart must have:
+
+- accessible summary
+- text equivalent
+- meaningful labels
+
+Never rely on color alone.
+
+==================================================
+41. RESPONSIVE DESIGN
+==================================================
+
+Desktop:
+
+Premium multi-column dashboard.
+
+Tablet:
+
+Adaptive grid.
+
+Mobile:
+
+Prioritize:
+
+1. Health
+2. Critical Alerts
+3. Attention
+4. Activity
+5. Other summaries
+
+Widgets should stack intelligently.
+
+==================================================
+42. DRAG / RESIZE
+==================================================
+
+Only implement widget drag/resize if the existing frontend architecture already supports it or if it can be added without introducing unnecessary dependencies.
+
+Do not make dashboard customization a prerequisite.
+
+==================================================
+43. DASHBOARD DENSITY
+==================================================
+
+Enterprise dashboards must avoid excessive cards.
+
+Use:
+
+- clear hierarchy
+- whitespace
+- grouping
+- restrained borders
+- meaningful typography
+
+Premium does NOT mean:
+
+more gradients
+more shadows
+more cards
+
+==================================================
+44. VISUAL LANGUAGE
+==================================================
+
+Maintain the existing design system.
+
+Use:
+
+- consistent spacing
+- semantic status
+- restrained surfaces
+- strong typography hierarchy
+- subtle interaction states
+
+Do not create a new color system.
+
+==================================================
+45. DARK MODE
+==================================================
+
+Use the existing application appearance system.
+
+Ensure:
+
+- charts remain readable
+- status remains distinguishable
+- contrast meets WCAG
+- cards do not become visually heavy
+
+Do not create a second dark-mode implementation.
+
+==================================================
+46. ACCESSIBILITY
+==================================================
+
+Target WCAG 2.2 AA.
+
+Ensure:
+
+- keyboard navigation
+- focus management
+- headings
+- landmark structure
+- accessible widgets
+- accessible charts
+- accessible status
+- screen-reader-friendly updates
+
+==================================================
+47. NAVIGATION
+==================================================
+
+Every widget should provide meaningful navigation where useful.
+
+Examples:
+
+Health
+→ Infrastructure
+
+Alert
+→ Alerting
+
+Signal
+→ Operations
+
+Resource
+→ Resource Detail
+
+Activity
+→ Audit
+
+Automation
+→ Automation
+
+Report
+→ Reporting
+
+Use canonical route registry.
+
+==================================================
+48. AI ASSISTANT INTEGRATION
+==================================================
+
+If supported:
+
+Dashboard
+→ AI Assistant
+
+Allow the user to ask about visible operational state.
+
+Do not automatically expose all dashboard data to AI.
+
+Only send authorized, necessary context.
+
+==================================================
+49. SECURITY
+==================================================
+
+Dashboard must never leak data through aggregate widgets.
+
+Examples:
+
+Unauthorized Reports
+→ no report counts
+
+Unauthorized Users
+→ no user metrics
+
+Unauthorized Infrastructure
+→ no asset information
+
+Permissions apply before rendering data.
+
+==================================================
+50. MULTI-TENANCY
+==================================================
+
+All dashboard data must respect:
+
+Organization
+Project
+Environment
+
+scope.
+
+Do not mix data across scopes.
+
+When scope changes:
+
+invalidate or refetch relevant queries.
+
+==================================================
+51. URL STATE
+==================================================
+
+If dashboard mode/scope is URL-addressable:
+
+preserve it safely.
+
+Do not encode sensitive dashboard payloads in URLs.
+
+==================================================
+52. USER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/user-guide/dashboard.md
+
+Document:
+
+- Dashboard
+- Executive mode
+- Operations mode
+- scope
+- health
+- alerts
+- operations signals
+- activity
+- automation
+- reporting
+- infrastructure
+- topology
+- notifications
+- AI insights
+- refresh
+- personalization
+- troubleshooting
+
+Only document implemented capabilities.
+
+==================================================
+53. DEVELOPER GUIDE
+==================================================
+
+Create:
+
+docs/frontend/developer-guide/dashboard.md
+
+Document:
+
+- dashboard architecture
+- widget architecture
+- widget registry
+- feature query reuse
+- permission-aware widgets
+- query caching
+- progressive loading
+- error isolation
+- visualization
+- responsive layout
+- accessibility
+- performance
+
+==================================================
+54. RFI / RFP DOCUMENTATION
+==================================================
+
+Create:
+
+docs/frontend/rfi/dashboard.md
+
+Document:
+
+- enterprise dashboard
+- executive visibility
+- operational awareness
+- cross-module integration
+- permission-aware presentation
+- responsive UX
+- accessibility
+- scalable widget architecture
+- extensibility
+- AI-assisted insights where supported
+
+Do not claim unsupported capabilities.
+
+==================================================
+55. BACKEND V1 LIMITATIONS
+==================================================
+
+Update:
+
+docs/frontend/backend-v1-integration-limitations.md
+
+Record:
+
+- unavailable dashboard metrics
+- unavailable aggregations
+- unavailable historical datasets
+- unavailable real-time feeds
+
+Do not modify backend.
+
+==================================================
+56. TESTING
+==================================================
+
+Create tests for:
+
+### Dashboard
+
+- route
+- shell
+- scope
+- mode
+- widgets
+
+### Widgets
+
+- render
+- loading
+- empty
+- error
+- retry
+- permission
+
+### Integration
+
+- Monitoring
+- Alerting
+- Automation
+- Reporting
+- Infrastructure
+- Topology
+- Operations
+- Audit
+- Notifications
+- Search
+- AI
+
+Only where supported.
+
+### Query
+
+- cache reuse
+- invalidation
+- refresh
+- stale protection
+
+### Security
+
+- unauthorized widgets hidden
+- scope isolation
+
+### Accessibility
+
+- keyboard
+- headings
+- status
+- charts
+
+==================================================
+57. E2E
+==================================================
+
+Where environment permits:
+
+- open Dashboard
+- verify health
+- inspect alerts
+- open Operations
+- open Infrastructure
+- open Monitoring
+- open Automation
+- open Reporting
+- open Notifications
+- open Audit
+- use Global Search
+- switch dashboard mode where supported
+- change authorized scope where supported
+
+Use safe test data.
+
+Do not execute destructive operations.
+
+Do not modify backend.
+
+==================================================
+58. DEPENDENCY SAFETY
+==================================================
+
+Use existing dependencies.
+
+Do not add:
+
+- dashboard frameworks
+- widget frameworks
+- chart libraries
+
+unless the existing frontend has no suitable capability and the dependency is genuinely necessary.
+
+==================================================
+59. BACKEND FREEZE VERIFICATION
+==================================================
+
+Before completion:
+
+[ ] Backend source changes = 0
+[ ] API changes = 0
+[ ] Database changes = 0
+[ ] Migration changes = 0
+[ ] Neo4j changes = 0
+[ ] PostgreSQL changes = 0
+[ ] Authentication changes = 0
+[ ] RBAC changes = 0
+[ ] Monitoring changes = 0
+[ ] Alerting changes = 0
+[ ] Automation changes = 0
+[ ] Reporting changes = 0
+[ ] AI backend changes = 0
+[ ] Backend configuration changes = 0
+[ ] Backend dependencies = 0
+
+==================================================
+60. VALIDATION
+==================================================
+
+Run:
+
+- typecheck
+- lint
+- unit tests
+- production build
+- applicable E2E
+
+Do not claim success without execution.
+
+==================================================
+61. GIT SAFETY
+==================================================
+
+Before commit:
+
+- inspect git status
+- inspect changed files
+- verify no secrets
+- verify no .env
+- verify no credentials
+- verify no backend modifications
+- inspect dependency changes
+- inspect lockfile
+
+==================================================
+62. COMMIT
+==================================================
+
+If validation passes:
+
+feat(frontend): implement enterprise executive dashboard
+
+Push according to repository workflow.
+
+==================================================
+63. DEFINITION OF DONE
+==================================================
+
+[ ] Existing dashboard architecture inspected.
+[ ] Existing dashboard functionality preserved/refactored safely.
+[ ] Canonical dashboard route maintained.
+[ ] Executive mode implemented where appropriate.
+[ ] Operations mode implemented where appropriate.
+[ ] Scope implemented using existing scope architecture.
+[ ] Executive summary implemented.
+[ ] Health overview implemented.
+[ ] Active alerts implemented.
+[ ] Attention Required implemented.
+[ ] Operations signals integrated.
+[ ] Recent activity integrated.
+[ ] Automation status integrated.
+[ ] Reporting summary integrated where useful.
+[ ] Infrastructure summary integrated.
+[ ] Topology summary integrated where useful.
+[ ] Notification summary integrated.
+[ ] AI insight implemented only where supported.
+[ ] Global Search integration preserved.
+[ ] Resource Detail navigation integrated.
+[ ] Permission-aware widgets implemented.
+[ ] Widget architecture reusable.
+[ ] Widget failure isolation implemented.
+[ ] Loading states implemented.
+[ ] Empty states implemented.
+[ ] Error states implemented.
+[ ] Refresh implemented.
+[ ] Stale data communicated where appropriate.
+[ ] Multi-tenant scope respected.
+[ ] Charts only use real V1 data.
+[ ] Chart accessibility implemented.
+[ ] Responsive design implemented.
+[ ] Dark mode supported through existing system.
+[ ] WCAG 2.2 AA targeted.
+[ ] Performance validated.
+[ ] User guide created.
+[ ] Developer guide created.
+[ ] RFI documentation created.
+[ ] Backend V1 untouched.
+[ ] No backend API changes.
+[ ] No database changes.
+[ ] No Neo4j changes.
+[ ] No unnecessary dependencies.
+[ ] Typecheck passes.
+[ ] Lint passes.
+[ ] Tests pass.
+[ ] Production build passes.
+[ ] Applicable E2E passes.
+[ ] Git state clean except explicitly pre-existing files.
+
+==================================================
+64. FINAL REPORT
+==================================================
+
+Provide:
+
+1. Dashboard implementation summary
+2. Existing dashboard code reused/refactored
+3. Actual V1 APIs consumed
+4. Dashboard modes
+5. Scope handling
+6. Executive summary
+7. Health overview
+8. Alert integration
+9. Operations integration
+10. Activity integration
+11. Automation integration
+12. Reporting integration
+13. Infrastructure integration
+14. Topology integration
+15. Notification integration
+16. AI integration
+17. Search integration
+18. Resource Detail integration
+19. Widget architecture
+20. Permission handling
+21. Query reuse/caching
+22. Loading/empty/error handling
+23. Visualization
+24. Accessibility
+25. Responsive behaviour
+26. Performance
+27. User guide
+28. Developer guide
+29. RFI documentation
+30. Tests
+31. E2E
+32. Typecheck
+33. Lint
+34. Production build
+35. Dependency changes
+36. Lockfile changes
+37. Backend files changed — MUST BE ZERO
+38. Backend V1 limitations
+39. Git commit
+40. Known limitations
+41. Recommended next frontend prompt
+
+Do not modify the backend.
+
+Do not fabricate dashboard metrics.
+
+Do not create duplicate backend/business logic.
+
+Proceed with implementation.
